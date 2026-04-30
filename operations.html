@@ -96,6 +96,12 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:11px;border-t
 ::-webkit-scrollbar-track{background:var(--surface);}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+
+/* CASCADE TAB BUTTONS */
+.cascade-tab{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border:1.5px solid var(--border);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;transition:all .15s;}
+.cascade-tab:hover{border-color:#ce0e2d;color:#ce0e2d;}
+.cascade-tab.active{background:#ce0e2d;border-color:#ce0e2d;color:#fff;}
+
 </style>
 </head>
 <body>
@@ -150,13 +156,7 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:11px;border-t
     </div>
   </div>
 
-  <div style="padding:14px 18px 0;">
-    <div class="card full">
-      <div class="card-title"><span class="dot"></span>Daily Activity</div>
-      <div class="chart-wrap" style="min-height:220px"><canvas id="cDaily"></canvas></div>
-      <div class="chart-note" id="chartNote">Click any point to drill into that day &bull; Multiple events: showing registrations per event</div>
-    </div>
-  </div>
+  <div id="dailyChartZone" style="padding:14px 18px 0;"></div>
 
   <div class="kpi-row" id="dayKpiRow"  style="display:none;grid-template-columns:repeat(4,1fr)"></div>
   <div class="kpi-row" id="dayKpiRow2" style="display:none;grid-template-columns:repeat(4,1fr);padding-top:0"></div>
@@ -461,41 +461,88 @@ function render(){
   const allDays=[...new Set([...Object.keys(D.signupsByDay),...Object.keys(D.excByDay),...Object.keys(D.winByDay)])].sort();
   const dayLabels=allDays.map(d=>{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});});
 
-  let dailyDatasets;
-  let chartNoteText;
+  // ── Daily Activity Chart(s) ─────────────────────────────────────────────
+  const allDays=[...new Set([...Object.keys(D.signupsByDay),...Object.keys(D.excByDay),...Object.keys(D.winByDay)])].sort();
+  const dayLabels=allDays.map(d=>{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});});
+
+  const zone=document.getElementById('dailyChartZone');
+
   if(!comparing){
-    // Single event / all: show regs + EXC + trivia
-    dailyDatasets=[
+    // Single event / all — one chart with 3 lines
+    zone.innerHTML=`<div class="card full">
+      <div class="card-title"><span class="dot"></span>Daily Activity</div>
+      <div class="chart-wrap" style="min-height:220px"><canvas id="cDaily_0"></canvas></div>
+      <div class="chart-note">Click any point to drill into that day</div>
+    </div>`;
+    const datasets=[
       {label:'Registrations',     data:allDays.map(d=>D.signupsByDay[d]||0),borderColor:'#ce0e2d',backgroundColor:'rgba(206,14,45,.12)',pointBackgroundColor:allDays.map(d=>selectedDay===d?'#ff6688':'#ce0e2d'),pointRadius:allDays.map(d=>selectedDay===d?7:4),pointHoverRadius:8,borderWidth:2,tension:.3,fill:true},
       {label:'EXC Simulator Runs',data:allDays.map(d=>D.excByDay[d]||0),   borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.08)',pointBackgroundColor:allDays.map(d=>selectedDay===d?'#88ccff':'#58a6ff'),pointRadius:allDays.map(d=>selectedDay===d?7:4),pointHoverRadius:8,borderWidth:2,tension:.3,fill:true},
       {label:'Trivia Sessions',   data:allDays.map(d=>D.winByDay[d]||0),   borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,.08)',pointBackgroundColor:allDays.map(d=>selectedDay===d?'#66dd88':'#3fb950'),pointRadius:allDays.map(d=>selectedDay===d?7:4),pointHoverRadius:8,borderWidth:2,tension:.3,fill:true},
     ];
-    chartNoteText='Click any point to drill into that day';
+    opsCharts['daily_0']=new Chart(document.getElementById('cDaily_0'),{
+      type:'line',data:{labels:dayLabels,datasets},
+      options:{...coBase,onClick:(evt,els)=>{if(!els.length)return;drillDown(allDays[els[0].index]);},
+        plugins:{...coBase.plugins,tooltip:{callbacks:{title:items=>{const d=allDays[items[0].dataIndex];return dayLabels[items[0].dataIndex]+(d===selectedDay?' (click to deselect)':' — click to drill down');}}}}
+      }
+    });
+
   } else {
-    // Multiple events: one registration line per event
-    dailyDatasets=[...selectedEvents].map((evName,i)=>{
+    // Multi-event — one chart per event in a responsive grid
+    const evList=[...selectedEvents];
+    const cols=2; // always 2 per row
+    // Build grid rows
+    const rows=[];
+    for(let i=0;i<evList.length;i+=cols) rows.push(evList.slice(i,i+cols));
+
+    let gridHtml='<div style="display:flex;flex-direction:column;gap:12px;">';
+    rows.forEach((rowEvents,ri)=>{
+      gridHtml+=`<div style="display:grid;grid-template-columns:${rowEvents.map(()=>'1fr').join(' ')};gap:12px;">`;
+      rowEvents.forEach((evName,ci)=>{
+        const idx=ri*cols+ci;
+        const color=eventColor(evName);
+        gridHtml+=`<div class="card">
+          <div class="card-title">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;margin-right:4px"></span>
+            ${evName}
+          </div>
+          <div class="chart-wrap" style="min-height:200px"><canvas id="cDaily_${idx}"></canvas></div>
+          <div class="chart-note" style="margin-top:4px">Click to drill into that day</div>
+        </div>`;
+      });
+      gridHtml+='</div>';
+    });
+    gridHtml+='</div>';
+    zone.innerHTML=gridHtml;
+
+    // Render one chart per event
+    evList.forEach((evName,idx)=>{
       const color=eventColor(evName);
       const evWeb=rawWeb.filter(r=>(r['Event Name']||'').trim()===evName);
-      const evSBD={};evWeb.forEach(r=>{const d=parseDate(r['Date']);if(d){const k=toYMD(d);evSBD[k]=(evSBD[k]||0)+1;}});
-      return {
-        label:evName,
-        data:allDays.map(d=>evSBD[d]||0),
-        borderColor:color,backgroundColor:color+'18',
-        pointBackgroundColor:allDays.map(d=>selectedDay===d?'#fff':color),
-        pointRadius:allDays.map(d=>selectedDay===d?7:4),
-        pointHoverRadius:8,borderWidth:2,tension:.3,fill:false,
-      };
+      const evExc=rawExc.filter(r=>(r['Event Name']||'').trim()===evName);
+      const evWin=rawWin.filter(r=>(r['Event Name']||'').trim()===evName);
+      const evSBD={},evEBD={},evWBD={};
+      evWeb.forEach(r=>{const d=parseDate(r['Date']);if(d){const k=toYMD(d);evSBD[k]=(evSBD[k]||0)+1;}});
+      evExc.forEach(r=>{const d=parseDate(r['Date']);if(d){const k=toYMD(d);evEBD[k]=(evEBD[k]||0)+1;}});
+      evWin.forEach(r=>{const d=parseDate(r['Date']);if(d){const k=toYMD(d);evWBD[k]=(evWBD[k]||0)+1;}});
+      // Only show days relevant to this event
+      const evDays=[...new Set([...Object.keys(evSBD),...Object.keys(evEBD),...Object.keys(evWBD)])].sort();
+      const evLabels=evDays.map(d=>{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});});
+      const alpha='33';
+      opsCharts[`daily_${idx}`]=new Chart(document.getElementById(`cDaily_${idx}`),{
+        type:'line',
+        data:{labels:evLabels,datasets:[
+          {label:'Registrations',     data:evDays.map(d=>evSBD[d]||0),borderColor:color,backgroundColor:color+alpha,pointBackgroundColor:evDays.map(d=>selectedDay===d?'#fff':color),pointRadius:evDays.map(d=>selectedDay===d?7:4),pointHoverRadius:8,borderWidth:2,tension:.3,fill:true},
+          {label:'EXC Runs',          data:evDays.map(d=>evEBD[d]||0),borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.08)',pointRadius:3,borderWidth:2,tension:.3,fill:false},
+          {label:'Trivia Sessions',   data:evDays.map(d=>evWBD[d]||0),borderColor:'#3fb950', backgroundColor:'rgba(63,185,80,.08)', pointRadius:3,borderWidth:2,tension:.3,fill:false},
+        ]},
+        options:{...coBase,
+          onClick:(evt,els)=>{if(!els.length)return;drillDown(evDays[els[0].index]);},
+          plugins:{...coBase.plugins,tooltip:{callbacks:{title:items=>{const d=evDays[items[0].dataIndex];return evLabels[items[0].dataIndex]+(d===selectedDay?' (click to deselect)':' — click to drill down');}}}}
+        }
+      });
     });
-    chartNoteText='Showing registrations per event — click any point to drill into that day';
   }
-  document.getElementById('chartNote').textContent=chartNoteText;
 
-  opsCharts.daily=new Chart(document.getElementById('cDaily'),{
-    type:'line',data:{labels:dayLabels,datasets:dailyDatasets},
-    options:{...coBase,onClick:(evt,els)=>{if(!els.length)return;drillDown(allDays[els[0].index]);},
-      plugins:{...coBase.plugins,tooltip:{callbacks:{title:items=>{const d=allDays[items[0].dataIndex];return dayLabels[items[0].dataIndex]+(d===selectedDay?' (click to deselect)':' — click to drill down');}}}}
-    }
-  });
 
   // ── Day header ────────────────────────────────────────────────────────────
   const dayHeaderEl=document.getElementById('dayHeader');
@@ -510,39 +557,203 @@ function render(){
     dayHeaderEl.classList.remove('visible');
     document.getElementById('dayKpiRow').style.display='none';
     document.getElementById('dayKpiRow2').style.display='none';
-    renderAllDaysCharts(D);
+    renderAllDaysCharts(D, webF, excF, winF);
   }
 }
 
 // ── ALL-DAYS CHARTS ───────────────────────────────────────────────────────────
-function renderAllDaysCharts(D){
+function renderAllDaysCharts(D, webF, excF, winF){
   document.getElementById('dayKpiRow').style.display='none';
   document.getElementById('dayKpiRow2').style.display='none';
+
+  const comparing = selectedEvents.size > 1;
+  const evList = comparing ? [...selectedEvents] : null;
+
+  // ── Build cascade data (Registered, Trivia, EXC) by day ───────────────────
+  const allDays=[...new Set([...Object.keys(D.signupsByDay),...Object.keys(D.excByDay),...Object.keys(D.winByDay)])].sort();
+  const dayLabels=allDays.map(d=>{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});});
+  const hourLabels=Array.from({length:24},(_,i)=>i===0?'12a':i<12?i+'a':i===12?'12p':(i-12)+'p');
+
+  // ── Build grid HTML ────────────────────────────────────────────────────────
   document.getElementById('opsGrid').innerHTML=`
-    <div class="card full"><div class="card-title"><span class="dot"></span>Sign-Up &amp; EXC Activity by Hour of Day</div><div class="chart-wrap" style="min-height:200px"><canvas id="cHourly"></canvas></div></div>
+    <div class="card full">
+      <div class="card-title"><span class="dot"></span>Participant Cascade &mdash; Registered &rarr; Trivia &rarr; EXC
+        <span style="margin-left:auto;display:flex;gap:6px;align-items:center">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">View:</span>
+          <button class="cascade-tab active" data-view="day"   onclick="setCascadeView('day',this)">By Day</button>
+          <button class="cascade-tab"        data-view="event" onclick="setCascadeView('event',this)">By Event</button>
+          <button class="cascade-tab"        data-view="hour"  onclick="setCascadeView('hour',this)">By Hour</button>
+        </span>
+      </div>
+      <div class="chart-wrap" style="min-height:220px"><canvas id="cCascade"></canvas></div>
+    </div>
+    <div class="card full"><div class="card-title"><span class="dot"></span>Activity by Hour of Day &mdash; Registrations, EXC &amp; Trivia</div><div class="chart-wrap" style="min-height:200px"><canvas id="cHourly"></canvas></div></div>
     <div class="card"><div class="card-title"><span class="dot"></span>Median Wait by Day &mdash; EXC</div><div class="chart-wrap" style="min-height:200px"><canvas id="cWaitExcDay"></canvas></div></div>
     <div class="card"><div class="card-title"><span class="dot"></span>Median Wait by Day &mdash; Trivia</div><div class="chart-wrap" style="min-height:200px"><canvas id="cWaitWinDay"></canvas></div></div>
     <div class="card"><div class="card-title"><span class="dot"></span>EXC Score Distribution</div><div class="chart-wrap" style="min-height:200px"><canvas id="cScoreDist"></canvas></div></div>
     <div class="card"><div class="card-title"><span class="dot"></span>Avg EXC Score by Hour</div><div class="chart-wrap" style="min-height:200px"><canvas id="cScoreHour"></canvas></div></div>`;
 
-  const hourLabels=Array.from({length:24},(_,i)=>i===0?'12a':i<12?i+'a':i===12?'12p':(i-12)+'p');
-  opsCharts.hourly=new Chart(document.getElementById('cHourly'),{type:'bar',data:{labels:hourLabels,datasets:[{label:'Registrations',data:D.byHour,backgroundColor:'rgba(206,14,45,.75)',borderRadius:3},{label:'EXC Runs',data:D.excByHour,backgroundColor:'rgba(88,166,255,.65)',borderRadius:3}]},options:{...coBase}});
+  // ── Cascade chart (by day default) ────────────────────────────────────────
+  window._cascadeData = { D, webF, excF, winF, allDays, dayLabels, hourLabels };
+  renderCascade('day');
 
-  function waitDayBar(id,obj,color){
-    const days=Object.keys(obj).sort(),labels=days.map(d=>{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});});
-    return new Chart(document.getElementById(id),{type:'bar',data:{labels,datasets:[{label:'Median (min)',data:days.map(d=>{const m=median(obj[d]);return m!=null?+m.toFixed(1):null;}),backgroundColor:color+'bb',borderRadius:3}]},options:{...coBase,plugins:{...coBase.plugins,legend:{display:false}},scales:{...coBase.scales,y:{...coBase.scales.y,title:{display:true,text:'Minutes',color:'#8b949e',font:{size:10}}}}}});
+  // ── Hourly activity (registrations + EXC + trivia) ────────────────────────
+  const winByHour = Array(24).fill(0);
+  winF.forEach(r=>{ const d=parseDate(r['Date']); if(d) winByHour[d.getHours()]++; });
+
+  opsCharts.hourly=new Chart(document.getElementById('cHourly'),{type:'bar',
+    data:{labels:hourLabels,datasets:[
+      {label:'Registrations',   data:D.byHour,    backgroundColor:'rgba(206,14,45,.75)', borderRadius:3},
+      {label:'EXC Runs',        data:D.excByHour, backgroundColor:'rgba(88,166,255,.65)',borderRadius:3},
+      {label:'Trivia Sessions', data:winByHour,   backgroundColor:'rgba(63,185,80,.65)', borderRadius:3},
+    ]},
+    options:{...coBase}
+  });
+
+  // ── Median wait by day — colored per event if comparing ───────────────────
+  function waitDayBar(id, waitByDayObj, singleColor){
+    const days=Object.keys(waitByDayObj).sort();
+    const labels=days.map(d=>{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});});
+
+    let datasets;
+    if(comparing){
+      // One dataset per event, each in its event color
+      datasets = evList.map(evName => {
+        const color = eventColor(evName);
+        const evWeb = rawWeb.filter(r=>(r['Event Name']||'').trim()===evName);
+        const evExc = rawExc.filter(r=>(r['Event Name']||'').trim()===evName);
+        const evWin = rawWin.filter(r=>(r['Event Name']||'').trim()===evName);
+        const evD   = computeData(evWeb, evExc, evWin);
+        const src   = id.includes('Exc') ? evD.excWaitByDay : evD.winWaitByDay;
+        return {
+          label: evName,
+          data: days.map(d=>{ const m=median(src[d]||[]); return m!=null?+m.toFixed(1):null; }),
+          backgroundColor: color+'bb',
+          borderRadius: 3,
+        };
+      });
+    } else {
+      datasets=[{
+        label:'Median (min)',
+        data:days.map(d=>{const m=median(waitByDayObj[d]);return m!=null?+m.toFixed(1):null;}),
+        backgroundColor:singleColor+'bb',borderRadius:3,
+      }];
+    }
+
+    return new Chart(document.getElementById(id),{type:'bar',
+      data:{labels, datasets},
+      options:{...coBase,
+        plugins:{...coBase.plugins,legend:{display:comparing}},
+        scales:{...coBase.scales,y:{...coBase.scales.y,title:{display:true,text:'Minutes',color:'#8b949e',font:{size:10}}}}
+      }
+    });
   }
-  opsCharts.waitExcDay=waitDayBar('cWaitExcDay',D.excWaitByDay,'#58a6ff');
-  opsCharts.waitWinDay=waitDayBar('cWaitWinDay',D.winWaitByDay,'#3fb950');
+  opsCharts.waitExcDay = waitDayBar('cWaitExcDay', D.excWaitByDay, '#58a6ff');
+  opsCharts.waitWinDay = waitDayBar('cWaitWinDay', D.winWaitByDay, '#3fb950');
 
+  // ── Score distribution ────────────────────────────────────────────────────
   if(D.excScoreAll.length){
     const bSz=8,buckets={};for(let i=0;i<=100;i+=bSz)buckets[i]=0;
     D.excScoreAll.forEach(s=>{const b=Math.floor(s/bSz)*bSz;if(b in buckets)buckets[b]++;});
-    opsCharts.scoreDist=new Chart(document.getElementById('cScoreDist'),{type:'bar',data:{labels:Object.keys(buckets).map(k=>k+'–'+(+k+bSz)),datasets:[{label:'Participants',data:Object.values(buckets),backgroundColor:'rgba(206,14,45,.75)',borderRadius:3}]},options:{...coBase,plugins:{...coBase.plugins,legend:{display:false}},scales:{...coBase.scales,x:{...coBase.scales.x,ticks:{...coBase.scales.x.ticks,maxRotation:45}}}}});
+    opsCharts.scoreDist=new Chart(document.getElementById('cScoreDist'),{type:'bar',
+      data:{labels:Object.keys(buckets).map(k=>k+'\u2013'+(+k+bSz)),datasets:[{label:'Participants',data:Object.values(buckets),backgroundColor:'rgba(206,14,45,.75)',borderRadius:3}]},
+      options:{...coBase,plugins:{...coBase.plugins,legend:{display:false}},scales:{...coBase.scales,x:{...coBase.scales.x,ticks:{...coBase.scales.x.ticks,maxRotation:45}}}}
+    });
   }
+
+  // ── Score by hour ─────────────────────────────────────────────────────────
   const scoreHrData=Array.from({length:24},(_,i)=>{const a=avg(D.excScoreByHour[i]||[]);return a!=null?+a.toFixed(1):null;});
-  opsCharts.scoreHour=new Chart(document.getElementById('cScoreHour'),{type:'line',data:{labels:hourLabels,datasets:[{label:'Avg EXC Score',data:scoreHrData,borderColor:'#f0a500',backgroundColor:'rgba(240,165,0,.1)',borderWidth:2,pointRadius:3,tension:.3,fill:true,spanGaps:true}]},options:{...coBase,plugins:{...coBase.plugins,legend:{display:false}},scales:{...coBase.scales,y:{...coBase.scales.y,min:0,max:100}}}});
+  opsCharts.scoreHour=new Chart(document.getElementById('cScoreHour'),{type:'line',
+    data:{labels:hourLabels,datasets:[{label:'Avg EXC Score',data:scoreHrData,borderColor:'#f0a500',backgroundColor:'rgba(240,165,0,.1)',borderWidth:2,pointRadius:3,tension:.3,fill:true,spanGaps:true}]},
+    options:{...coBase,plugins:{...coBase.plugins,legend:{display:false}},scales:{...coBase.scales,y:{...coBase.scales.y,min:0,max:100}}}
+  });
 }
+
+// ── CASCADE CHART RENDERER ────────────────────────────────────────────────────
+window._cascadeView = 'day';
+function setCascadeView(view, btn){
+  window._cascadeView = view;
+  document.querySelectorAll('.cascade-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCascade(view);
+}
+
+function renderCascade(view){
+  if(opsCharts.cascade){ opsCharts.cascade.destroy(); delete opsCharts.cascade; }
+  const cd = window._cascadeData;
+  if(!cd) return;
+  const { D, webF, excF, winF, allDays, dayLabels, hourLabels } = cd;
+  const comparing = selectedEvents.size > 1;
+  const evList = comparing ? [...selectedEvents] : null;
+
+  // Trivia by day
+  const winByDay={};
+  winF.forEach(r=>{const d=parseDate(r['Date']);if(d){const k=toYMD(d);winByDay[k]=(winByDay[k]||0)+1;}});
+
+  let labels, regData, excData, winData, datasets;
+
+  if(view==='day'){
+    labels  = dayLabels;
+    regData = allDays.map(d=>D.signupsByDay[d]||0);
+    excData = allDays.map(d=>D.excByDay[d]||0);
+    winData = allDays.map(d=>winByDay[d]||0);
+    datasets=[
+      {label:'Registered',      data:regData, backgroundColor:'rgba(206,14,45,.8)',  borderRadius:3},
+      {label:'Trivia Sessions', data:winData, backgroundColor:'rgba(63,185,80,.75)', borderRadius:3},
+      {label:'EXC Runs',        data:excData, backgroundColor:'rgba(88,166,255,.75)',borderRadius:3},
+    ];
+  } else if(view==='event'){
+    // One group per event (or "All" if not comparing)
+    const evNames = comparing ? evList : ['All Events'];
+    labels = evNames;
+    datasets=[
+      {label:'Registered', data:evNames.map(ev=>{
+        if(ev==='All Events')return webF.length;
+        return rawWeb.filter(r=>(r['Event Name']||'').trim()===ev).length;
+      }), backgroundColor:'rgba(206,14,45,.8)', borderRadius:3},
+      {label:'Trivia Sessions', data:evNames.map(ev=>{
+        if(ev==='All Events')return winF.length;
+        return rawWin.filter(r=>(r['Event Name']||'').trim()===ev).length;
+      }), backgroundColor:'rgba(63,185,80,.75)', borderRadius:3},
+      {label:'EXC Runs', data:evNames.map(ev=>{
+        if(ev==='All Events')return excF.length;
+        return rawExc.filter(r=>(r['Event Name']||'').trim()===ev).length;
+      }), backgroundColor:'rgba(88,166,255,.75)', borderRadius:3},
+    ];
+  } else { // hour
+    const winByHour=Array(24).fill(0);
+    winF.forEach(r=>{const d=parseDate(r['Date']);if(d)winByHour[d.getHours()]++;});
+    labels  = hourLabels;
+    datasets=[
+      {label:'Registered',      data:D.byHour,    backgroundColor:'rgba(206,14,45,.8)',  borderRadius:3},
+      {label:'Trivia Sessions', data:winByHour,   backgroundColor:'rgba(63,185,80,.75)', borderRadius:3},
+      {label:'EXC Runs',        data:D.excByHour, backgroundColor:'rgba(88,166,255,.75)',borderRadius:3},
+    ];
+  }
+
+  opsCharts.cascade=new Chart(document.getElementById('cCascade'),{
+    type:'bar',
+    data:{labels, datasets},
+    options:{...coBase,
+      plugins:{...coBase.plugins,
+        legend:{labels:{color:'#8b949e',font:{family:'Barlow Condensed',size:11,weight:'600'},padding:12}},
+        tooltip:{callbacks:{
+          afterBody: items => {
+            const reg=items.find(i=>i.dataset.label==='Registered');
+            const exc=items.find(i=>i.dataset.label==='EXC Runs');
+            const win=items.find(i=>i.dataset.label==='Trivia Sessions');
+            if(reg&&exc){
+              const pct=(exc.raw/reg.raw*100).toFixed(1);
+              return [`EXC completion: ${pct}%`];
+            }
+            return [];
+          }
+        }}
+      }
+    }
+  });
+}
+
 
 // ── DAY DETAIL ────────────────────────────────────────────────────────────────
 function renderDayDetail(day,webF,excF,winF,D){
