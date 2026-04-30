@@ -347,8 +347,15 @@ footer{border-top:1px solid var(--border);}
 /* ── TRIVIA SCORE SECTION ── */
 #triviaScoreSection{transition:opacity .2s;}
 
+
+/* ops page moved to operations.html */
+
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
+// operations page logic moved to operations.html
+
+
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -405,6 +412,7 @@ footer{border-top:1px solid var(--border);}
     <select class="event-select" id="eventSelect" onchange="onEventChange()"><option value="ALL">All Events</option></select>
     <button class="hbtn hbtn-blue" onclick="refreshData()">&#8635; Refresh</button>
     <button class="hbtn hbtn-danger" id="clearFiltersBtn" onclick="clearAllFilters()" style="display:none;">&#x2715; Clear Filters</button>
+    <a href="operations.html" class="hbtn hbtn-muted" style="text-decoration:none">&#9632; Operations</a>
     <button class="hbtn hbtn-muted" onclick="doLogout()">Sign Out</button>
   </div>
 </header>
@@ -905,9 +913,9 @@ async function loadData(){
 async function fetchFresh(blocking){
   try{
     const [web,exc,win]=await Promise.all([
-      fetchAll('web_registration','"Event Name","Mobile Phone","DOB","First Name","Last Name","Street Address","State","Gender","Job Status","Student","Interested in Construction Jobs","Trade Certifications or Licenses","Trade Certifications or Licenses_1","Trade Certifications or Licenses_2","Trade Certifications or Licenses_3","Trade Certifications or Licenses_4","Trade Certifications or Licenses_5","Trade Certifications or Licenses_6","Trade Certifications or Licenses_7","Trade Certifications or Licenses_8","Trade Certifications or Licenses_9","Trade Certifications or Licenses_10","Trade Certifications or Licenses_11","Trade Certifications or Licenses_12","Trade Certifications or Licenses_13","Trade Certifications or Licenses_14","Trade Certifications or Licenses_15"'),
-      fetchAll('exc_truck_loading','"Event Name","Login Code","Total Score"'),
-      fetchAll('windows_trivia','"Event Name","QR Code Scan","Mobile Phone","Trivia Auto Mechanic Score","Trivia Civil Construction Score","Trivia Electrical Score","Trivia Plumbing Score","Trivia Welding Score","Trivia Construction Labor Score","Trivia HVAC Score","Trivia Warehouse Score","Trivia Heavy Equipment Technician Score"')
+      fetchAll('web_registration','"Date","Event Name","Mobile Phone","DOB","First Name","Last Name","Street Address","State","Gender","Job Status","Student","Interested in Construction Jobs","Trade Certifications or Licenses","Trade Certifications or Licenses_1","Trade Certifications or Licenses_2","Trade Certifications or Licenses_3","Trade Certifications or Licenses_4","Trade Certifications or Licenses_5","Trade Certifications or Licenses_6","Trade Certifications or Licenses_7","Trade Certifications or Licenses_8","Trade Certifications or Licenses_9","Trade Certifications or Licenses_10","Trade Certifications or Licenses_11","Trade Certifications or Licenses_12","Trade Certifications or Licenses_13","Trade Certifications or Licenses_14","Trade Certifications or Licenses_15"'),
+      fetchAll('exc_truck_loading','"Date","Event Name","Login Code","Total Score"'),
+      fetchAll('windows_trivia','"Date","Event Name","QR Code Scan","Mobile Phone","Trivia Auto Mechanic Score","Trivia Civil Construction Score","Trivia Electrical Score","Trivia Plumbing Score","Trivia Welding Score","Trivia Construction Labor Score","Trivia HVAC Score","Trivia Warehouse Score","Trivia Heavy Equipment Technician Score"')
     ]);
     rawWeb=web;rawExc=exc;rawWin=win;
     saveCache(web,exc,win);
