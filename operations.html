@@ -457,10 +457,6 @@ function render(){
     compDiv.innerHTML='';
   }
 
-  // ── Daily Activity Chart ──────────────────────────────────────────────────
-  const allDays=[...new Set([...Object.keys(D.signupsByDay),...Object.keys(D.excByDay),...Object.keys(D.winByDay)])].sort();
-  const dayLabels=allDays.map(d=>{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});});
-
   // ── Daily Activity Chart(s) ─────────────────────────────────────────────
   const allDays=[...new Set([...Object.keys(D.signupsByDay),...Object.keys(D.excByDay),...Object.keys(D.winByDay)])].sort();
   const dayLabels=allDays.map(d=>{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});});
