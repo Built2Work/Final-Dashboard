@@ -368,6 +368,35 @@ footer{border-top:1px solid var(--border);}
 .ms-check{width:14px;height:14px;border:1.5px solid var(--border);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s;}
 .ms-option.selected .ms-check{background:var(--accent);border-color:var(--accent);color:#fff;}
 
+
+/* COLUMN SELECTOR MODAL */
+.col-modal-overlay{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;}
+.col-modal-overlay.open{display:flex;}
+.col-modal{background:var(--surface);border:1px solid var(--border);border-radius:6px;width:560px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 12px 48px rgba(0,0,0,.5);}
+.col-modal-header{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.col-modal-title{font-family:'Oswald',sans-serif;font-size:16px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text);}
+.col-modal-close{background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:3px;transition:color .15s;}
+.col-modal-close:hover{color:var(--text);}
+.col-modal-body{overflow-y:auto;padding:14px 20px;flex:1;}
+.col-group-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:6px;}
+.col-group-title:not(:first-child){margin-top:14px;}
+.col-items{display:grid;grid-template-columns:1fr 1fr;gap:3px;}
+.col-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:3px;cursor:grab;border:1px solid transparent;transition:background .1s;user-select:none;}
+.col-item:hover{background:var(--surface2);}
+.col-item.dragging{opacity:.4;border-color:var(--accent);}
+.col-item.drag-over{background:rgba(206,14,45,.1);border-color:var(--accent);}
+.col-item.locked{cursor:default;opacity:.5;}
+.col-drag-handle{color:var(--muted);font-size:12px;flex-shrink:0;cursor:grab;}
+.col-check{width:14px;height:14px;accent-color:var(--accent);flex-shrink:0;cursor:pointer;}
+.col-label{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.col-modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.col-reset-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border:1.5px solid var(--border);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;transition:all .15s;}
+.col-reset-btn:hover{border-color:var(--accent);color:var(--accent);}
+.col-apply-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 20px;border:none;background:var(--accent);color:#fff;border-radius:3px;cursor:pointer;margin-left:auto;transition:background .15s;}
+.col-apply-btn:hover{background:#a00b22;}
+.tbl-cols-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border:1.5px solid var(--border);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.tbl-cols-btn:hover{border-color:var(--accent);color:var(--accent);}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
 // operations page logic moved to operations.html
@@ -939,8 +968,8 @@ async function loadData(){
 async function fetchFresh(blocking){
   try{
     const [web,exc,win]=await Promise.all([
-      fetchAll('web_registration','"Date","Event Name","Mobile Phone","DOB","First Name","Last Name","Street Address","State","Gender","Job Status","Student","Interested in Construction Jobs","Trade Certifications or Licenses","Trade Certifications or Licenses_1","Trade Certifications or Licenses_2","Trade Certifications or Licenses_3","Trade Certifications or Licenses_4","Trade Certifications or Licenses_5","Trade Certifications or Licenses_6","Trade Certifications or Licenses_7","Trade Certifications or Licenses_8","Trade Certifications or Licenses_9","Trade Certifications or Licenses_10","Trade Certifications or Licenses_11","Trade Certifications or Licenses_12","Trade Certifications or Licenses_13","Trade Certifications or Licenses_14","Trade Certifications or Licenses_15"'),
-      fetchAll('exc_truck_loading','"Date","Event Name","Login Code","Total Score"'),
+      fetchAll('web_registration','"Date","Event Name","Mobile Phone","DOB","First Name","Last Name","Street Address","City","State","Email Address","Gender","Job Status","Student","Interested in Construction Jobs","Trade Certifications or Licenses","Trade Certifications or Licenses_1","Trade Certifications or Licenses_2","Trade Certifications or Licenses_3","Trade Certifications or Licenses_4","Trade Certifications or Licenses_5","Trade Certifications or Licenses_6","Trade Certifications or Licenses_7","Trade Certifications or Licenses_8","Trade Certifications or Licenses_9","Trade Certifications or Licenses_10","Trade Certifications or Licenses_11","Trade Certifications or Licenses_12","Trade Certifications or Licenses_13","Trade Certifications or Licenses_14","Trade Certifications or Licenses_15"'),
+      fetchAll('exc_truck_loading','"Date","Event Name","Login Code","Total Score","Safety Score","Productivity Score"'),
       fetchAll('windows_trivia','"Date","Event Name","QR Code Scan","Mobile Phone","Trivia Auto Mechanic Score","Trivia Civil Construction Score","Trivia Electrical Score","Trivia Plumbing Score","Trivia Welding Score","Trivia Construction Labor Score","Trivia HVAC Score","Trivia Warehouse Score","Trivia Heavy Equipment Technician Score"')
     ]);
     rawWeb=web;rawExc=exc;rawWin=win;
@@ -1136,7 +1165,8 @@ function renderKPIs(w,e,n){
   document.getElementById('kpiRow').innerHTML=`<div class="kpi-card"><div class="kpi-label">Registrations Shown</div><div class="kpi-value">${w.length.toLocaleString()}</div><div class="kpi-sub">of ${rawWeb.length} total</div></div><div class="kpi-card"><div class="kpi-label">EXC Simulator Runs</div><div class="kpi-value">${e.length.toLocaleString()}</div><div class="kpi-sub">of ${rawExc.length} total</div></div><div class="kpi-card"><div class="kpi-label">Trivia Sessions</div><div class="kpi-value">${n.length.toLocaleString()}</div><div class="kpi-sub">of ${rawWin.length} total</div></div><div class="kpi-card"><div class="kpi-label">Yes/Maybe \u2014 Construction</div><div class="kpi-value" style="color:var(--green)">${hot.toLocaleString()}</div><div class="kpi-sub">interested in opportunities</div></div>`;
 }
 function renderGrid(webRows,excRows,winRows){
-  document.getElementById('dashGrid').innerHTML=`<div class="card"><div class="card-title"><span class="dot"></span>EXC Score Distribution <span class="fab" id="badgeExc">FILTERED</span></div><div class="chart-wrap"><canvas id="chartExc"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Employment Status <span class="fab" id="badgeEmp">FILTERED</span></div><div class="chart-wrap"><canvas id="chartEmp"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Interest in Construction Jobs <span class="fab" id="badgeJI">FILTERED</span></div><div class="chart-wrap"><canvas id="chartJI"></canvas></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Age Distribution <span class="fab" id="badgeAge">FILTERED</span></div><div class="chart-wrap"><canvas id="chartAge"></canvas></div></div><div class="card" style="grid-row:span 2"><div class="card-title"><span class="dot"></span>Trade Certifications &amp; Licenses <span class="fab" id="badgeCerts">FILTERED</span></div><div class="chart-wrap" style="min-height:460px"><canvas id="chartCerts"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Participants by State <span class="fab" id="badgeState">FILTERED</span></div><div class="state-grid" id="stateGrid"></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Windows Trivia \u2014 Tests Taken &amp; Avg Scores <span class="fab" id="badgeTrivia">FILTERED</span></div><table class="ttbl"><thead><tr><th>Test</th><th>Participants</th><th>Avg Score</th><th>Bar</th></tr></thead><tbody id="triviaBody"></tbody></table></div><div class="card full"><div class="card-title"><span class="dot"></span>Filtered Participants</div><div class="tbl-toolbar"><button class="tbl-toggle" id="showAllToggle" onclick="toggleShowAll()">Show Unmatched</button><input class="tbl-search" type="text" placeholder="Search name / phone\u2026" oninput="tblSearch=this.value;renderTable(window.webRows2,window.excRows2,window.winRows2)"><div class="tbl-count" id="tblCount"></div><button class="tbl-toggle" onclick="exportPDF()" style="border-color:var(--accent);color:var(--accent);white-space:nowrap;">&#8681; Export PDF</button></div><div class="table-scroll"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Address</th><th>State</th><th>Event</th><th>EXC Score</th><th>Trivia Tests (Avg)</th><th>Job Interest</th></tr></thead><tbody id="ptblBody"></tbody></table></div></div>`;
+  document.getElementById('dashGrid').innerHTML=`<div class="card"><div class="card-title"><span class="dot"></span>EXC Score Distribution <span class="fab" id="badgeExc">FILTERED</span></div><div class="chart-wrap"><canvas id="chartExc"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Employment Status <span class="fab" id="badgeEmp">FILTERED</span></div><div class="chart-wrap"><canvas id="chartEmp"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Interest in Construction Jobs <span class="fab" id="badgeJI">FILTERED</span></div><div class="chart-wrap"><canvas id="chartJI"></canvas></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Age Distribution <span class="fab" id="badgeAge">FILTERED</span></div><div class="chart-wrap"><canvas id="chartAge"></canvas></div></div><div class="card" style="grid-row:span 2"><div class="card-title"><span class="dot"></span>Trade Certifications &amp; Licenses <span class="fab" id="badgeCerts">FILTERED</span></div><div class="chart-wrap" style="min-height:460px"><canvas id="chartCerts"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Participants by State <span class="fab" id="badgeState">FILTERED</span></div><div class="state-grid" id="stateGrid"></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Windows Trivia \u2014 Tests Taken &amp; Avg Scores <span class="fab" id="badgeTrivia">FILTERED</span></div><table class="ttbl"><thead><tr><th>Test</th><th>Participants</th><th>Avg Score</th><th>Bar</th></tr></thead><tbody id="triviaBody"></tbody></table></div><div class="card full"><div class="card-title"><span class="dot"></span>Filtered Participants</div><div class="tbl-toolbar"><button class="tbl-toggle" id="showAllToggle" onclick="toggleShowAll()">Show Unmatched</button><input class="tbl-search" type="text" placeholder="Search name / phone\u2026" oninput="tblSearch=this.value;renderTable(window.webRows2,window.excRows2,window.winRows2)"><div class="tbl-count" id="tblCount"></div><button class="tbl-cols-btn" onclick="openColModal()">&#9776; Columns</button>
+        <button class="tbl-toggle" onclick="exportPDF()" style="border-color:var(--accent);color:var(--accent);white-space:nowrap;">&#8681; Export PDF</button></div><div class="table-scroll"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Address</th><th>State</th><th>Event</th><th>EXC Score</th><th>Trivia Tests (Avg)</th><th>Job Interest</th></tr></thead><tbody id="ptblBody"></tbody></table></div></div>`;
   if(filters.scoreSegs.size>0||filters.excMin>0||filters.excMax<100){const b=document.getElementById('badgeExc');if(b)b.style.display='inline';}
   if(filters.employment.size>0){const b=document.getElementById('badgeEmp');if(b)b.style.display='inline';}
   if(filters.jobInterest.size>0){const b=document.getElementById('badgeJI');if(b)b.style.display='inline';}
@@ -1172,6 +1202,209 @@ function renderGrid(webRows,excRows,winRows){
   renderTable(webRows,excRows,winRows);
 }
 
+
+// ─── COLUMN CONFIGURATION ────────────────────────────────────────────────────
+const ALL_COLS = [
+  // identity
+  {id:'name',       label:'Name',              group:'Identity',    default:true,  locked:false},
+  {id:'phone',      label:'Phone',             group:'Identity',    default:true,  locked:false},
+  {id:'email',      label:'Email',             group:'Identity',    default:false, locked:false},
+  {id:'addr',       label:'Street Address',    group:'Identity',    default:true,  locked:false},
+  {id:'city',       label:'City',              group:'Identity',    default:false, locked:false},
+  {id:'state',      label:'State',             group:'Identity',    default:true,  locked:false},
+  {id:'event',      label:'Event',             group:'Identity',    default:true,  locked:false},
+  // EXC scores
+  {id:'excScore',   label:'EXC Total Score',   group:'EXC Simulator', default:true,  locked:false},
+  {id:'excSafety',  label:'EXC Safety Score',  group:'EXC Simulator', default:false, locked:false},
+  {id:'excProd',    label:'EXC Productivity',  group:'EXC Simulator', default:false, locked:false},
+  // Trivia
+  {id:'tAuto',      label:'Trivia: Auto Mechanic',      group:'Trivia Scores', default:false, locked:false},
+  {id:'tCivil',     label:'Trivia: Civil Construction', group:'Trivia Scores', default:false, locked:false},
+  {id:'tElec',      label:'Trivia: Electrical',         group:'Trivia Scores', default:false, locked:false},
+  {id:'tPlumb',     label:'Trivia: Plumbing',           group:'Trivia Scores', default:false, locked:false},
+  {id:'tWeld',      label:'Trivia: Welding',            group:'Trivia Scores', default:false, locked:false},
+  {id:'tConst',     label:'Trivia: Construction Labor', group:'Trivia Scores', default:false, locked:false},
+  {id:'tHvac',      label:'Trivia: HVAC',               group:'Trivia Scores', default:false, locked:false},
+  {id:'tWarehouse', label:'Trivia: Warehouse',          group:'Trivia Scores', default:false, locked:false},
+  {id:'tHeavy',     label:'Trivia: Heavy Equip Tech',   group:'Trivia Scores', default:false, locked:false},
+  {id:'triviaSum',  label:'Trivia Summary (avg)',        group:'Trivia Scores', default:true,  locked:false},
+  // Certs
+  {id:'cCDL',       label:'CDL',                     group:'Certifications', default:false, locked:false},
+  {id:'cHEO',       label:'HEO Cert',                group:'Certifications', default:false, locked:false},
+  {id:'cJE',        label:'Journeyman Electrician',   group:'Certifications', default:false, locked:false},
+  {id:'cME',        label:'Master Electrician',       group:'Certifications', default:false, locked:false},
+  {id:'cNEC',       label:'NEC Cert',                 group:'Certifications', default:false, locked:false},
+  {id:'cCCM',       label:'CCM',                      group:'Certifications', default:false, locked:false},
+  {id:'cPMP',       label:'PMP',                      group:'Certifications', default:false, locked:false},
+  {id:'cCCO',       label:'CCO',                      group:'Certifications', default:false, locked:false},
+  {id:'cEPA',       label:'EPA 608 Cert',             group:'Certifications', default:false, locked:false},
+  {id:'cHVACE',     label:'HVAC Excellence Cert',     group:'Certifications', default:false, locked:false},
+  {id:'cJP',        label:'Journeyman Plumber Lic.',  group:'Certifications', default:false, locked:false},
+  {id:'cMP',        label:'Master Plumber Lic.',      group:'Certifications', default:false, locked:false},
+  {id:'cCW',        label:'CW',                       group:'Certifications', default:false, locked:false},
+  {id:'cCWI',       label:'CWI',                      group:'Certifications', default:false, locked:false},
+  {id:'cCLC',       label:'CLC',                      group:'Certifications', default:false, locked:false},
+  {id:'cMCAA',      label:'MCAA',                     group:'Certifications', default:false, locked:false},
+  // Demographic
+  {id:'ji',         label:'Job Interest',      group:'Demographics', default:true,  locked:false},
+  {id:'employment', label:'Employment Status', group:'Demographics', default:false, locked:false},
+  {id:'gender',     label:'Gender',            group:'Demographics', default:false, locked:false},
+];
+
+// Active column order (array of col ids, maintained by drag-drop)
+let activeColIds = ALL_COLS.filter(c=>c.default).map(c=>c.id);
+// Pending state while modal is open
+let pendingColIds = null;
+let dragSrcId = null;
+
+// ── COLUMN MODAL ──────────────────────────────────────────────────────────────
+function openColModal(){
+  pendingColIds = [...activeColIds];
+  renderColModal();
+  document.getElementById('colModalOverlay').classList.add('open');
+}
+function closeColModal(e){
+  if(e && e.target !== document.getElementById('colModalOverlay')) return;
+  pendingColIds = null;
+  document.getElementById('colModalOverlay').classList.remove('open');
+}
+function applyColsAndClose(){
+  activeColIds = [...pendingColIds];
+  document.getElementById('colModalOverlay').classList.remove('open');
+  pendingColIds = null;
+  if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
+}
+function resetCols(){
+  pendingColIds = ALL_COLS.filter(c=>c.default).map(c=>c.id);
+  renderColModal();
+}
+
+function renderColModal(){
+  const body = document.getElementById('colModalBody');
+  const groups = [...new Set(ALL_COLS.map(c=>c.group))];
+  body.innerHTML = '';
+
+  groups.forEach(group => {
+    const colsInGroup = ALL_COLS.filter(c=>c.group===group);
+    const gtitle = document.createElement('div');
+    gtitle.className = 'col-group-title';
+    gtitle.textContent = group;
+    body.appendChild(gtitle);
+
+    const grid = document.createElement('div');
+    grid.className = 'col-items';
+    colsInGroup.forEach(col => {
+      const checked = pendingColIds.includes(col.id);
+      const item = document.createElement('div');
+      item.className = 'col-item' + (col.locked?' locked':'');
+      item.dataset.id = col.id;
+      item.draggable = !col.locked;
+      item.innerHTML = `<span class="col-drag-handle">&#8597;</span>
+        <input class="col-check" type="checkbox" id="chk_${col.id}" ${checked?'checked':''} ${col.locked?'disabled':''}>
+        <label class="col-label" for="chk_${col.id}">${col.label}</label>`;
+
+      // Checkbox change
+      item.querySelector('input').addEventListener('change', e => {
+        if(e.target.checked){
+          if(!pendingColIds.includes(col.id)) pendingColIds.push(col.id);
+        } else {
+          pendingColIds = pendingColIds.filter(id=>id!==col.id);
+        }
+      });
+
+      // Drag events
+      item.addEventListener('dragstart', e => {
+        dragSrcId = col.id;
+        item.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      item.addEventListener('dragend', () => item.classList.remove('dragging'));
+      item.addEventListener('dragover', e => { e.preventDefault(); item.classList.add('drag-over'); });
+      item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+      item.addEventListener('drop', e => {
+        e.preventDefault();
+        item.classList.remove('drag-over');
+        if(dragSrcId === col.id) return;
+        // Reorder in pendingColIds
+        const srcIdx = pendingColIds.indexOf(dragSrcId);
+        const dstIdx = pendingColIds.indexOf(col.id);
+        if(srcIdx !== -1 && dstIdx !== -1){
+          pendingColIds.splice(srcIdx, 1);
+          pendingColIds.splice(dstIdx, 0, dragSrcId);
+        } else if(srcIdx !== -1) {
+          // dragged from unchecked into checked — add and position
+          pendingColIds.splice(dstIdx >= 0 ? dstIdx : pendingColIds.length, 0, dragSrcId);
+        }
+        renderColModal();
+      });
+
+      grid.appendChild(item);
+    });
+    body.appendChild(grid);
+  });
+}
+
+// ── CELL VALUE GETTER ─────────────────────────────────────────────────────────
+function getCellValue(colId, r, w, e, n) {
+  const cert = (w, idx) => (w && (w[CERT_COLS[idx]]||'').trim()==='Yes') ? 'Yes' : (w ? 'No' : '—');
+  const triviaScore = (n, colName) => {
+    if(!n) return '—';
+    const v = parseFloat(n[colName]);
+    return isNaN(v) ? 'DNC' : v.toFixed(0);
+  };
+  switch(colId){
+    case 'name':       return {display: r.name, raw: r.name};
+    case 'phone':      return {display: r.displayPhone, raw: r.displayPhone};
+    case 'email':      return {display: w?(w['Email Address']||'—'):'—', raw: w?(w['Email Address']||''):'', style:'font-size:11px;color:var(--muted)'};
+    case 'addr':       return {display: r.addr||'—', raw: r.addr, style:'font-size:12px;color:var(--muted);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'};
+    case 'city':       return {display: w?(w['City']||'—'):'—', raw: w?(w['City']||''):''};
+    case 'state':      return {display: r.state||'—', raw: r.state, style:"font-family:'Barlow Condensed',sans-serif;font-weight:700"};
+    case 'event':      return {display: r.event||'—', raw: r.event, style:'font-size:12px;color:var(--muted);white-space:nowrap'};
+    case 'excScore':   return {html: r.excScore==null?'<span class="score-badge dnc">DNC</span>':'<span class="score-badge '+(r.excScore>=72?'hi':'')+'">'+(r.excScore.toFixed(0))+'</span>', raw: r.excScore??-1};
+    case 'excSafety':  return {display: e?((s=parseFloat(e['Safety Score']),isNaN(s)?'DNC':s.toFixed(0))):'—', raw: 0};
+    case 'excProd':    return {display: e?((s=parseFloat(e['Productivity Score']),isNaN(s)?'DNC':s.toFixed(0))):'—', raw: 0};
+    case 'tAuto':      return {display: triviaScore(n,'Trivia Auto Mechanic Score'), raw:0};
+    case 'tCivil':     return {display: triviaScore(n,'Trivia Civil Construction Score'), raw:0};
+    case 'tElec':      return {display: triviaScore(n,'Trivia Electrical Score'), raw:0};
+    case 'tPlumb':     return {display: triviaScore(n,'Trivia Plumbing Score'), raw:0};
+    case 'tWeld':      return {display: triviaScore(n,'Trivia Welding Score'), raw:0};
+    case 'tConst':     return {display: triviaScore(n,'Trivia Construction Labor Score'), raw:0};
+    case 'tHvac':      return {display: triviaScore(n,'Trivia HVAC Score'), raw:0};
+    case 'tWarehouse': return {display: triviaScore(n,'Trivia Warehouse Score'), raw:0};
+    case 'tHeavy':     return {display: triviaScore(n,'Trivia Heavy Equipment Technician Score'), raw:0};
+    case 'triviaSum':  return {display: r.trivia, raw: 0, style:'font-size:11px;color:var(--muted);max-width:200px'};
+    case 'cCDL':       return {display: cert(w,0), raw:0};
+    case 'cHEO':       return {display: cert(w,1), raw:0};
+    case 'cJE':        return {display: cert(w,2), raw:0};
+    case 'cME':        return {display: cert(w,3), raw:0};
+    case 'cNEC':       return {display: cert(w,4), raw:0};
+    case 'cCCM':       return {display: cert(w,5), raw:0};
+    case 'cPMP':       return {display: cert(w,6), raw:0};
+    case 'cCCO':       return {display: cert(w,7), raw:0};
+    case 'cEPA':       return {display: cert(w,8), raw:0};
+    case 'cHVACE':     return {display: cert(w,9), raw:0};
+    case 'cJP':        return {display: cert(w,10), raw:0};
+    case 'cMP':        return {display: cert(w,11), raw:0};
+    case 'cCW':        return {display: cert(w,12), raw:0};
+    case 'cCWI':       return {display: cert(w,13), raw:0};
+    case 'cCLC':       return {display: cert(w,14), raw:0};
+    case 'cMCAA':      return {display: cert(w,15), raw:0};
+    case 'ji': {
+      const v=r.ji;
+      return {html: v==='Yes'?'<span class="ip-yes">Yes</span>':v==='Maybe'?'<span class="ip-maybe">Maybe</span>':v==='No'?'<span class="ip-no">No</span>':'<span class="ip-na">N/A</span>', raw:0};
+    }
+    case 'employment': return {display: w?({
+      'Currently employed in construction and/or a trade':'In Trades',
+      'Currently employed in another industry':'Other Industry',
+      'Retired':'Retired','Student':'Student',
+      'Unemployed and looking for work':'Unemployed','Other':'Other'
+    }[w['Job Status']||'']||w['Job Status']||'—'):'—', raw:0, style:'font-size:11px;color:var(--muted)'};
+    case 'gender':     return {display: w?(w['Gender']||'—'):'—', raw:0};
+    default:           return {display:'—', raw:0};
+  }
+}
+
+// ── RENDER TABLE ─────────────────────────────────────────────────────────────
 function renderTable(webRows,excRows,winRows){
   const eMap=excMap(excRows),wMap=webMap(webRows),nMap=winMap(winRows);
   const allPhones=new Set();
@@ -1192,7 +1425,6 @@ function renderTable(webRows,excRows,winRows){
     let triviaStr='---';
     if(n){
       if(filters.trivia.size===1){
-        // Show only the selected test and its score
         const selectedTest=[...filters.trivia][0];
         const col=TRIVIA_COLS[selectedTest];
         const score=col?parseFloat(n[col]):NaN;
@@ -1202,24 +1434,34 @@ function renderTable(webRows,excRows,winRows){
         if(taken.length){const scores=taken.map(([nm,col])=>parseFloat(n[col]));triviaStr=taken.map(([nm])=>nm).join(', ')+' (avg '+(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1)+')';}
       }
     }
-    const rawPhone = w ? String(w['Mobile Phone']||'').split('.')[0].replace(/[^\d]/g,'')
-                  : e ? String(e['Login Code']||'').replace(/[^\d]/g,'')
-                  : phone;
-    const displayPhone = rawPhone || phone;
-    rows.push({phone,displayPhone,name:name.trim()||'---',addr,state,event,excScore,trivia:triviaStr,ji});
+    const rawPhone=w?String(w['Mobile Phone']||'').split('.')[0].replace(/[^\d]/g,''):e?String(e['Login Code']||'').replace(/[^\d]/g,''):phone;
+    rows.push({phone,displayPhone:rawPhone||phone,name:name.trim()||'---',addr,state,event,excScore,trivia:triviaStr,ji,_w:w,_e:e,_n:n});
   });
   const q=tblSearch.toLowerCase();
   if(q)rows=rows.filter(r=>r.name.toLowerCase().includes(q)||r.displayPhone.includes(q)||r.phone.includes(q));
   rows.sort((a,b)=>{if(a.excScore==null&&b.excScore==null)return 0;if(a.excScore==null)return 1;if(b.excScore==null)return -1;return b.excScore-a.excScore;});
-  document.getElementById('tblCount').textContent=rows.length.toLocaleString()+' participants';window._lastTableRows=rows;
+  document.getElementById('tblCount').textContent=rows.length.toLocaleString()+' participants';
+  window._lastTableRows=rows;
+
+  // Build header from activeColIds
+  const colDefs = activeColIds.map(id=>ALL_COLS.find(c=>c.id===id)).filter(Boolean);
+  const thead = '<tr><th>#</th>' + colDefs.map(c=>`<th>${c.label}</th>`).join('') + '</tr>';
+  document.querySelector('.ptbl thead').innerHTML = thead;
+
   const tbody=document.getElementById('ptblBody');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="9" class="no-data">No participants match the current filters.</td></tr>';return;}
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="${colDefs.length+1}" class="no-data">No participants match the current filters.</td></tr>`;return;}
   tbody.innerHTML=rows.map((r,i)=>{
-    const sb=r.excScore==null?'<span class="score-badge dnc">DNC</span>':'<span class="score-badge '+(r.excScore>=72?'hi':'')+'">'+r.excScore.toFixed(0)+'</span>';
-    const jp=r.ji==='Yes'?'<span class="ip-yes">Yes</span>':r.ji==='Maybe'?'<span class="ip-maybe">Maybe</span>':r.ji==='No'?'<span class="ip-no">No</span>':'<span class="ip-na">N/A</span>';
-    return '<tr><td class="fmuted">'+(i+1)+'</td><td class="fname">'+r.name+'</td><td class="fmuted">'+r.displayPhone+'</td><td style="font-size:12px;color:var(--muted);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+r.addr+'</td><td style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700">'+r.state+'</td><td style="font-size:12px;color:var(--muted);white-space:nowrap">'+r.event+'</td><td>'+sb+'</td><td style="font-size:11px;color:var(--muted);max-width:200px">'+r.trivia+'</td><td>'+jp+'</td></tr>';
+    const w=r._w,e=r._e,n=r._n;
+    const cells = colDefs.map(col=>{
+      const v = getCellValue(col.id, r, w, e, n);
+      if(v.html) return `<td>${v.html}</td>`;
+      return `<td${v.style?` style="${v.style}"`:v.class?` class="${v.class}"`:''}>${v.display}</td>`;
+    }).join('');
+    const rowClass = i%2===0?'':'';
+    return `<tr><td class="fmuted">${i+1}</td>${cells}</tr>`;
   }).join('');
 }
+
 
 function toggleShowAll(){showAllParticipants=!showAllParticipants;const btn=document.getElementById('showAllToggle');if(btn){btn.classList.toggle('on',showAllParticipants);btn.textContent=showAllParticipants?'Hide Unmatched':'Show Unmatched';}if(window.webRows2)renderTable(window.webRows2,window.excRows2,window.winRows2);}
 
@@ -1319,5 +1561,21 @@ async function runDiag(){
 }
 
 </script>
+
+<!-- COLUMN SELECTOR MODAL -->
+<div class="col-modal-overlay" id="colModalOverlay" onclick="closeColModal(event)">
+  <div class="col-modal">
+    <div class="col-modal-header">
+      <span class="col-modal-title">Choose &amp; Arrange Columns</span>
+      <button class="col-modal-close" onclick="closeColModal()">&#x2715;</button>
+    </div>
+    <div class="col-modal-body" id="colModalBody"></div>
+    <div class="col-modal-footer">
+      <button class="col-reset-btn" onclick="resetCols()">Reset to Default</button>
+      <button class="col-apply-btn" onclick="applyColsAndClose()">Apply</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
