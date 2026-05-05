@@ -595,26 +595,22 @@ function exportPDF(){
     const summaryText = parts.length ? parts.join('   \u2022   ') : 'All participants \u2014 no filters applied';
 
     // ── Selected trivia test label ─────────────────────────────────────────
-    const selectedTest = filters.trivia.size === 1 ? [...filters.trivia][0] : null;
+    // PDF columns now dynamic via activeColIds
 
     // ── Table data ─────────────────────────────────────────────────────────
-    const head = [['#','Name','Phone','State','Event','EXC Score',
-      selectedTest ? selectedTest + ' Score' : 'Trivia Tests','Job Interest']];
+    // Build PDF columns from activeColIds (same as table on screen)
+    const pdfColDefs = activeColIds.map(id=>ALL_COLS.find(c=>c.id===id)).filter(Boolean);
+    const head = [['#', ...pdfColDefs.map(c=>c.label)]];
 
-    const body = rows.map((r, i) => [
-      i + 1,
-      r.name || '—',
-      r.displayPhone || r.phone || '—',
-      r.state || '—',
-      (r.event || '—').replace('Daytona ','D.'),
-      r.excScore != null ? r.excScore.toFixed(0) : 'DNC',
-      r.trivia || '—',
-      r.ji || '—',
-    ]);
+    const body = rows.map((r, i) => {
+      const w=r._w, e=r._e, n=r._n;
+      return [i+1, ...pdfColDefs.map(col=>{
+        const v = getCellValue(col.id, r, w, e, n);
+        return v.html ? v.html.replace(/<[^>]+>/g,'').trim() : (v.display||'—');
+      })];
+    });
 
-    // Column widths that sum exactly to available content width (612-80=532)
-    // #:18  Name:95  Phone:68  State:26  Event:62  EXC:38  Trivia:150  Interest:50 = 507... pad auto
-    const colWidths = [18, 95, 68, 26, 62, 38, 140, 55]; // total=502, autotable fills rest
+    const colWidths = null; // auto-sized
 
     // ── Single-pass render using didDrawPage hook ──────────────────────────
     doc.autoTable({
@@ -639,26 +635,27 @@ function exportPDF(){
       },
       alternateRowStyles: {fillColor: [247, 247, 247]},
       columnStyles: {
-        0: {cellWidth: colWidths[0], halign: 'center'},
-        1: {cellWidth: colWidths[1]},
-        2: {cellWidth: colWidths[2]},
-        3: {cellWidth: colWidths[3], halign: 'center'},
-        4: {cellWidth: colWidths[4]},
-        5: {cellWidth: colWidths[5], halign: 'center'},
-        6: {cellWidth: colWidths[6]},
-        7: {cellWidth: colWidths[7]},
+        0: {cellWidth: 18, halign: 'center'},
       },
       rowPageBreak: 'avoid',
       didParseCell(data) {
         if(data.section !== 'body') return;
-        // EXC score color
-        if(data.column.index === 5) {
+        const col = pdfColDefs[data.column.index - 1];
+        if(!col) return;
+        // Allow wrapping for content-heavy cols
+        if(['certs','triviaSum','addr','email','industry'].includes(col.id)){
+          data.cell.styles.overflow = 'linebreak';
+          data.cell.styles.cellWidth = 'wrap';
+          data.cell.styles.minCellWidth = 55;
+        }
+        // Color EXC score
+        if(col.id === 'excScore') {
           const v = String(data.cell.raw || '');
           if(v === 'DNC') data.cell.styles.textColor = [150,150,150];
           else if(parseInt(v) >= 72) { data.cell.styles.textColor = [30,140,60]; data.cell.styles.fontStyle = 'bold'; }
         }
-        // Job interest color
-        if(data.column.index === 7) {
+        // Color job interest
+        if(col.id === 'ji') {
           const v = String(data.cell.raw || '');
           if(v === 'Yes') { data.cell.styles.textColor = [30,140,60]; data.cell.styles.fontStyle = 'bold'; }
           else if(v === 'Maybe') { data.cell.styles.textColor = [180,110,0]; data.cell.styles.fontStyle = 'bold'; }
@@ -968,7 +965,7 @@ async function loadData(){
 async function fetchFresh(blocking){
   try{
     const [web,exc,win]=await Promise.all([
-      fetchAll('web_registration','"Date","Event Name","Mobile Phone","DOB","First Name","Last Name","Street Address","City","State","Email Address","Gender","Job Status","Student","Interested in Construction Jobs","Trade Certifications or Licenses","Trade Certifications or Licenses_1","Trade Certifications or Licenses_2","Trade Certifications or Licenses_3","Trade Certifications or Licenses_4","Trade Certifications or Licenses_5","Trade Certifications or Licenses_6","Trade Certifications or Licenses_7","Trade Certifications or Licenses_8","Trade Certifications or Licenses_9","Trade Certifications or Licenses_10","Trade Certifications or Licenses_11","Trade Certifications or Licenses_12","Trade Certifications or Licenses_13","Trade Certifications or Licenses_14","Trade Certifications or Licenses_15"'),
+      fetchAll('web_registration','"Date","Event Name","Mobile Phone","DOB","First Name","Last Name","Street Address","City","State","Email Address","Gender","Job Status","Student","Interested in Construction Jobs","What industry do you work in?","What industry do you work in","Trade Certifications or Licenses","Trade Certifications or Licenses_1","Trade Certifications or Licenses_2","Trade Certifications or Licenses_3","Trade Certifications or Licenses_4","Trade Certifications or Licenses_5","Trade Certifications or Licenses_6","Trade Certifications or Licenses_7","Trade Certifications or Licenses_8","Trade Certifications or Licenses_9","Trade Certifications or Licenses_10","Trade Certifications or Licenses_11","Trade Certifications or Licenses_12","Trade Certifications or Licenses_13","Trade Certifications or Licenses_14","Trade Certifications or Licenses_15"'),
       fetchAll('exc_truck_loading','"Date","Event Name","Login Code","Total Score","Safety Score","Productivity Score"'),
       fetchAll('windows_trivia','"Date","Event Name","QR Code Scan","Mobile Phone","Trivia Auto Mechanic Score","Trivia Civil Construction Score","Trivia Electrical Score","Trivia Plumbing Score","Trivia Welding Score","Trivia Construction Labor Score","Trivia HVAC Score","Trivia Warehouse Score","Trivia Heavy Equipment Technician Score"')
     ]);
@@ -1227,28 +1224,14 @@ const ALL_COLS = [
   {id:'tHvac',      label:'Trivia: HVAC',               group:'Trivia Scores', default:false, locked:false},
   {id:'tWarehouse', label:'Trivia: Warehouse',          group:'Trivia Scores', default:false, locked:false},
   {id:'tHeavy',     label:'Trivia: Heavy Equip Tech',   group:'Trivia Scores', default:false, locked:false},
-  {id:'triviaSum',  label:'Trivia Summary (avg)',        group:'Trivia Scores', default:true,  locked:false},
+  {id:'triviaSum',  label:'Trivia Tests & Scores',       group:'Trivia Scores', default:true,  locked:false},
   // Certs
-  {id:'cCDL',       label:'CDL',                     group:'Certifications', default:false, locked:false},
-  {id:'cHEO',       label:'HEO Cert',                group:'Certifications', default:false, locked:false},
-  {id:'cJE',        label:'Journeyman Electrician',   group:'Certifications', default:false, locked:false},
-  {id:'cME',        label:'Master Electrician',       group:'Certifications', default:false, locked:false},
-  {id:'cNEC',       label:'NEC Cert',                 group:'Certifications', default:false, locked:false},
-  {id:'cCCM',       label:'CCM',                      group:'Certifications', default:false, locked:false},
-  {id:'cPMP',       label:'PMP',                      group:'Certifications', default:false, locked:false},
-  {id:'cCCO',       label:'CCO',                      group:'Certifications', default:false, locked:false},
-  {id:'cEPA',       label:'EPA 608 Cert',             group:'Certifications', default:false, locked:false},
-  {id:'cHVACE',     label:'HVAC Excellence Cert',     group:'Certifications', default:false, locked:false},
-  {id:'cJP',        label:'Journeyman Plumber Lic.',  group:'Certifications', default:false, locked:false},
-  {id:'cMP',        label:'Master Plumber Lic.',      group:'Certifications', default:false, locked:false},
-  {id:'cCW',        label:'CW',                       group:'Certifications', default:false, locked:false},
-  {id:'cCWI',       label:'CWI',                      group:'Certifications', default:false, locked:false},
-  {id:'cCLC',       label:'CLC',                      group:'Certifications', default:false, locked:false},
-  {id:'cMCAA',      label:'MCAA',                     group:'Certifications', default:false, locked:false},
+  {id:'certs',      label:'Certifications',           group:'Certifications', default:false, locked:false},
   // Demographic
   {id:'ji',         label:'Job Interest',      group:'Demographics', default:true,  locked:false},
   {id:'employment', label:'Employment Status', group:'Demographics', default:false, locked:false},
   {id:'gender',     label:'Gender',            group:'Demographics', default:false, locked:false},
+  {id:'industry',   label:'Industry',          group:'Demographics', default:false, locked:false},
 ];
 
 // Active column order (array of col ids, maintained by drag-drop)
@@ -1373,25 +1356,20 @@ function getCellValue(colId, r, w, e, n) {
     case 'tWarehouse': return {display: triviaScore(n,'Trivia Warehouse Score'), raw:0};
     case 'tHeavy':     return {display: triviaScore(n,'Trivia Heavy Equipment Technician Score'), raw:0};
     case 'triviaSum':  return {display: r.trivia, raw: 0, style:'font-size:11px;color:var(--muted);max-width:200px'};
-    case 'cCDL':       return {display: cert(w,0), raw:0};
-    case 'cHEO':       return {display: cert(w,1), raw:0};
-    case 'cJE':        return {display: cert(w,2), raw:0};
-    case 'cME':        return {display: cert(w,3), raw:0};
-    case 'cNEC':       return {display: cert(w,4), raw:0};
-    case 'cCCM':       return {display: cert(w,5), raw:0};
-    case 'cPMP':       return {display: cert(w,6), raw:0};
-    case 'cCCO':       return {display: cert(w,7), raw:0};
-    case 'cEPA':       return {display: cert(w,8), raw:0};
-    case 'cHVACE':     return {display: cert(w,9), raw:0};
-    case 'cJP':        return {display: cert(w,10), raw:0};
-    case 'cMP':        return {display: cert(w,11), raw:0};
-    case 'cCW':        return {display: cert(w,12), raw:0};
-    case 'cCWI':       return {display: cert(w,13), raw:0};
-    case 'cCLC':       return {display: cert(w,14), raw:0};
-    case 'cMCAA':      return {display: cert(w,15), raw:0};
+    case 'certs': {
+      if(!w) return {display:'—', raw:0};
+      const held=CERT_NAMES.filter((_,i)=>(w[CERT_COLS[i]]||'').trim()==='Yes');
+      return {display: held.length?held.join(', '):'None', raw:0, style:'font-size:11px;white-space:normal;max-width:200px'};
+    }
     case 'ji': {
       const v=r.ji;
       return {html: v==='Yes'?'<span class="ip-yes">Yes</span>':v==='Maybe'?'<span class="ip-maybe">Maybe</span>':v==='No'?'<span class="ip-no">No</span>':'<span class="ip-na">N/A</span>', raw:0};
+    }
+    case 'industry': {
+      if(!w) return {display:'—', raw:0};
+      const ind=(w['What industry do you work in?']||'').trim();
+      const other=(w['What industry do you work in']||'').trim();
+      return {display: ind==='Other'&&other ? 'Other: '+other : ind||'—', raw:0, style:'font-size:11px;color:var(--muted)'};
     }
     case 'employment': return {display: w?({
       'Currently employed in construction and/or a trade':'In Trades',
@@ -1431,7 +1409,7 @@ function renderTable(webRows,excRows,winRows){
         triviaStr=isNaN(score)?'DNC':selectedTest+': '+score.toFixed(0);
       } else {
         const taken=Object.entries(TRIVIA_COLS).filter(([nm,col])=>n[col]!==''&&n[col]!=null&&!isNaN(parseFloat(n[col])));
-        if(taken.length){const scores=taken.map(([nm,col])=>parseFloat(n[col]));triviaStr=taken.map(([nm])=>nm).join(', ')+' (avg '+(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1)+')';}
+        if(taken.length){triviaStr=taken.map(([nm,col])=>nm+': '+parseFloat(n[col]).toFixed(0)).join(', ');}
       }
     }
     const rawPhone=w?String(w['Mobile Phone']||'').split('.')[0].replace(/[^\d]/g,''):e?String(e['Login Code']||'').replace(/[^\d]/g,''):phone;
