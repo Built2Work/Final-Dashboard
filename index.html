@@ -350,6 +350,24 @@ footer{border-top:1px solid var(--border);}
 
 /* ops page moved to operations.html */
 
+
+/* MULTI-SELECT EVENT PICKER */
+.ms-wrap{position:relative;}
+.ms-btn{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);padding:6px 30px 6px 12px;border-radius:4px;cursor:pointer;transition:border-color .2s;white-space:nowrap;position:relative;min-width:160px;text-align:left;display:inline-block;}
+.ms-btn::after{content:'\25BE';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:10px;}
+.ms-btn:hover,.ms-btn.open{border-color:var(--accent);}
+.ms-btn .badge{display:inline-block;background:var(--accent);color:#fff;font-size:10px;font-weight:900;padding:0 5px;border-radius:2px;margin-left:6px;vertical-align:middle;}
+.ms-panel{position:absolute;top:calc(100% + 4px);right:0;min-width:220px;background:var(--surface);border:1.5px solid var(--border);border-radius:4px;z-index:200;box-shadow:0 8px 28px rgba(0,0,0,.5);overflow:hidden;display:none;}
+.ms-panel.open{display:block;}
+.ms-all{padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;transition:background .15s;}
+.ms-all:hover{background:var(--surface2);}
+.ms-all.active{color:var(--accent);}
+.ms-option{padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background .15s;border-left:3px solid transparent;}
+.ms-option:hover{background:var(--surface2);}
+.ms-option.selected{border-left-color:var(--accent);}
+.ms-check{width:14px;height:14px;border:1.5px solid var(--border);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s;}
+.ms-option.selected .ms-check{background:var(--accent);border-color:var(--accent);color:#fff;}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
 // operations page logic moved to operations.html
@@ -409,7 +427,15 @@ footer{border-top:1px solid var(--border);}
       <div class="refresh-dot"></div>
       <span class="refresh-label">Updated <span id="lastRefreshTime">&mdash;</span></span>
     </div>
-    <select class="event-select" id="eventSelect" onchange="onEventChange()"><option value="ALL">All Events</option></select>
+    <div class="ms-wrap" id="msWrap">
+      <button class="ms-btn" id="msBtn" onclick="togglePicker()">All Events</button>
+      <div class="ms-panel" id="msPanel">
+        <div class="ms-all active" id="msAll" onclick="selectAllEvents()">
+          <span class="ms-check" id="msAllCheck">&#10003;</span>All Events
+        </div>
+        <div id="msOptions"></div>
+      </div>
+    </div>
     <button class="hbtn hbtn-blue" onclick="refreshData()">&#8635; Refresh</button>
     <button class="hbtn hbtn-danger" id="clearFiltersBtn" onclick="clearAllFilters()" style="display:none;">&#x2715; Clear Filters</button>
     <a href="operations.html" class="hbtn hbtn-muted" style="text-decoration:none">&#9632; Operations</a>
@@ -525,7 +551,7 @@ function exportPDF(){
 
     // ── Build filter summary string ────────────────────────────────────────
     const parts = [];
-    if(filters.event !== 'ALL') parts.push('Event: ' + filters.event);
+    if(filters.events.size>0) parts.push('Events: '+[...filters.events].join(', '));
     if(filters.jobInterest.size > 0) parts.push('Interest: ' + [...filters.jobInterest].join(', '));
     if(filters.employment.size > 0) parts.push('Employment: ' + [...filters.employment].map(e => ({
       'Currently employed in construction and/or a trade':'Trades',
@@ -689,7 +715,7 @@ function exportPDF(){
     // ── Download ────────────────────────────────────────────────────────────
     const now = new Date();
     const stamp = now.toISOString().slice(0,10);
-    const eventTag = filters.event === 'ALL' ? 'All-Events' : filters.event.replace(/\s+/g,'-');
+    const eventTag = filters.events.size===0 ? 'All-Events' : [...filters.events].map(e=>e.replace(/\s+/g,'-')).join('_');
     const filename = 'BTW-Participants_' + eventTag + '_' + stamp + '.pdf';
 
     // Use blob URL for reliable cross-browser download
@@ -802,7 +828,7 @@ const CERT_NAMES=['CDL','HEO Cert','Journeyman Electrician','Master Electrician'
 const CERT_COLS=['Trade Certifications or Licenses','Trade Certifications or Licenses_1','Trade Certifications or Licenses_2','Trade Certifications or Licenses_3','Trade Certifications or Licenses_4','Trade Certifications or Licenses_5','Trade Certifications or Licenses_6','Trade Certifications or Licenses_7','Trade Certifications or Licenses_8','Trade Certifications or Licenses_9','Trade Certifications or Licenses_10','Trade Certifications or Licenses_11','Trade Certifications or Licenses_12','Trade Certifications or Licenses_13','Trade Certifications or Licenses_14','Trade Certifications or Licenses_15'];
 const TRIVIA_COLS={'Auto Mechanic':'Trivia Auto Mechanic Score','Civil Construction':'Trivia Civil Construction Score','Electrical':'Trivia Electrical Score','Plumbing':'Trivia Plumbing Score','Welding':'Trivia Welding Score','Construction Labor':'Trivia Construction Labor Score','HVAC':'Trivia HVAC Score','Warehouse':'Trivia Warehouse Score','Heavy Equipment Tech':'Trivia Heavy Equipment Technician Score'};
 
-let filters={event:'ALL',excMin:0,excMax:100,jobInterest:new Set(),employment:new Set(),scoreSegs:new Set(),ageGroups:new Set(),gender:new Set(),states:new Set(),trivia:new Set(),triviaScoreMin:0,triviaScoreMax:20,certs:new Set()};
+let filters={events:new Set(),excMin:0,excMax:100,jobInterest:new Set(),employment:new Set(),scoreSegs:new Set(),ageGroups:new Set(),gender:new Set(),states:new Set(),trivia:new Set(),triviaScoreMin:0,triviaScoreMax:20,certs:new Set()};
 
 // AUTH
 window.addEventListener('DOMContentLoaded', async ()=>{
@@ -951,12 +977,72 @@ function getAge(dob){if(!dob)return null;const d=new Date(dob);if(isNaN(d))retur
 function ageGroup(age){if(!age||age<18)return null;const bins=[[18,20],[21,25],[26,30],[31,35],[36,40],[41,45],[46,50],[51,55],[56,60],[61,65],[66,70],[71,75],[76,80]];for(const [lo,hi] of bins)if(age>=lo&&age<=hi)return lo+'-'+hi;return '80+';}
 function excScoreSeg(s){if(s==null)return null;if(s<=10)return '0-10';if(s<=20)return '11-20';if(s<=30)return '21-30';if(s<=40)return '31-40';if(s<=50)return '41-50';if(s<=60)return '51-60';if(s<=70)return '61-70';if(s<=80)return '71-80';if(s<=90)return '81-90';return '91-100';}
 function getEvents(){const ev=new Set(['ALL']);[...rawWeb,...rawExc,...rawWin].forEach(r=>{const e=(r['Event Name']||'').trim();if(e)ev.add(e);});return [...ev];}
-function populateEventDropdown(){const sel=document.getElementById('eventSelect');sel.innerHTML='';getEvents().forEach(e=>{const o=document.createElement('option');o.value=e;o.textContent=e==='ALL'?'All Events':e;sel.appendChild(o);});}
-function onEventChange(){filters.event=document.getElementById('eventSelect').value;render();}
+function populateEventDropdown(){
+  const allNames=getEvents().filter(e=>e!=='ALL');
+  const container=document.getElementById('msOptions');
+  if(!container)return;
+  container.innerHTML='';
+  allNames.forEach(name=>{
+    const div=document.createElement('div');
+    div.className='ms-option'+(filters.events.has(name)?' selected':'');
+    div.innerHTML=`<span class="ms-check">${filters.events.has(name)?'&#10003;':''}</span>${name}`;
+    div.onclick=()=>toggleEventFilter(name);
+    container.appendChild(div);
+  });
+  updatePickerLabel();
+}
+function togglePicker(){
+  const btn=document.getElementById('msBtn');
+  const panel=document.getElementById('msPanel');
+  const open=panel.classList.toggle('open');
+  btn.classList.toggle('open',open);
+  if(open) setTimeout(()=>document.addEventListener('click',closePickerOutside,{once:true}),0);
+}
+function closePickerOutside(e){
+  const wrap=document.getElementById('msWrap');
+  if(wrap&&!wrap.contains(e.target)){
+    document.getElementById('msPanel').classList.remove('open');
+    document.getElementById('msBtn').classList.remove('open');
+  }
+}
+function selectAllEvents(){
+  filters.events.clear();
+  populateEventDropdown();
+  render();
+}
+function toggleEventFilter(name){
+  if(filters.events.has(name)) filters.events.delete(name);
+  else filters.events.add(name);
+  // If all events selected manually treat as All
+  const allNames=getEvents().filter(e=>e!=='ALL');
+  if(filters.events.size===allNames.length) filters.events.clear();
+  populateEventDropdown();
+  render();
+}
+function updatePickerLabel(){
+  const btn=document.getElementById('msBtn');
+  const allCheck=document.getElementById('msAllCheck');
+  const allDiv=document.getElementById('msAll');
+  if(!btn)return;
+  if(filters.events.size===0){
+    btn.innerHTML='All Events';
+    if(allCheck)allCheck.innerHTML='&#10003;';
+    if(allDiv)allDiv.classList.add('active');
+  } else if(filters.events.size===1){
+    btn.innerHTML=[...filters.events][0];
+    if(allCheck)allCheck.innerHTML='';
+    if(allDiv)allDiv.classList.remove('active');
+  } else {
+    btn.innerHTML='Events <span class="badge">'+filters.events.size+'</span>';
+    if(allCheck)allCheck.innerHTML='';
+    if(allDiv)allDiv.classList.remove('active');
+  }
+}
+function onEventChange(){render();}
 
 // FILTERING
 function filteredWeb(){return rawWeb.filter(r=>{
-  if(filters.event!=='ALL'&&(r['Event Name']||'').trim()!==filters.event)return false;
+  if(filters.events.size>0&&!filters.events.has((r['Event Name']||'').trim()))return false;
   if(filters.employment.size>0&&!filters.employment.has((r['Job Status']||'').trim()))return false;
   if(filters.jobInterest.size>0&&!filters.jobInterest.has((r['Interested in Construction Jobs']||'').trim()))return false;
   if(filters.ageGroups.size>0){const ag=ageGroup(getAge(r['DOB']));if(!ag||!filters.ageGroups.has(ag))return false;}
@@ -972,13 +1058,13 @@ function filteredWeb(){return rawWeb.filter(r=>{
   return true;
 });}
 function filteredExc(){return rawExc.filter(r=>{
-  if(filters.event!=='ALL'&&(r['Event Name']||'').trim()!==filters.event)return false;
+  if(filters.events.size>0&&!filters.events.has((r['Event Name']||'').trim()))return false;
   const s=parseFloat(r['Total Score']);
   if(!isNaN(s)){if(s<filters.excMin||s>filters.excMax)return false;if(filters.scoreSegs.size>0&&!filters.scoreSegs.has(excScoreSeg(s)))return false;}
   return true;
 });}
 function filteredWin(){return rawWin.filter(r=>{
-  if(filters.event!=='ALL'&&(r['Event Name']||'').trim()!==filters.event)return false;
+  if(filters.events.size>0&&!filters.events.has((r['Event Name']||'').trim()))return false;
   if(filters.trivia.size>0){
     const took=[...filters.trivia].some(t=>{const col=TRIVIA_COLS[t];return col&&r[col]!==''&&r[col]!=null&&!isNaN(parseFloat(r[col]));});
     if(!took)return false;
@@ -1039,7 +1125,7 @@ function onTriviaRange(){
   updateActiveCount();render();
 }
 function updateActiveCount(){let n=0;if(filters.excMin>0||filters.excMax<100)n++;['jobInterest','employment','scoreSegs','ageGroups','gender','states','trivia','certs'].forEach(k=>{if(filters[k].size>0)n+=filters[k].size;});if(filters.triviaScoreMin>0||filters.triviaScoreMax<20)n++;const el=document.getElementById('activeCount'),btn=document.getElementById('clearFiltersBtn');el.textContent=n;el.style.display=n>0?'inline':'none';btn.style.display=n>0?'inline':'none';}
-function clearAllFilters(){filters.excMin=0;filters.excMax=100;document.getElementById('excMin').value=0;document.getElementById('excMax').value=100;document.getElementById('excMinVal').textContent=0;document.getElementById('excMaxVal').textContent=100;['jobInterest','employment','scoreSegs','ageGroups','gender','states','trivia','certs'].forEach(k=>filters[k].clear());filters.triviaScoreMin=0;filters.triviaScoreMax=20;const tsMin=document.getElementById('triviaScoreMin');const tsMax=document.getElementById('triviaScoreMax');if(tsMin){tsMin.value=0;tsMax.value=20;document.getElementById('tsMinVal').textContent=0;document.getElementById('tsMaxVal').textContent=20;}document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));updateActiveCount();render();}
+function clearAllFilters(){filters.events.clear();filters.excMin=0;filters.excMax=100;document.getElementById('excMin').value=0;document.getElementById('excMax').value=100;document.getElementById('excMinVal').textContent=0;document.getElementById('excMaxVal').textContent=100;['jobInterest','employment','scoreSegs','ageGroups','gender','states','trivia','certs'].forEach(k=>filters[k].clear());filters.triviaScoreMin=0;filters.triviaScoreMax=20;const tsMin=document.getElementById('triviaScoreMin');const tsMax=document.getElementById('triviaScoreMax');if(tsMin){tsMin.value=0;tsMax.value=20;document.getElementById('tsMinVal').textContent=0;document.getElementById('tsMaxVal').textContent=20;}document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));updateActiveCount();render();}
 function toggleFilter(key,value){if(filters[key] instanceof Set){if(filters[key].has(value))filters[key].delete(value);else filters[key].add(value);document.querySelectorAll('.filter-chip').forEach(c=>{if(c.dataset.value===value)c.classList.toggle('active',filters[key].has(value));});}updateActiveCount();render();}
 
 // RENDER
