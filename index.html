@@ -380,11 +380,13 @@ footer{border-top:1px solid var(--border);}
 .col-modal-body{overflow-y:auto;padding:14px 20px;flex:1;}
 .col-group-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:6px;}
 .col-group-title:not(:first-child){margin-top:14px;}
-.col-items{display:grid;grid-template-columns:1fr 1fr;gap:3px;}
+.col-items{display:flex;flex-direction:column;gap:2px;}
 .col-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:3px;cursor:grab;border:1px solid transparent;transition:background .1s;user-select:none;}
 .col-item:hover{background:var(--surface2);}
 .col-item.dragging{opacity:.4;border-color:var(--accent);}
 .col-item.drag-over{background:rgba(206,14,45,.1);border-color:var(--accent);}
+.col-item.drag-above{border-top:2px solid var(--accent) !important;}
+.col-item.drag-below{border-bottom:2px solid var(--accent) !important;}
 .col-item.locked{cursor:default;opacity:.5;}
 .col-drag-handle{color:var(--muted);font-size:12px;flex-shrink:0;cursor:grab;}
 .col-check{width:14px;height:14px;accent-color:var(--accent);flex-shrink:0;cursor:pointer;}
@@ -402,9 +404,185 @@ footer{border-top:1px solid var(--border);}
 // operations page logic moved to operations.html
 
 
+
+// ─── EXCEL EXPORT ────────────────────────────────────────────────────────────
+function exportExcel(){
+  try {
+    if(typeof XLSX === 'undefined'){
+      alert('Excel library is still loading. Please wait a moment and try again.');
+      return;
+    }
+    const rows = window._lastTableRows || [];
+    if(!rows.length){
+      alert('No participants to export. Make sure data is loaded and visible in the table.');
+      return;
+    }
+
+    const pdfColDefs = activeColIds.map(id=>ALL_COLS.find(c=>c.id===id)).filter(Boolean);
+
+    // ── Build data rows ────────────────────────────────────────────────────
+    const headerRow = ['#', ...pdfColDefs.map(c=>c.label)];
+    const dataRows  = rows.map((r,i)=>{
+      const w=r._w, e=r._e, n=r._n;
+      return [i+1, ...pdfColDefs.map(col=>{
+        const v = getCellValue(col.id, r, w, e, n);
+        const raw = v.html ? v.html.replace(/<[^>]+>/g,'').trim() : (v.display||'');
+        return raw === '—' ? '' : raw;
+      })];
+    });
+
+    // ── Build worksheet ───────────────────────────────────────────────────
+    const wb = XLSX.utils.book_new();
+    const wsData = [headerRow, ...dataRows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // ── Column widths ─────────────────────────────────────────────────────
+    const COL_CHARS = {
+      name:22, phone:16, email:28, addr:28, city:16, state:8, event:22,
+      excScore:10, excSafety:10, excProd:12,
+      tAuto:10, tCivil:10, tElec:10, tPlumb:10, tWeld:10,
+      tConst:10, tHvac:10, tWarehouse:10, tHeavy:10,
+      triviaSum:42, certs:36, ji:14, employment:22, gender:12, industry:22,
+    };
+    ws['!cols'] = [
+      {wch:5},  // # column
+      ...pdfColDefs.map(c=>({wch: COL_CHARS[c.id]||18}))
+    ];
+
+    // ── Row heights — taller rows for cert/trivia to show all content ──────
+    ws['!rows'] = [{hpt:22}]; // header row
+    dataRows.forEach((_,i)=>{
+      // Check if this row has a certs or triviaSum value longer than one line
+      const certIdx = pdfColDefs.findIndex(c=>c.id==='certs');
+      const trivIdx = pdfColDefs.findIndex(c=>c.id==='triviaSum');
+      let maxLines = 1;
+      if(certIdx>=0){
+        const val = String(wsData[i+1][certIdx+1]||'');
+        const commas = (val.match(/,/g)||[]).length;
+        maxLines = Math.max(maxLines, commas+1);
+      }
+      if(trivIdx>=0){
+        const val = String(wsData[i+1][trivIdx+1]||'');
+        const commas = (val.match(/,/g)||[]).length;
+        maxLines = Math.max(maxLines, commas+1);
+      }
+      ws['!rows'].push({hpt: Math.max(18, maxLines*15)});
+    });
+
+    // ── Cell styles using SheetJS style API ───────────────────────────────
+    const HEADER_FILL   = {fgColor:{rgb:'0D0D0D'}};
+    const HEADER_FONT   = {name:'Calibri',sz:10,bold:true,color:{rgb:'CE0E2D'}};
+    const HEADER_ALIGN  = {horizontal:'center',vertical:'center',wrapText:true};
+    const BORDER        = {top:{style:'thin',color:{rgb:'D2D5D8'}},bottom:{style:'thin',color:{rgb:'D2D5D8'}},left:{style:'thin',color:{rgb:'D2D5D8'}},right:{style:'thin',color:{rgb:'D2D5D8'}}};
+    const CELL_FONT     = {name:'Calibri',sz:9};
+    const ALT_FILL      = {fgColor:{rgb:'F7F7F7'}};
+    const GREEN_FONT    = {name:'Calibri',sz:9,bold:true,color:{rgb:'1E8C3C'}};
+    const AMBER_FONT    = {name:'Calibri',sz:9,bold:true,color:{rgb:'B46E00'}};
+    const RED_FONT      = {name:'Calibri',sz:9,color:{rgb:'B41E1E'}};
+    const DNC_FONT      = {name:'Calibri',sz:9,color:{rgb:'969696'}};
+    const WRAP_ALIGN    = {vertical:'top',wrapText:true};
+    const CENTER_ALIGN  = {horizontal:'center',vertical:'center'};
+    const TOP_ALIGN     = {vertical:'top',wrapText:false};
+
+    const numCols = headerRow.length;
+    const numRows = wsData.length;
+    const colLetter = n => {
+      let s='';let r=n;
+      while(r>=0){s=String.fromCharCode(65+(r%26))+s;r=Math.floor(r/26)-1;}
+      return s;
+    };
+
+    // Style header row
+    for(let c=0;c<numCols;c++){
+      const addr = colLetter(c)+'1';
+      if(!ws[addr]) ws[addr]={v:headerRow[c],t:'s'};
+      ws[addr].s = {fill:HEADER_FILL,font:HEADER_FONT,alignment:HEADER_ALIGN,border:BORDER};
+    }
+
+    // Style data rows
+    for(let r=1;r<numRows;r++){
+      const isAlt = r%2===0;
+      for(let c=0;c<numCols;c++){
+        const addr = colLetter(c)+(r+1);
+        if(!ws[addr]) ws[addr]={v:'',t:'s'};
+        const col = pdfColDefs[c-1];
+        const val = String(ws[addr].v||'');
+        let font = {...CELL_FONT};
+        let fill = isAlt?ALT_FILL:{};
+        let align = TOP_ALIGN;
+
+        if(c===0){ align=CENTER_ALIGN; }
+
+        if(col){
+          if(col.id==='excScore'){
+            if(val==='DNC') font={...DNC_FONT};
+            else if(parseInt(val)>=72) font={...GREEN_FONT};
+          }
+          if(col.id==='ji'){
+            if(val==='Yes') font={...GREEN_FONT};
+            else if(val==='Maybe') font={...AMBER_FONT};
+            else if(val==='No') font={...RED_FONT};
+          }
+          if(['certs','triviaSum'].includes(col.id)){
+            align={...WRAP_ALIGN};
+          }
+        }
+        ws[addr].s = {font,fill,alignment:align,border:BORDER};
+      }
+    }
+
+    // ── Freeze top row + enable autofilter ────────────────────────────────
+    ws['!freeze'] = {xSplit:0, ySplit:1, topLeftCell:'A2', activeCell:'A2', sqref:'A2'};
+    ws['!autofilter'] = {ref: `A1:${colLetter(numCols-1)}1`};
+
+    // ── Meta sheet with filter summary ────────────────────────────────────
+    const parts = [];
+    if(filters.events.size>0) parts.push('Events: '+[...filters.events].join(', '));
+    if(filters.jobInterest.size>0) parts.push('Job Interest: '+[...filters.jobInterest].join(', '));
+    if(filters.employment.size>0) parts.push('Employment: '+[...filters.employment].map(e=>({
+      'Currently employed in construction and/or a trade':'Trades',
+      'Currently employed in another industry':'Other Industry',
+      'Retired':'Retired','Student':'Student',
+      'Unemployed and looking for work':'Unemployed','Other':'Other'
+    }[e]||e)).join(', '));
+    if(filters.states.size>0) parts.push('States: '+[...filters.states].join(', '));
+    if(filters.certs.size>0) parts.push('Certs: '+[...filters.certs].join(', '));
+    if(filters.trivia.size>0) parts.push('Trivia: '+[...filters.trivia].join(', '));
+    if(filters.excMin>0||filters.excMax<100) parts.push('EXC Score: '+filters.excMin+'\u2013'+filters.excMax);
+
+    const metaData = [
+      ['Built to Work — Event Analytics Export'],
+      ['Generated:', new Date().toLocaleString()],
+      ['Participants:', rows.length],
+      [''],
+      ['Active Filters:'],
+      ...(parts.length ? parts.map(p=>[p]) : [['None — all participants']]),
+    ];
+    const wsMeta = XLSX.utils.aoa_to_sheet(metaData);
+    wsMeta['!cols'] = [{wch:20},{wch:60}];
+    if(wsMeta['A1']) wsMeta['A1'].s = {font:{name:'Calibri',sz:14,bold:true,color:{rgb:'CE0E2D'}}};
+
+    // ── Assemble and save ─────────────────────────────────────────────────
+    XLSX.utils.book_append_sheet(wb, ws, 'Participants');
+    XLSX.utils.book_append_sheet(wb, wsMeta, 'Export Info');
+
+    const now=new Date();
+    const stamp=now.toISOString().slice(0,10);
+    const eventTag=filters.events.size===0?'All-Events':[...filters.events].map(e=>e.replace(/\s+/g,'-')).join('_');
+    XLSX.writeFile(wb, `BTW-Participants_${eventTag}_${stamp}.xlsx`, {
+      bookType:'xlsx', type:'binary', cellStyles:true
+    });
+
+  } catch(err){
+    console.error('Excel export error:', err);
+    alert('Excel export failed: '+err.message);
+  }
+}
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -1134,7 +1312,8 @@ function renderKPIs(w,e,n){
 }
 function renderGrid(webRows,excRows,winRows){
   document.getElementById('dashGrid').innerHTML=`<div class="card"><div class="card-title"><span class="dot"></span>EXC Score Distribution <span class="fab" id="badgeExc">FILTERED</span></div><div class="chart-wrap"><canvas id="chartExc"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Employment Status <span class="fab" id="badgeEmp">FILTERED</span></div><div class="chart-wrap"><canvas id="chartEmp"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Interest in Construction Jobs <span class="fab" id="badgeJI">FILTERED</span></div><div class="chart-wrap"><canvas id="chartJI"></canvas></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Age Distribution <span class="fab" id="badgeAge">FILTERED</span></div><div class="chart-wrap"><canvas id="chartAge"></canvas></div></div><div class="card" style="grid-row:span 2"><div class="card-title"><span class="dot"></span>Trade Certifications &amp; Licenses <span class="fab" id="badgeCerts">FILTERED</span></div><div class="chart-wrap" style="min-height:460px"><canvas id="chartCerts"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Participants by State <span class="fab" id="badgeState">FILTERED</span></div><div class="state-grid" id="stateGrid"></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Windows Trivia \u2014 Tests Taken &amp; Avg Scores <span class="fab" id="badgeTrivia">FILTERED</span></div><table class="ttbl"><thead><tr><th>Test</th><th>Participants</th><th>Avg Score</th><th>Bar</th></tr></thead><tbody id="triviaBody"></tbody></table></div><div class="card full"><div class="card-title"><span class="dot"></span>Filtered Participants</div><div class="tbl-toolbar"><button class="tbl-toggle" id="showAllToggle" onclick="toggleShowAll()">Show Unmatched</button><input class="tbl-search" type="text" placeholder="Search name / phone\u2026" oninput="tblSearch=this.value;renderTable(window.webRows2,window.excRows2,window.winRows2)"><div class="tbl-count" id="tblCount"></div><button class="tbl-cols-btn" onclick="openColModal()">&#9776; Columns</button>
-        <button class="tbl-toggle" onclick="exportPDF()" style="border-color:var(--accent);color:var(--accent);white-space:nowrap;">&#8681; Export PDF</button></div><div class="table-scroll"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Address</th><th>State</th><th>Event</th><th>EXC Score</th><th>Trivia Tests (Avg)</th><th>Job Interest</th></tr></thead><tbody id="ptblBody"></tbody></table></div></div>`;
+        <button class="tbl-toggle" onclick="exportPDF()" style="border-color:var(--accent);color:var(--accent);white-space:nowrap;">&#8681; Export PDF</button>
+        <button class="tbl-toggle" onclick="exportExcel()" style="border-color:var(--green);color:var(--green);white-space:nowrap;">&#8681; Export Excel</button></div><div class="table-scroll"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Address</th><th>State</th><th>Event</th><th>EXC Score</th><th>Trivia Tests (Avg)</th><th>Job Interest</th></tr></thead><tbody id="ptblBody"></tbody></table></div></div>`;
   if(filters.scoreSegs.size>0||filters.excMin>0||filters.excMax<100){const b=document.getElementById('badgeExc');if(b)b.style.display='inline';}
   if(filters.employment.size>0){const b=document.getElementById('badgeEmp');if(b)b.style.display='inline';}
   if(filters.jobInterest.size>0){const b=document.getElementById('badgeJI');if(b)b.style.display='inline';}
@@ -1245,57 +1424,95 @@ function renderColModal(){
     gtitle.textContent = group;
     body.appendChild(gtitle);
 
-    const grid = document.createElement('div');
-    grid.className = 'col-items';
-    colsInGroup.forEach(col => {
-      const checked = pendingColIds.includes(col.id);
-      const item = document.createElement('div');
-      item.className = 'col-item' + (col.locked?' locked':'');
-      item.dataset.id = col.id;
-      item.draggable = !col.locked;
-      item.innerHTML = `<span class="col-drag-handle">&#8597;</span>
-        <input class="col-check" type="checkbox" id="chk_${col.id}" ${checked?'checked':''} ${col.locked?'disabled':''}>
-        <label class="col-label" for="chk_${col.id}">${col.label}</label>`;
-
-      // Checkbox change
-      item.querySelector('input').addEventListener('change', e => {
-        if(e.target.checked){
-          if(!pendingColIds.includes(col.id)) pendingColIds.push(col.id);
-        } else {
-          pendingColIds = pendingColIds.filter(id=>id!==col.id);
-        }
-      });
-
-      // Drag events
-      item.addEventListener('dragstart', e => {
-        dragSrcId = col.id;
-        item.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-      });
-      item.addEventListener('dragend', () => item.classList.remove('dragging'));
-      item.addEventListener('dragover', e => { e.preventDefault(); item.classList.add('drag-over'); });
-      item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
-      item.addEventListener('drop', e => {
-        e.preventDefault();
-        item.classList.remove('drag-over');
-        if(dragSrcId === col.id) return;
-        // Reorder in pendingColIds
-        const srcIdx = pendingColIds.indexOf(dragSrcId);
-        const dstIdx = pendingColIds.indexOf(col.id);
-        if(srcIdx !== -1 && dstIdx !== -1){
-          pendingColIds.splice(srcIdx, 1);
-          pendingColIds.splice(dstIdx, 0, dragSrcId);
-        } else if(srcIdx !== -1) {
-          // dragged from unchecked into checked — add and position
-          pendingColIds.splice(dstIdx >= 0 ? dstIdx : pendingColIds.length, 0, dragSrcId);
-        }
-        renderColModal();
-      });
-
-      grid.appendChild(item);
-    });
-    body.appendChild(grid);
+    const list = document.createElement('div');
+    list.className = 'col-items';
+    list.dataset.group = group;
+    colsInGroup.forEach(col => buildColItem(list, col));
+    body.appendChild(list);
   });
+}
+
+function buildColItem(list, col){
+  const checked = pendingColIds.includes(col.id);
+  const item = document.createElement('div');
+  item.className = 'col-item' + (col.locked?' locked':'');
+  item.dataset.id = col.id;
+  item.draggable = true;
+  item.innerHTML = `<span class="col-drag-handle">&#8597;</span>
+    <input class="col-check" type="checkbox" id="chk_${col.id}" ${checked?'checked':''} ${col.locked?'disabled':''}>
+    <label class="col-label" for="chk_${col.id}">${col.label}</label>`;
+
+  item.querySelector('input').addEventListener('change', e => {
+    if(e.target.checked){
+      if(!pendingColIds.includes(col.id)) pendingColIds.push(col.id);
+    } else {
+      pendingColIds = pendingColIds.filter(id=>id!==col.id);
+    }
+  });
+
+  // ── Robust drag-drop using dragover position ──────────────────────────────
+  item.addEventListener('dragstart', e => {
+    dragSrcId = col.id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', col.id);
+    setTimeout(() => item.classList.add('dragging'), 0);
+  });
+
+  item.addEventListener('dragend', () => {
+    item.classList.remove('dragging');
+    document.querySelectorAll('.col-item').forEach(el => el.classList.remove('drag-over','drag-above','drag-below'));
+  });
+
+  item.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    // Determine if cursor is in top or bottom half
+    const rect = item.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    item.classList.remove('drag-above','drag-below');
+    if(e.clientY < midY) item.classList.add('drag-above');
+    else item.classList.add('drag-below');
+  });
+
+  item.addEventListener('dragleave', e => {
+    item.classList.remove('drag-above','drag-below');
+  });
+
+  item.addEventListener('drop', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    item.classList.remove('drag-above','drag-below','dragging');
+    if(dragSrcId === col.id) return;
+
+    const rect = item.getBoundingClientRect();
+    const insertBefore = e.clientY < (rect.top + rect.height / 2);
+
+    // ── Reorder DOM ────────────────────────────────────────────────────────
+    const allItems = [...document.querySelectorAll('.col-item')];
+    const srcEl = allItems.find(el=>el.dataset.id===dragSrcId);
+    if(!srcEl) return;
+    const parent = item.parentNode;
+
+    if(srcEl.parentNode !== parent){
+      // Cross-group drag: move srcEl into target group
+      if(insertBefore) parent.insertBefore(srcEl, item);
+      else item.after(srcEl);
+    } else {
+      if(insertBefore) parent.insertBefore(srcEl, item);
+      else item.after(srcEl);
+    }
+
+    // ── Rebuild pendingColIds from current DOM order ───────────────────────
+    const newOrder = [...document.querySelectorAll('.col-item')]
+      .map(el=>el.dataset.id)
+      .filter(id=>pendingColIds.includes(id));
+    // Keep any pendingColIds not visible in modal (shouldn't happen but guard)
+    pendingColIds = [...new Set([...newOrder, ...pendingColIds])];
+
+    dragSrcId = null;
+  });
+
+  list.appendChild(item);
 }
 
 // ── CELL VALUE GETTER ─────────────────────────────────────────────────────────
