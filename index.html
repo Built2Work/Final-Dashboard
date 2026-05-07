@@ -420,7 +420,7 @@ function exportExcel(){
 
     const pdfColDefs = activeColIds.map(id=>ALL_COLS.find(c=>c.id===id)).filter(Boolean);
 
-    // ── Build data rows ────────────────────────────────────────────────────
+    // ── Build header + data ───────────────────────────────────────────────
     const headerRow = ['#', ...pdfColDefs.map(c=>c.label)];
     const dataRows  = rows.map((r,i)=>{
       const w=r._w, e=r._e, n=r._n;
@@ -433,109 +433,51 @@ function exportExcel(){
 
     // ── Build worksheet ───────────────────────────────────────────────────
     const wb = XLSX.utils.book_new();
-    const wsData = [headerRow, ...dataRows];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const ws = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows]);
 
     // ── Column widths ─────────────────────────────────────────────────────
     const COL_CHARS = {
-      name:22, phone:16, email:28, addr:28, city:16, state:8, event:22,
+      name:22, phone:16, email:30, addr:30, city:16, state:8,  event:22,
       excScore:10, excSafety:10, excProd:12,
       tAuto:10, tCivil:10, tElec:10, tPlumb:10, tWeld:10,
       tConst:10, tHvac:10, tWarehouse:10, tHeavy:10,
-      triviaSum:42, certs:36, ji:14, employment:22, gender:12, industry:22,
+      triviaSum:50, certs:40, ji:14, employment:24, gender:12, industry:24,
     };
     ws['!cols'] = [
-      {wch:5},  // # column
+      {wch:5},
       ...pdfColDefs.map(c=>({wch: COL_CHARS[c.id]||18}))
     ];
 
-    // ── Row heights — taller rows for cert/trivia to show all content ──────
-    ws['!rows'] = [{hpt:22}]; // header row
-    dataRows.forEach((_,i)=>{
-      // Check if this row has a certs or triviaSum value longer than one line
-      const certIdx = pdfColDefs.findIndex(c=>c.id==='certs');
-      const trivIdx = pdfColDefs.findIndex(c=>c.id==='triviaSum');
+    // ── Row heights ───────────────────────────────────────────────────────
+    const certIdx  = pdfColDefs.findIndex(c=>c.id==='certs');
+    const trivIdx  = pdfColDefs.findIndex(c=>c.id==='triviaSum');
+    ws['!rows'] = [{hpt:18}];
+    dataRows.forEach((row,i)=>{
       let maxLines = 1;
       if(certIdx>=0){
-        const val = String(wsData[i+1][certIdx+1]||'');
-        const commas = (val.match(/,/g)||[]).length;
-        maxLines = Math.max(maxLines, commas+1);
+        const val = String(row[certIdx+1]||'');
+        maxLines = Math.max(maxLines, (val.match(/,/g)||[]).length + 1);
       }
       if(trivIdx>=0){
-        const val = String(wsData[i+1][trivIdx+1]||'');
-        const commas = (val.match(/,/g)||[]).length;
-        maxLines = Math.max(maxLines, commas+1);
+        const val = String(row[trivIdx+1]||'');
+        maxLines = Math.max(maxLines, (val.match(/,/g)||[]).length + 1);
       }
-      ws['!rows'].push({hpt: Math.max(18, maxLines*15)});
+      ws['!rows'].push({hpt: Math.max(16, maxLines * 14)});
     });
 
-    // ── Cell styles using SheetJS style API ───────────────────────────────
-    const HEADER_FILL   = {fgColor:{rgb:'0D0D0D'}};
-    const HEADER_FONT   = {name:'Calibri',sz:10,bold:true,color:{rgb:'CE0E2D'}};
-    const HEADER_ALIGN  = {horizontal:'center',vertical:'center',wrapText:true};
-    const BORDER        = {top:{style:'thin',color:{rgb:'D2D5D8'}},bottom:{style:'thin',color:{rgb:'D2D5D8'}},left:{style:'thin',color:{rgb:'D2D5D8'}},right:{style:'thin',color:{rgb:'D2D5D8'}}};
-    const CELL_FONT     = {name:'Calibri',sz:9};
-    const ALT_FILL      = {fgColor:{rgb:'F7F7F7'}};
-    const GREEN_FONT    = {name:'Calibri',sz:9,bold:true,color:{rgb:'1E8C3C'}};
-    const AMBER_FONT    = {name:'Calibri',sz:9,bold:true,color:{rgb:'B46E00'}};
-    const RED_FONT      = {name:'Calibri',sz:9,color:{rgb:'B41E1E'}};
-    const DNC_FONT      = {name:'Calibri',sz:9,color:{rgb:'969696'}};
-    const WRAP_ALIGN    = {vertical:'top',wrapText:true};
-    const CENTER_ALIGN  = {horizontal:'center',vertical:'center'};
-    const TOP_ALIGN     = {vertical:'top',wrapText:false};
+    // ── Freeze header row ─────────────────────────────────────────────────
+    ws['!freeze'] = {xSplit:0, ySplit:1, topLeftCell:'A2', activeCell:'A2', sqref:'A2'};
 
-    const numCols = headerRow.length;
-    const numRows = wsData.length;
+    // ── Autofilter on header row ──────────────────────────────────────────
+    const lastCol = headerRow.length - 1;
     const colLetter = n => {
-      let s='';let r=n;
+      let s='', r=n;
       while(r>=0){s=String.fromCharCode(65+(r%26))+s;r=Math.floor(r/26)-1;}
       return s;
     };
+    ws['!autofilter'] = {ref:`A1:${colLetter(lastCol)}1`};
 
-    // Style header row
-    for(let c=0;c<numCols;c++){
-      const addr = colLetter(c)+'1';
-      if(!ws[addr]) ws[addr]={v:headerRow[c],t:'s'};
-      ws[addr].s = {fill:HEADER_FILL,font:HEADER_FONT,alignment:HEADER_ALIGN,border:BORDER};
-    }
-
-    // Style data rows
-    for(let r=1;r<numRows;r++){
-      const isAlt = r%2===0;
-      for(let c=0;c<numCols;c++){
-        const addr = colLetter(c)+(r+1);
-        if(!ws[addr]) ws[addr]={v:'',t:'s'};
-        const col = pdfColDefs[c-1];
-        const val = String(ws[addr].v||'');
-        let font = {...CELL_FONT};
-        let fill = isAlt?ALT_FILL:{};
-        let align = TOP_ALIGN;
-
-        if(c===0){ align=CENTER_ALIGN; }
-
-        if(col){
-          if(col.id==='excScore'){
-            if(val==='DNC') font={...DNC_FONT};
-            else if(parseInt(val)>=72) font={...GREEN_FONT};
-          }
-          if(col.id==='ji'){
-            if(val==='Yes') font={...GREEN_FONT};
-            else if(val==='Maybe') font={...AMBER_FONT};
-            else if(val==='No') font={...RED_FONT};
-          }
-          if(['certs','triviaSum'].includes(col.id)){
-            align={...WRAP_ALIGN};
-          }
-        }
-        ws[addr].s = {font,fill,alignment:align,border:BORDER};
-      }
-    }
-
-    // ── Freeze top row + enable autofilter ────────────────────────────────
-    ws['!freeze'] = {xSplit:0, ySplit:1, topLeftCell:'A2', activeCell:'A2', sqref:'A2'};
-    ws['!autofilter'] = {ref: `A1:${colLetter(numCols-1)}1`};
-
-    // ── Meta sheet with filter summary ────────────────────────────────────
+    // ── Meta / filter info sheet ──────────────────────────────────────────
     const parts = [];
     if(filters.events.size>0) parts.push('Events: '+[...filters.events].join(', '));
     if(filters.jobInterest.size>0) parts.push('Job Interest: '+[...filters.jobInterest].join(', '));
@@ -552,30 +494,29 @@ function exportExcel(){
 
     const metaData = [
       ['Built to Work — Event Analytics Export'],
-      ['Generated:', new Date().toLocaleString()],
-      ['Participants:', rows.length],
+      ['Generated', new Date().toLocaleString()],
+      ['Participants', rows.length],
       [''],
-      ['Active Filters:'],
+      ['Active Filters'],
       ...(parts.length ? parts.map(p=>[p]) : [['None — all participants']]),
     ];
     const wsMeta = XLSX.utils.aoa_to_sheet(metaData);
-    wsMeta['!cols'] = [{wch:20},{wch:60}];
-    if(wsMeta['A1']) wsMeta['A1'].s = {font:{name:'Calibri',sz:14,bold:true,color:{rgb:'CE0E2D'}}};
+    wsMeta['!cols'] = [{wch:22},{wch:60}];
 
-    // ── Assemble and save ─────────────────────────────────────────────────
+    // ── Write file ────────────────────────────────────────────────────────
     XLSX.utils.book_append_sheet(wb, ws, 'Participants');
     XLSX.utils.book_append_sheet(wb, wsMeta, 'Export Info');
 
-    const now=new Date();
-    const stamp=now.toISOString().slice(0,10);
-    const eventTag=filters.events.size===0?'All-Events':[...filters.events].map(e=>e.replace(/\s+/g,'-')).join('_');
-    XLSX.writeFile(wb, `BTW-Participants_${eventTag}_${stamp}.xlsx`, {
-      bookType:'xlsx', type:'binary', cellStyles:true
-    });
+    const stamp = new Date().toISOString().slice(0,10);
+    const eventTag = filters.events.size===0
+      ? 'All-Events'
+      : [...filters.events].map(e=>e.replace(/\s+/g,'-')).join('_');
+
+    XLSX.writeFile(wb, `BTW-Participants_${eventTag}_${stamp}.xlsx`);
 
   } catch(err){
     console.error('Excel export error:', err);
-    alert('Excel export failed: '+err.message);
+    alert('Excel export failed: ' + err.message + '\n\nCheck the browser console for details.');
   }
 }
 
