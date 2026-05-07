@@ -348,55 +348,63 @@ footer{border-top:1px solid var(--border);}
 #triviaScoreSection{transition:opacity .2s;}
 
 
-/* ops page moved to operations.html */
+/* ── TAB NAVIGATION ── */
+.tab-bar{display:flex;gap:0;border-bottom:2px solid #ce0e2d;flex-shrink:0;background:#111;}
+.tab-btn{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:10px 28px;border:none;background:transparent;color:#666;cursor:pointer;transition:all .2s;border-bottom:3px solid transparent;margin-bottom:-2px;}
+.tab-btn:hover{color:#e0e0e0;background:rgba(255,255,255,.04);}
+.tab-btn.active{color:#fff;background:rgba(206,14,45,.12);border-bottom-color:#ce0e2d;}
+.tab-page{display:none;flex:1;overflow-y:auto;flex-direction:column;}
+.tab-page.active{display:flex;}
+
+/* ── OPS PAGE ── */
+.ops-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 18px;}
+.ops-grid .card.full{grid-column:span 2;}
+.ops-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 18px 0;flex-shrink:0;}
+.ops-kpi-row .kpi-card{border-top-color:#ce0e2d;}
+.kpi-accent{font-family:'Oswald',sans-serif;font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:#ce0e2d;margin-top:4px;}
 
 
 /* MULTI-SELECT EVENT PICKER */
 .ms-wrap{position:relative;}
-.ms-btn{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);padding:6px 30px 6px 12px;border-radius:4px;cursor:pointer;transition:border-color .2s;white-space:nowrap;position:relative;min-width:160px;text-align:left;display:inline-block;}
+.ms-btn{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);padding:6px 30px 6px 12px;border-radius:4px;cursor:pointer;white-space:nowrap;position:relative;min-width:150px;text-align:left;display:inline-block;}
 .ms-btn::after{content:'\25BE';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:10px;}
 .ms-btn:hover,.ms-btn.open{border-color:var(--accent);}
 .ms-btn .badge{display:inline-block;background:var(--accent);color:#fff;font-size:10px;font-weight:900;padding:0 5px;border-radius:2px;margin-left:6px;vertical-align:middle;}
-.ms-panel{position:absolute;top:calc(100% + 4px);right:0;min-width:220px;background:var(--surface);border:1.5px solid var(--border);border-radius:4px;z-index:200;box-shadow:0 8px 28px rgba(0,0,0,.5);overflow:hidden;display:none;}
+.ms-panel{position:absolute;top:calc(100% + 4px);right:0;min-width:220px;background:var(--surface);border:1.5px solid var(--border);border-radius:4px;z-index:200;box-shadow:0 8px 28px rgba(0,0,0,.5);display:none;}
 .ms-panel.open{display:block;}
-.ms-all{padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;transition:background .15s;}
+.ms-all{padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
 .ms-all:hover{background:var(--surface2);}
 .ms-all.active{color:var(--accent);}
-.ms-option{padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background .15s;border-left:3px solid transparent;}
+.ms-option{padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:10px;border-left:3px solid transparent;}
 .ms-option:hover{background:var(--surface2);}
 .ms-option.selected{border-left-color:var(--accent);}
-.ms-check{width:14px;height:14px;border:1.5px solid var(--border);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s;}
+.ms-check{width:14px;height:14px;border:1.5px solid var(--border);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;}
 .ms-option.selected .ms-check{background:var(--accent);border-color:var(--accent);color:#fff;}
-
-
 /* COLUMN SELECTOR MODAL */
 .col-modal-overlay{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;}
 .col-modal-overlay.open{display:flex;}
-.col-modal{background:var(--surface);border:1px solid var(--border);border-radius:6px;width:560px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 12px 48px rgba(0,0,0,.5);}
+.col-modal{background:var(--surface);border:1px solid var(--border);border-radius:6px;width:520px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 12px 48px rgba(0,0,0,.5);}
 .col-modal-header{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .col-modal-title{font-family:'Oswald',sans-serif;font-size:16px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text);}
-.col-modal-close{background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:3px;transition:color .15s;}
+.col-modal-close{background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:3px;}
 .col-modal-close:hover{color:var(--text);}
 .col-modal-body{overflow-y:auto;padding:14px 20px;flex:1;}
 .col-group-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:6px;}
 .col-group-title:not(:first-child){margin-top:14px;}
 .col-items{display:flex;flex-direction:column;gap:2px;}
-.col-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:3px;cursor:grab;border:1px solid transparent;transition:background .1s;user-select:none;}
+.col-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:3px;cursor:grab;border:1px solid transparent;user-select:none;}
 .col-item:hover{background:var(--surface2);}
-.col-item.dragging{opacity:.4;border-color:var(--accent);}
-.col-item.drag-over{background:rgba(206,14,45,.1);border-color:var(--accent);}
-.col-item.drag-above{border-top:2px solid var(--accent) !important;}
-.col-item.drag-below{border-bottom:2px solid var(--accent) !important;}
-.col-item.locked{cursor:default;opacity:.5;}
-.col-drag-handle{color:var(--muted);font-size:12px;flex-shrink:0;cursor:grab;}
+.col-item.dragging{opacity:.4;}
+.col-item.drag-above{border-top:2px solid var(--accent)!important;}
+.col-item.drag-below{border-bottom:2px solid var(--accent)!important;}
+.col-drag-handle{color:var(--muted);font-size:12px;flex-shrink:0;}
 .col-check{width:14px;height:14px;accent-color:var(--accent);flex-shrink:0;cursor:pointer;}
-.col-label{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.col-label{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;color:var(--text);}
 .col-modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
-.col-reset-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border:1.5px solid var(--border);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;transition:all .15s;}
+.col-reset-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border:1.5px solid var(--border);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;}
 .col-reset-btn:hover{border-color:var(--accent);color:var(--accent);}
-.col-apply-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 20px;border:none;background:var(--accent);color:#fff;border-radius:3px;cursor:pointer;margin-left:auto;transition:background .15s;}
-.col-apply-btn:hover{background:#a00b22;}
-.tbl-cols-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border:1.5px solid var(--border);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.col-apply-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 20px;border:none;background:var(--accent);color:#fff;border-radius:3px;cursor:pointer;margin-left:auto;}
+.tbl-cols-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border:1.5px solid var(--border);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;}
 .tbl-cols-btn:hover{border-color:var(--accent);color:var(--accent);}
 
 </style>
@@ -458,9 +466,7 @@ footer{border-top:1px solid var(--border);}
     <div class="ms-wrap" id="msWrap">
       <button class="ms-btn" id="msBtn" onclick="togglePicker()">All Events</button>
       <div class="ms-panel" id="msPanel">
-        <div class="ms-all active" id="msAll" onclick="selectAllEvents()">
-          <span class="ms-check" id="msAllCheck">&#10003;</span>All Events
-        </div>
+        <div class="ms-all active" id="msAll" onclick="selectAllEvents()"><span class="ms-check" id="msAllCheck">&#10003;</span>All Events</div>
         <div id="msOptions"></div>
       </div>
     </div>
@@ -468,9 +474,20 @@ footer{border-top:1px solid var(--border);}
     <button class="hbtn hbtn-danger" id="clearFiltersBtn" onclick="clearAllFilters()" style="display:none;">&#x2715; Clear Filters</button>
     <a href="operations.html" class="hbtn hbtn-muted" style="text-decoration:none">&#9632; Operations</a>
     <button class="hbtn hbtn-muted" onclick="doLogout()">Sign Out</button>
+  </div></div>
+      <span class="refresh-label">Updated <span id="lastRefreshTime">&mdash;</span></span>
+    </div>
+    <select class="event-select" id="eventSelect" onchange="onEventChange()"><option value="ALL">All Events</option></select>
+    <button class="hbtn hbtn-blue" onclick="refreshData()">&#8635; Refresh</button>
+    <button class="hbtn hbtn-danger" id="clearFiltersBtn" onclick="clearAllFilters()" style="display:none;">&#x2715; Clear Filters</button>
+    <button class="hbtn hbtn-muted" onclick="doLogout()">Sign Out</button>
   </div>
 </header>
 
+<div class="tab-bar" id="tabBar" style="display:none;">
+  <button class="tab-btn active" onclick="switchTab('analytics')">&#9632; Analytics</button>
+  <button class="tab-btn" onclick="switchTab('operations')">&#9632; Operations</button>
+</div>
 <div id="appLayout" style="display:none;">
   <!-- SIDEBAR -->
   <div id="sidebar">
@@ -546,15 +563,171 @@ footer{border-top:1px solid var(--border);}
   </div>
 
   <!-- MAIN -->
-  <div id="mainContent">
+  <div id="mainContent" class="tab-page active" data-tab="analytics">
     <div class="kpi-row" id="kpiRow"></div>
     <div class="dash-grid" id="dashGrid"></div>
     <footer>BUILT TO WORK &bull; <span style="color:#ce0e2d;font-weight:700">POWERING THE AMERICAN WORKFORCE</span> &bull; Event Analytics Dashboard &bull; 2026</footer>
   </div>
+
+  <!-- OPERATIONS PAGE -->
+  <div id="opsContent" class="tab-page" data-tab="operations">
+    <div class="ops-kpi-row" id="opsKpiRow"></div>
+    <div class="ops-grid" id="opsGrid"></div>
+    <footer>BUILT TO WORK &bull; <span style="color:#ce0e2d;font-weight:700">POWERING THE AMERICAN WORKFORCE</span> &bull; Operations Dashboard &bull; 2026</footer>
+  </div>
 </div>
 
-
 <script>
+// ─── PDF EXPORT ──────────────────────────────────────────────────────────────
+function exportPDF(){
+  try{
+    if(!window.jspdf||!window.jspdf.jsPDF){alert('PDF library loading, try again.');return;}
+    const {jsPDF}=window.jspdf;
+    const rows=window._lastTableRows||[];
+    if(!rows.length){alert('No participants to export.');return;}
+    const colDefs=activeColIds.map(id=>ALL_COLS.find(c=>c.id===id)).filter(Boolean);
+    const head=[['#',...colDefs.map(c=>c.label)]];
+    const body=rows.map((r,i)=>{
+      const w=r._w,e=r._e,n=r._n;
+      return[i+1,...colDefs.map(col=>{
+        const v=getCellValue(col.id,r,w,e,n);
+        return v.html?v.html.replace(/<[^>]+>/g,'').trim():(v.display||'—');
+      })];
+    });
+    const LOGO='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';
+    const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'letter'});
+    const PW=792,PH=612,ML=36,MR=36,MT=52,MB=40;
+    const TW=PW-ML-MR;
+    const W={name:68,phone:58,email:85,addr:85,city:48,state:20,event:65,excScore:26,excSafety:26,excProd:28,tAuto:26,tCivil:26,tElec:26,tPlumb:26,tWeld:26,tConst:26,tHvac:26,tWarehouse:26,tHeavy:26,triviaSum:105,certs:105,ji:34,employment:58,gender:28,industry:65};
+    const raw=colDefs.reduce((s,c)=>s+(W[c.id]||55),0);
+    const pad=(colDefs.length+1)*8;
+    const sc=raw+pad>TW-18?(TW-18-pad)/raw:1;
+    const scaledW=colDefs.map(c=>Math.floor((W[c.id]||55)*sc));
+    const parts=[];
+    if(filters.events.size>0)parts.push('Events: '+[...filters.events].join(', '));
+    if(filters.jobInterest.size>0)parts.push('Interest: '+[...filters.jobInterest].join(', '));
+    if(filters.states.size>0)parts.push('States: '+[...filters.states].join(', '));
+    if(filters.certs.size>0)parts.push('Certs: '+[...filters.certs].join(', '));
+    const sumText=parts.length?parts.join(' • '):'All participants';
+    doc.autoTable({head,body,startY:MT+16,margin:{left:ML,right:MR,top:MT+16,bottom:MB+14},tableWidth:TW,
+      styles:{font:'helvetica',fontSize:7.5,cellPadding:{top:4,bottom:4,left:4,right:4},textColor:[25,25,25],lineColor:[210,213,216],lineWidth:0.3,overflow:'linebreak',minCellHeight:14},
+      headStyles:{fillColor:[13,13,13],textColor:[206,14,45],fontStyle:'bold',fontSize:8},
+      alternateRowStyles:{fillColor:[247,247,247]},
+      columnStyles:Object.fromEntries([[0,{cellWidth:18,halign:'center'}],...scaledW.map((w,i)=>[i+1,{cellWidth:w}])]),
+      rowPageBreak:'avoid',
+      didParseCell(data){
+        if(data.section!=='body')return;
+        const col=colDefs[data.column.index-1];if(!col)return;
+        if(col.id==='excScore'){const v=String(data.cell.raw||'');if(v==='DNC')data.cell.styles.textColor=[150,150,150];else if(parseInt(v)>=72){data.cell.styles.textColor=[30,140,60];data.cell.styles.fontStyle='bold';}}
+        if(col.id==='ji'){const v=String(data.cell.raw||'');if(v==='Yes'){data.cell.styles.textColor=[30,140,60];data.cell.styles.fontStyle='bold';}else if(v==='Maybe'){data.cell.styles.textColor=[180,110,0];data.cell.styles.fontStyle='bold';}else if(v==='No')data.cell.styles.textColor=[180,30,30];}
+      },
+      didDrawPage(data){
+        const pg=data.pageNumber,tot=doc.internal.getNumberOfPages();
+        doc.setFillColor(13,13,13);doc.rect(0,0,PW,MT,'F');
+        try{doc.addImage('data:image/png;base64,'+LOGO,'PNG',ML,8,120,20);}catch(e){}
+        doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(140,140,140);
+        doc.text('Built to Work — Event Analytics',PW-MR,18,{align:'right'});
+        doc.text('Filtered Participant Export',PW-MR,30,{align:'right'});
+        doc.setDrawColor(206,14,45);doc.setLineWidth(2);doc.line(0,MT,PW,MT);
+        if(pg===1){
+          doc.setFillColor(22,22,22);doc.rect(0,MT,PW,14,'F');
+          doc.setFontSize(7);doc.setTextColor(140,140,140);doc.setFont('helvetica','normal');
+          doc.text(doc.splitTextToSize(sumText,PW-ML-MR-70)[0],ML,MT+10);
+          doc.setTextColor(206,14,45);doc.setFont('helvetica','bold');
+          doc.text(rows.length+' participants',PW-MR,MT+10,{align:'right'});
+        }
+        const fy=PH-12;
+        doc.setDrawColor(200,200,200);doc.setLineWidth(0.5);doc.line(ML,fy-8,PW-MR,fy-8);
+        doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(30,30,30);
+        doc.text('POWERING THE ',ML,fy);const p1=doc.getTextWidth('POWERING THE ');
+        doc.setTextColor(206,14,45);doc.text('AMERICAN',ML+p1,fy);const p2=doc.getTextWidth('AMERICAN');
+        doc.setTextColor(30,30,30);doc.text(' WORKFORCE',ML+p1+p2,fy);
+        doc.setFont('helvetica','normal');doc.setTextColor(120,120,120);
+        doc.text('Page '+pg+' of '+tot+'  |  '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),PW-MR,fy,{align:'right'});
+      }
+    });
+    const stamp=new Date().toISOString().slice(0,10);
+    const tag=filters.events.size===0?'All-Events':[...filters.events].map(e=>e.replace(/\s+/g,'-')).join('_');
+    const blob=doc.output('blob');
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='BTW-Participants_'+tag+'_'+stamp+'.pdf';
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+  }catch(err){console.error('PDF error:',err);alert('PDF export failed: '+err.message);}
+}
+
+// ─── CONNECTION DIAGNOSTIC ───────────────────────────────────────────────────
+async function runDiag(){
+  const box=document.getElementById('diagBox');
+  box.className='diag-box visible';
+  box.innerHTML='';
+
+  function row(icon,cls,msg){
+    const d=document.createElement('div');
+    d.className='diag-row';
+    d.innerHTML=`<span class="diag-icon ${cls}">${icon}</span><span>${msg}</span>`;
+    box.appendChild(d);
+  }
+  function updateLast(icon,cls,msg){
+    const last=box.lastChild;
+    last.innerHTML=`<span class="diag-icon ${cls}">${icon}</span><span>${msg}</span>`;
+    last.className='diag-row';
+  }
+
+  // CHECK 1: URL format
+  const urlOk=SUPABASE_URL.startsWith('https://')&&SUPABASE_URL.includes('.supabase.co');
+  if(!urlOk){row('✗','diag-fail',`URL looks wrong: <b>${SUPABASE_URL.slice(0,50)}</b><br>Should start with https:// and contain .supabase.co`);return;}
+  row('✓','diag-ok',`URL format OK`);
+
+  // CHECK 2: Key format
+  const keyOk=SUPABASE_ANON.startsWith('eyJ')&&SUPABASE_ANON.length>100;
+  if(!keyOk){row('✗','diag-fail','Anon key looks wrong — should be a long string starting with eyJ');return;}
+  row('✓','diag-ok','Anon key format OK');
+
+  // CHECK 3: Try login with entered credentials (uses Supabase JS client directly — no raw fetch)
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPassword').value;
+  if(!email||!pass){
+    row('⚠','diag-warn','Enter your email + password above then run Test Connection again to verify login and table access');
+    return;
+  }
+  row('…','diag-wait','Testing login via Supabase client…');
+  const {data:authData,error:authErr}=await sb.auth.signInWithPassword({email,password:pass});
+  if(authErr){
+    updateLast('✗','diag-fail','Login failed: <b>'+authErr.message+'</b><br>Go to Supabase → Authentication → Users and verify this email exists and the password is correct');
+    return;
+  }
+  updateLast('✓','diag-ok','Login OK — Supabase client is connected');
+
+  // CHECK 4: Read from web_registration
+  row('…','diag-wait','Reading from web_registration table…');
+  const {data:rows,error:tErr,count}=await sb.from('web_registration').select('"Event Name"',{count:'exact'}).limit(1);
+  if(tErr){
+    updateLast('✗','diag-fail','Table read failed: <b>'+tErr.message+'</b><br>Go to Supabase → Authentication → Policies and confirm the "Authenticated read" policy exists on web_registration');
+    await sb.auth.signOut();return;
+  }
+  if(!rows||rows.length===0){
+    updateLast('⚠','diag-warn','web_registration table is empty — import your CSV via Table Editor first');
+  } else {
+    updateLast('✓','diag-ok','web_registration readable — data present');
+  }
+
+  // CHECK 5: Read from exc_truck_loading
+  row('…','diag-wait','Reading from exc_truck_loading table…');
+  const {error:eErr}=await sb.from('exc_truck_loading').select('"Total Score"').limit(1);
+  if(eErr){updateLast('✗','diag-fail','exc_truck_loading read failed: '+eErr.message);}
+  else{updateLast('✓','diag-ok','exc_truck_loading readable');}
+
+  // CHECK 6: Read from windows_trivia
+  row('…','diag-wait','Reading from windows_trivia table…');
+  const {error:wErr}=await sb.from('windows_trivia').select('"Mobile Phone"').limit(1);
+  if(wErr){updateLast('✗','diag-fail','windows_trivia read failed: '+wErr.message);}
+  else{updateLast('✓','diag-ok','windows_trivia readable');}
+
+  await sb.auth.signOut();
+  row('✓','diag-ok','<b>All checks passed — click Sign In to load the dashboard</b>');
+}
+
 // ================================================================
 //  STEP 1: Replace YOUR_SUPABASE_URL with your Project URL
 //  STEP 2: Replace YOUR_SUPABASE_ANON_KEY with your anon key
@@ -601,11 +774,12 @@ async function doLogin(){
   await loadData();
 }
 
-async function doLogout(){clearInterval(refreshTimer);clearCache();await sb.auth.signOut();location.reload();}
+async function doLogout(){clearInterval(refreshTimer);clearCache();destroyOpsCharts();await sb.auth.signOut();location.reload();}
 
 function showApp(email){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appHeader').style.display='flex';
+  document.getElementById('tabBar').style.display='flex';
   document.getElementById('appLayout').style.display='flex';
   const ued=document.getElementById('userEmailDisplay');
   if(ued)ued.textContent=email;
@@ -734,18 +908,19 @@ function populateEventDropdown(){
   allNames.forEach(name=>{
     const div=document.createElement('div');
     div.className='ms-option'+(filters.events.has(name)?' selected':'');
-    div.innerHTML=`<span class="ms-check">${filters.events.has(name)?'&#10003;':''}</span>${name}`;
+    div.innerHTML='<span class="ms-check">'+(filters.events.has(name)?'&#10003;':'')+'</span>'+name;
     div.onclick=()=>toggleEventFilter(name);
     container.appendChild(div);
   });
   updatePickerLabel();
 }
+function onEventChange(){render();}
 function togglePicker(){
   const btn=document.getElementById('msBtn');
   const panel=document.getElementById('msPanel');
   const open=panel.classList.toggle('open');
   btn.classList.toggle('open',open);
-  if(open) setTimeout(()=>document.addEventListener('click',closePickerOutside,{once:true}),0);
+  if(open)setTimeout(()=>document.addEventListener('click',closePickerOutside,{once:true}),0);
 }
 function closePickerOutside(e){
   const wrap=document.getElementById('msWrap');
@@ -760,11 +935,10 @@ function selectAllEvents(){
   render();
 }
 function toggleEventFilter(name){
-  if(filters.events.has(name)) filters.events.delete(name);
+  if(filters.events.has(name))filters.events.delete(name);
   else filters.events.add(name);
-  // If all events selected manually treat as All
   const allNames=getEvents().filter(e=>e!=='ALL');
-  if(filters.events.size===allNames.length) filters.events.clear();
+  if(filters.events.size===allNames.length)filters.events.clear();
   populateEventDropdown();
   render();
 }
@@ -773,21 +947,10 @@ function updatePickerLabel(){
   const allCheck=document.getElementById('msAllCheck');
   const allDiv=document.getElementById('msAll');
   if(!btn)return;
-  if(filters.events.size===0){
-    btn.innerHTML='All Events';
-    if(allCheck)allCheck.innerHTML='&#10003;';
-    if(allDiv)allDiv.classList.add('active');
-  } else if(filters.events.size===1){
-    btn.innerHTML=[...filters.events][0];
-    if(allCheck)allCheck.innerHTML='';
-    if(allDiv)allDiv.classList.remove('active');
-  } else {
-    btn.innerHTML='Events <span class="badge">'+filters.events.size+'</span>';
-    if(allCheck)allCheck.innerHTML='';
-    if(allDiv)allDiv.classList.remove('active');
-  }
+  if(filters.events.size===0){btn.innerHTML='All Events';if(allCheck)allCheck.innerHTML='&#10003;';if(allDiv)allDiv.classList.add('active');}
+  else if(filters.events.size===1){btn.innerHTML=[...filters.events][0];if(allCheck)allCheck.innerHTML='';if(allDiv)allDiv.classList.remove('active');}
+  else{btn.innerHTML='Events <span class="badge">'+filters.events.size+'</span>';if(allCheck)allCheck.innerHTML='';if(allDiv)allDiv.classList.remove('active');}
 }
-function onEventChange(){render();}
 
 // FILTERING
 function filteredWeb(){return rawWeb.filter(r=>{
@@ -874,20 +1037,20 @@ function onTriviaRange(){
   updateActiveCount();render();
 }
 function updateActiveCount(){let n=0;if(filters.excMin>0||filters.excMax<100)n++;['jobInterest','employment','scoreSegs','ageGroups','gender','states','trivia','certs'].forEach(k=>{if(filters[k].size>0)n+=filters[k].size;});if(filters.triviaScoreMin>0||filters.triviaScoreMax<20)n++;const el=document.getElementById('activeCount'),btn=document.getElementById('clearFiltersBtn');el.textContent=n;el.style.display=n>0?'inline':'none';btn.style.display=n>0?'inline':'none';}
-function clearAllFilters(){filters.events.clear();filters.excMin=0;filters.excMax=100;document.getElementById('excMin').value=0;document.getElementById('excMax').value=100;document.getElementById('excMinVal').textContent=0;document.getElementById('excMaxVal').textContent=100;['jobInterest','employment','scoreSegs','ageGroups','gender','states','trivia','certs'].forEach(k=>filters[k].clear());filters.triviaScoreMin=0;filters.triviaScoreMax=20;const tsMin=document.getElementById('triviaScoreMin');const tsMax=document.getElementById('triviaScoreMax');if(tsMin){tsMin.value=0;tsMax.value=20;document.getElementById('tsMinVal').textContent=0;document.getElementById('tsMaxVal').textContent=20;}document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));updateActiveCount();render();}
+function clearAllFilters(){filters.excMin=0;filters.excMax=100;document.getElementById('excMin').value=0;document.getElementById('excMax').value=100;document.getElementById('excMinVal').textContent=0;document.getElementById('excMaxVal').textContent=100;filters.events.clear();['jobInterest','employment','scoreSegs','ageGroups','gender','states','trivia','certs'].forEach(k=>filters[k].clear());filters.triviaScoreMin=0;filters.triviaScoreMax=20;const tsMin=document.getElementById('triviaScoreMin');const tsMax=document.getElementById('triviaScoreMax');if(tsMin){tsMin.value=0;tsMax.value=20;document.getElementById('tsMinVal').textContent=0;document.getElementById('tsMaxVal').textContent=20;}document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));updateActiveCount();render();}
 function toggleFilter(key,value){if(filters[key] instanceof Set){if(filters[key].has(value))filters[key].delete(value);else filters[key].add(value);document.querySelectorAll('.filter-chip').forEach(c=>{if(c.dataset.value===value)c.classList.toggle('active',filters[key].has(value));});}updateActiveCount();render();}
 
 // RENDER
-function render(){const {webRows,excRows,winRows}=crossFiltered();destroyCharts();renderKPIs(webRows,excRows,winRows);renderGrid(webRows,excRows,winRows);}
+function render(){const {webRows,excRows,winRows}=crossFiltered();destroyCharts();renderKPIs(webRows,excRows,winRows);renderGrid(webRows,excRows,winRows);if(activeTab==='operations')renderOps();}
 function destroyCharts(){Object.values(charts).forEach(c=>{if(c)c.destroy();});charts={};}
 function renderKPIs(w,e,n){
   const hot=w.filter(r=>['Yes','Maybe'].includes((r['Interested in Construction Jobs']||'').trim())).length;
   document.getElementById('kpiRow').innerHTML=`<div class="kpi-card"><div class="kpi-label">Registrations Shown</div><div class="kpi-value">${w.length.toLocaleString()}</div><div class="kpi-sub">of ${rawWeb.length} total</div></div><div class="kpi-card"><div class="kpi-label">EXC Simulator Runs</div><div class="kpi-value">${e.length.toLocaleString()}</div><div class="kpi-sub">of ${rawExc.length} total</div></div><div class="kpi-card"><div class="kpi-label">Trivia Sessions</div><div class="kpi-value">${n.length.toLocaleString()}</div><div class="kpi-sub">of ${rawWin.length} total</div></div><div class="kpi-card"><div class="kpi-label">Yes/Maybe \u2014 Construction</div><div class="kpi-value" style="color:var(--green)">${hot.toLocaleString()}</div><div class="kpi-sub">interested in opportunities</div></div>`;
 }
 function renderGrid(webRows,excRows,winRows){
-  document.getElementById('dashGrid').innerHTML=`<div class="card"><div class="card-title"><span class="dot"></span>EXC Score Distribution <span class="fab" id="badgeExc">FILTERED</span></div><div class="chart-wrap"><canvas id="chartExc"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Employment Status <span class="fab" id="badgeEmp">FILTERED</span></div><div class="chart-wrap"><canvas id="chartEmp"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Interest in Construction Jobs <span class="fab" id="badgeJI">FILTERED</span></div><div class="chart-wrap"><canvas id="chartJI"></canvas></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Age Distribution <span class="fab" id="badgeAge">FILTERED</span></div><div class="chart-wrap"><canvas id="chartAge"></canvas></div></div><div class="card" style="grid-row:span 2"><div class="card-title"><span class="dot"></span>Trade Certifications &amp; Licenses <span class="fab" id="badgeCerts">FILTERED</span></div><div class="chart-wrap" style="min-height:460px"><canvas id="chartCerts"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Participants by State <span class="fab" id="badgeState">FILTERED</span></div><div class="state-grid" id="stateGrid"></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Windows Trivia \u2014 Tests Taken &amp; Avg Scores <span class="fab" id="badgeTrivia">FILTERED</span></div><table class="ttbl"><thead><tr><th>Test</th><th>Participants</th><th>Avg Score</th><th>Bar</th></tr></thead><tbody id="triviaBody"></tbody></table></div><div class="card full"><div class="card-title"><span class="dot"></span>Filtered Participants</div><div class="tbl-toolbar"><button class="tbl-toggle" id="showAllToggle" onclick="toggleShowAll()">Show Unmatched</button><input class="tbl-search" type="text" placeholder="Search name / phone\u2026" oninput="tblSearch=this.value;renderTable(window.webRows2,window.excRows2,window.winRows2)"><div class="tbl-count" id="tblCount"></div><button class="tbl-cols-btn" onclick="openColModal()">&#9776; Columns</button>
-        <button class="tbl-toggle" onclick="exportPDF()" style="border-color:var(--accent);color:var(--accent);white-space:nowrap;">&#8681; Export PDF</button>
-        <button class="tbl-toggle" onclick="exportExcel()" style="border-color:var(--green);color:var(--green);white-space:nowrap;">&#8681; Export Excel</button></div><div class="table-scroll"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Address</th><th>State</th><th>Event</th><th>EXC Score</th><th>Trivia Tests (Avg)</th><th>Job Interest</th></tr></thead><tbody id="ptblBody"></tbody></table></div></div>`;
+  document.getElementById('dashGrid').innerHTML=`<div class="card"><div class="card-title"><span class="dot"></span>EXC Score Distribution <span class="fab" id="badgeExc">FILTERED</span></div><div class="chart-wrap"><canvas id="chartExc"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Employment Status <span class="fab" id="badgeEmp">FILTERED</span></div><div class="chart-wrap"><canvas id="chartEmp"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Interest in Construction Jobs <span class="fab" id="badgeJI">FILTERED</span></div><div class="chart-wrap"><canvas id="chartJI"></canvas></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Age Distribution <span class="fab" id="badgeAge">FILTERED</span></div><div class="chart-wrap"><canvas id="chartAge"></canvas></div></div><div class="card" style="grid-row:span 2"><div class="card-title"><span class="dot"></span>Trade Certifications &amp; Licenses <span class="fab" id="badgeCerts">FILTERED</span></div><div class="chart-wrap" style="min-height:460px"><canvas id="chartCerts"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Participants by State <span class="fab" id="badgeState">FILTERED</span></div><div class="state-grid" id="stateGrid"></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Windows Trivia \u2014 Tests Taken &amp; Avg Scores <span class="fab" id="badgeTrivia">FILTERED</span></div><table class="ttbl"><thead><tr><th>Test</th><th>Participants</th><th>Avg Score</th><th>Bar</th></tr></thead><tbody id="triviaBody"></tbody></table></div><div class="card full"><div class="card-title"><span class="dot"></span>Filtered Participants</div><div class="tbl-toolbar"><button class="tbl-toggle" id="showAllToggle" onclick="toggleShowAll()">Show Unmatched</button><input class="tbl-search" type="text" placeholder="Search name / phone\u2026" oninput="tblSearch=this.value;renderTable(window.webRows2,window.excRows2,window.winRows2)"><div class="tbl-count" id="tblCount"></div><button class="tbl-toggle" onclick="exportPDF()" style="border-color:var(--accent);color:var(--accent);white-space:nowrap;">&#8681; Export PDF</button>
+        <button class="tbl-cols-btn" onclick="openColModal()">&#9776; Columns</button>
+        <button class="tbl-toggle" onclick="exportExcel()" style="border-color:var(--green);color:var(--green);white-space:nowrap;">&#8681; Excel</button></div><div class="table-scroll"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Address</th><th>State</th><th>Event</th><th>EXC Score</th><th>Trivia Tests (Avg)</th><th>Job Interest</th></tr></thead><tbody id="ptblBody"></tbody></table></div></div>`;
   if(filters.scoreSegs.size>0||filters.excMin>0||filters.excMax<100){const b=document.getElementById('badgeExc');if(b)b.style.display='inline';}
   if(filters.employment.size>0){const b=document.getElementById('badgeEmp');if(b)b.style.display='inline';}
   if(filters.jobInterest.size>0){const b=document.getElementById('badgeJI');if(b)b.style.display='inline';}
@@ -926,225 +1089,146 @@ function renderGrid(webRows,excRows,winRows){
 
 // ─── COLUMN CONFIGURATION ────────────────────────────────────────────────────
 const ALL_COLS = [
-  // identity
-  {id:'name',       label:'Name',              group:'Identity',    default:true,  locked:false},
-  {id:'phone',      label:'Phone',             group:'Identity',    default:true,  locked:false},
-  {id:'email',      label:'Email',             group:'Identity',    default:false, locked:false},
-  {id:'addr',       label:'Street Address',    group:'Identity',    default:true,  locked:false},
-  {id:'city',       label:'City',              group:'Identity',    default:false, locked:false},
-  {id:'state',      label:'State',             group:'Identity',    default:true,  locked:false},
-  {id:'event',      label:'Event',             group:'Identity',    default:true,  locked:false},
-  // EXC scores
-  {id:'excScore',   label:'EXC Total Score',   group:'EXC Simulator', default:true,  locked:false},
-  {id:'excSafety',  label:'EXC Safety Score',  group:'EXC Simulator', default:false, locked:false},
-  {id:'excProd',    label:'EXC Productivity',  group:'EXC Simulator', default:false, locked:false},
-  // Trivia
-  {id:'tAuto',      label:'Trivia: Auto Mechanic',      group:'Trivia Scores', default:false, locked:false},
-  {id:'tCivil',     label:'Trivia: Civil Construction', group:'Trivia Scores', default:false, locked:false},
-  {id:'tElec',      label:'Trivia: Electrical',         group:'Trivia Scores', default:false, locked:false},
-  {id:'tPlumb',     label:'Trivia: Plumbing',           group:'Trivia Scores', default:false, locked:false},
-  {id:'tWeld',      label:'Trivia: Welding',            group:'Trivia Scores', default:false, locked:false},
-  {id:'tConst',     label:'Trivia: Construction Labor', group:'Trivia Scores', default:false, locked:false},
-  {id:'tHvac',      label:'Trivia: HVAC',               group:'Trivia Scores', default:false, locked:false},
-  {id:'tWarehouse', label:'Trivia: Warehouse',          group:'Trivia Scores', default:false, locked:false},
-  {id:'tHeavy',     label:'Trivia: Heavy Equip Tech',   group:'Trivia Scores', default:false, locked:false},
-  {id:'triviaSum',  label:'Trivia Tests & Scores',       group:'Trivia Scores', default:true,  locked:false},
-  // Certs
-  {id:'certs',      label:'Certifications',           group:'Certifications', default:false, locked:false},
-  // Demographic
-  {id:'ji',         label:'Job Interest',      group:'Demographics', default:true,  locked:false},
-  {id:'employment', label:'Employment Status', group:'Demographics', default:false, locked:false},
-  {id:'gender',     label:'Gender',            group:'Demographics', default:false, locked:false},
-  {id:'industry',   label:'Industry',          group:'Demographics', default:false, locked:false},
+  {id:'name',      label:'Name',             group:'Identity',      default:true},
+  {id:'phone',     label:'Phone',            group:'Identity',      default:true},
+  {id:'email',     label:'Email',            group:'Identity',      default:false},
+  {id:'addr',      label:'Street Address',   group:'Identity',      default:true},
+  {id:'city',      label:'City',             group:'Identity',      default:false},
+  {id:'state',     label:'State',            group:'Identity',      default:true},
+  {id:'event',     label:'Event',            group:'Identity',      default:true},
+  {id:'excScore',  label:'EXC Total Score',  group:'EXC Simulator', default:true},
+  {id:'excSafety', label:'EXC Safety',       group:'EXC Simulator', default:false},
+  {id:'excProd',   label:'EXC Productivity', group:'EXC Simulator', default:false},
+  {id:'tAuto',     label:'Trivia: Auto Mechanic',      group:'Trivia', default:false},
+  {id:'tCivil',    label:'Trivia: Civil Construction', group:'Trivia', default:false},
+  {id:'tElec',     label:'Trivia: Electrical',         group:'Trivia', default:false},
+  {id:'tPlumb',    label:'Trivia: Plumbing',           group:'Trivia', default:false},
+  {id:'tWeld',     label:'Trivia: Welding',            group:'Trivia', default:false},
+  {id:'tConst',    label:'Trivia: Construction Labor', group:'Trivia', default:false},
+  {id:'tHvac',     label:'Trivia: HVAC',               group:'Trivia', default:false},
+  {id:'tWarehouse',label:'Trivia: Warehouse',          group:'Trivia', default:false},
+  {id:'tHeavy',    label:'Trivia: Heavy Equip Tech',   group:'Trivia', default:false},
+  {id:'triviaSum', label:'Trivia Tests & Scores',      group:'Trivia', default:true},
+  {id:'certs',     label:'Certifications',             group:'Certifications', default:false},
+  {id:'ji',        label:'Job Interest',     group:'Demographics', default:true},
+  {id:'employment',label:'Employment Status',group:'Demographics', default:false},
+  {id:'gender',    label:'Gender',           group:'Demographics', default:false},
+  {id:'industry',  label:'Industry',         group:'Demographics', default:false},
 ];
-
-// Active column order (array of col ids, maintained by drag-drop)
 let activeColIds = ALL_COLS.filter(c=>c.default).map(c=>c.id);
-// Pending state while modal is open
 let pendingColIds = null;
 let dragSrcId = null;
 
+function getCellValue(colId, r, w, e, n){
+  switch(colId){
+    case 'name':    return {display:r.name, cls:'fname'};
+    case 'phone':   return {display:r.displayPhone, cls:'fmuted'};
+    case 'email':   return {display:w?(w['Email Address']||'—'):'—', style:'font-size:11px;color:var(--muted)'};
+    case 'addr':    return {display:r.addr||'—', style:'font-size:12px;color:var(--muted);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'};
+    case 'city':    return {display:w?(w['City']||'—'):'—'};
+    case 'state':   return {display:r.state||'—', style:"font-family:'Barlow Condensed',sans-serif;font-weight:700"};
+    case 'event':   return {display:r.event||'—', style:'font-size:12px;color:var(--muted);white-space:nowrap'};
+    case 'excScore':{
+      const sb=r.excScore==null?'<span class="score-badge dnc">DNC</span>':'<span class="score-badge '+(r.excScore>=72?'hi':'')+'">'+r.excScore.toFixed(0)+'</span>';
+      return {html:sb};
+    }
+    case 'excSafety': {const s=e?parseFloat(e['Safety Score']):NaN;return {display:isNaN(s)?'—':s.toFixed(0)};}
+    case 'excProd':   {const s=e?parseFloat(e['Productivity Score']):NaN;return {display:isNaN(s)?'—':s.toFixed(0)};}
+    case 'tAuto':     {const s=n?parseFloat(n['Trivia Auto Mechanic Score']):NaN;return {display:isNaN(s)?'—':s.toFixed(0)};}
+    case 'tCivil':    {const s=n?parseFloat(n['Trivia Civil Construction Score']):NaN;return {display:isNaN(s)?'—':s.toFixed(0)};}
+    case 'tElec':     {const s=n?parseFloat(n['Trivia Electrical Score']):NaN;return {display:isNaN(s)?'—':s.toFixed(0)};}
+    case 'tPlumb':    {const s=n?parseFloat(n['Trivia Plumbing Score']):NaN;return {display:isNaN(s)?'—':s.toFixed(0)};}
+    case 'tWeld':     {const s=n?parseFloat(n['Trivia Welding Score']):NaN;return {display:isNaN(s)?'—':s.toFixed(0)};}
+    case 'tConst':    {const s=n?parseFloat(n['Trivia Construction Labor Score']):NaN;return {display:isNaN(s)?'—':s.toFixed(0)};}
+    case 'tHvac':     {const s=n?parseFloat(n['Trivia HVAC Score']):NaN;return {display:isNaN(s)?'—':s.toFixed(0)};}
+    case 'tWarehouse':{const s=n?parseFloat(n['Trivia Warehouse Score']):NaN;return {display:isNaN(s)?'—':s.toFixed(0)};}
+    case 'tHeavy':    {const s=n?parseFloat(n['Trivia Heavy Equipment Technician Score']):NaN;return {display:isNaN(s)?'—':s.toFixed(0)};}
+    case 'triviaSum': return {display:r.trivia, style:'font-size:11px;color:var(--muted);max-width:200px'};
+    case 'certs': {
+      if(!w) return {display:'—'};
+      const held=CERT_NAMES.filter((_,i)=>(w[CERT_COLS[i]]||'').trim()==='Yes');
+      return {display:held.length?held.join(', '):'None', style:'font-size:11px;white-space:normal;max-width:200px'};
+    }
+    case 'ji': {
+      const jp=r.ji==='Yes'?'<span class="ip-yes">Yes</span>':r.ji==='Maybe'?'<span class="ip-maybe">Maybe</span>':r.ji==='No'?'<span class="ip-no">No</span>':'<span class="ip-na">N/A</span>';
+      return {html:jp};
+    }
+    case 'employment': {
+      const map={'Currently employed in construction and/or a trade':'In Trades','Currently employed in another industry':'Other Industry','Retired':'Retired','Student':'Student','Unemployed and looking for work':'Unemployed','Other':'Other'};
+      return {display:w?(map[w['Job Status']||'']||w['Job Status']||'—'):'—', style:'font-size:11px;color:var(--muted)'};
+    }
+    case 'gender':   return {display:w?(w['Gender']||'—'):'—'};
+    case 'industry': {
+      if(!w) return {display:'—'};
+      const ind=(w['What industry do you work in?']||'').trim();
+      const other=(w['What industry do you work in']||'').trim();
+      return {display:ind==='Other'&&other?'Other: '+other:ind||'—', style:'font-size:11px;color:var(--muted)'};
+    }
+    default: return {display:'—'};
+  }
+}
+
 // ── COLUMN MODAL ──────────────────────────────────────────────────────────────
 function openColModal(){
-  pendingColIds = [...activeColIds];
+  pendingColIds=[...activeColIds];
   renderColModal();
   document.getElementById('colModalOverlay').classList.add('open');
 }
 function closeColModal(e){
-  if(e && e.target !== document.getElementById('colModalOverlay')) return;
-  pendingColIds = null;
+  if(e&&e.target!==document.getElementById('colModalOverlay'))return;
+  pendingColIds=null;
   document.getElementById('colModalOverlay').classList.remove('open');
 }
 function applyColsAndClose(){
-  activeColIds = [...pendingColIds];
+  activeColIds=[...pendingColIds];
   document.getElementById('colModalOverlay').classList.remove('open');
-  pendingColIds = null;
-  if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
+  pendingColIds=null;
+  if(window.webRows2)renderTable(window.webRows2,window.excRows2,window.winRows2);
 }
 function resetCols(){
-  pendingColIds = ALL_COLS.filter(c=>c.default).map(c=>c.id);
+  pendingColIds=ALL_COLS.filter(c=>c.default).map(c=>c.id);
   renderColModal();
 }
-
 function renderColModal(){
-  const body = document.getElementById('colModalBody');
-  const groups = [...new Set(ALL_COLS.map(c=>c.group))];
-  body.innerHTML = '';
-
-  groups.forEach(group => {
-    const colsInGroup = ALL_COLS.filter(c=>c.group===group);
-    const gtitle = document.createElement('div');
-    gtitle.className = 'col-group-title';
-    gtitle.textContent = group;
-    body.appendChild(gtitle);
-
-    const list = document.createElement('div');
-    list.className = 'col-items';
-    list.dataset.group = group;
-    colsInGroup.forEach(col => buildColItem(list, col));
+  const body=document.getElementById('colModalBody');
+  const groups=[...new Set(ALL_COLS.map(c=>c.group))];
+  body.innerHTML='';
+  groups.forEach(group=>{
+    const gt=document.createElement('div');gt.className='col-group-title';gt.textContent=group;body.appendChild(gt);
+    const list=document.createElement('div');list.className='col-items';list.dataset.group=group;
+    ALL_COLS.filter(c=>c.group===group).forEach(col=>buildColItem(list,col));
     body.appendChild(list);
   });
 }
-
-function buildColItem(list, col){
-  const checked = pendingColIds.includes(col.id);
-  const item = document.createElement('div');
-  item.className = 'col-item' + (col.locked?' locked':'');
-  item.dataset.id = col.id;
-  item.draggable = true;
-  item.innerHTML = `<span class="col-drag-handle">&#8597;</span>
-    <input class="col-check" type="checkbox" id="chk_${col.id}" ${checked?'checked':''} ${col.locked?'disabled':''}>
-    <label class="col-label" for="chk_${col.id}">${col.label}</label>`;
-
-  item.querySelector('input').addEventListener('change', e => {
-    if(e.target.checked){
-      if(!pendingColIds.includes(col.id)) pendingColIds.push(col.id);
-    } else {
-      pendingColIds = pendingColIds.filter(id=>id!==col.id);
-    }
+function buildColItem(list,col){
+  const checked=pendingColIds.includes(col.id);
+  const item=document.createElement('div');
+  item.className='col-item';item.dataset.id=col.id;item.draggable=true;
+  item.innerHTML='<span class="col-drag-handle">&#8597;</span><input class="col-check" type="checkbox" id="chk_'+col.id+'" '+(checked?'checked':'')+'><label class="col-label" for="chk_'+col.id+'">'+col.label+'</label>';
+  item.querySelector('input').addEventListener('change',e=>{
+    if(e.target.checked){if(!pendingColIds.includes(col.id))pendingColIds.push(col.id);}
+    else{pendingColIds=pendingColIds.filter(id=>id!==col.id);}
   });
-
-  // ── Robust drag-drop using dragover position ──────────────────────────────
-  item.addEventListener('dragstart', e => {
-    dragSrcId = col.id;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', col.id);
-    setTimeout(() => item.classList.add('dragging'), 0);
+  item.addEventListener('dragstart',e=>{dragSrcId=col.id;e.dataTransfer.effectAllowed='move';setTimeout(()=>item.classList.add('dragging'),0);});
+  item.addEventListener('dragend',()=>{item.classList.remove('dragging');document.querySelectorAll('.col-item').forEach(el=>el.classList.remove('drag-above','drag-below'));});
+  item.addEventListener('dragover',e=>{e.preventDefault();const r=item.getBoundingClientRect();item.classList.remove('drag-above','drag-below');if(e.clientY<r.top+r.height/2)item.classList.add('drag-above');else item.classList.add('drag-below');});
+  item.addEventListener('dragleave',()=>item.classList.remove('drag-above','drag-below'));
+  item.addEventListener('drop',e=>{
+    e.preventDefault();e.stopPropagation();item.classList.remove('drag-above','drag-below');
+    if(dragSrcId===col.id)return;
+    const insertBefore=e.clientY<(item.getBoundingClientRect().top+item.getBoundingClientRect().height/2);
+    const allItems=[...document.querySelectorAll('.col-item')];
+    const srcEl=allItems.find(el=>el.dataset.id===dragSrcId);
+    if(!srcEl)return;
+    if(insertBefore)item.parentNode.insertBefore(srcEl,item);else item.after(srcEl);
+    const newOrder=[...document.querySelectorAll('.col-item')].map(el=>el.dataset.id).filter(id=>pendingColIds.includes(id));
+    pendingColIds=[...new Set([...newOrder,...pendingColIds])];
+    dragSrcId=null;
   });
-
-  item.addEventListener('dragend', () => {
-    item.classList.remove('dragging');
-    document.querySelectorAll('.col-item').forEach(el => el.classList.remove('drag-over','drag-above','drag-below'));
-  });
-
-  item.addEventListener('dragover', e => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    // Determine if cursor is in top or bottom half
-    const rect = item.getBoundingClientRect();
-    const midY = rect.top + rect.height / 2;
-    item.classList.remove('drag-above','drag-below');
-    if(e.clientY < midY) item.classList.add('drag-above');
-    else item.classList.add('drag-below');
-  });
-
-  item.addEventListener('dragleave', e => {
-    item.classList.remove('drag-above','drag-below');
-  });
-
-  item.addEventListener('drop', e => {
-    e.preventDefault();
-    e.stopPropagation();
-    item.classList.remove('drag-above','drag-below','dragging');
-    if(dragSrcId === col.id) return;
-
-    const rect = item.getBoundingClientRect();
-    const insertBefore = e.clientY < (rect.top + rect.height / 2);
-
-    // ── Reorder DOM ────────────────────────────────────────────────────────
-    const allItems = [...document.querySelectorAll('.col-item')];
-    const srcEl = allItems.find(el=>el.dataset.id===dragSrcId);
-    if(!srcEl) return;
-    const parent = item.parentNode;
-
-    if(srcEl.parentNode !== parent){
-      // Cross-group drag: move srcEl into target group
-      if(insertBefore) parent.insertBefore(srcEl, item);
-      else item.after(srcEl);
-    } else {
-      if(insertBefore) parent.insertBefore(srcEl, item);
-      else item.after(srcEl);
-    }
-
-    // ── Rebuild pendingColIds from current DOM order ───────────────────────
-    const newOrder = [...document.querySelectorAll('.col-item')]
-      .map(el=>el.dataset.id)
-      .filter(id=>pendingColIds.includes(id));
-    // Keep any pendingColIds not visible in modal (shouldn't happen but guard)
-    pendingColIds = [...new Set([...newOrder, ...pendingColIds])];
-
-    dragSrcId = null;
-  });
-
   list.appendChild(item);
 }
 
-// ── CELL VALUE GETTER ─────────────────────────────────────────────────────────
-function getCellValue(colId, r, w, e, n) {
-  const cert = (w, idx) => (w && (w[CERT_COLS[idx]]||'').trim()==='Yes') ? 'Yes' : (w ? 'No' : '—');
-  const triviaScore = (n, colName) => {
-    if(!n) return '—';
-    const v = parseFloat(n[colName]);
-    return isNaN(v) ? 'DNC' : v.toFixed(0);
-  };
-  switch(colId){
-    case 'name':       return {display: r.name, raw: r.name};
-    case 'phone':      return {display: r.displayPhone, raw: r.displayPhone};
-    case 'email':      return {display: w?(w['Email Address']||'—'):'—', raw: w?(w['Email Address']||''):'', style:'font-size:11px;color:var(--muted)'};
-    case 'addr':       return {display: r.addr||'—', raw: r.addr, style:'font-size:12px;color:var(--muted);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'};
-    case 'city':       return {display: w?(w['City']||'—'):'—', raw: w?(w['City']||''):''};
-    case 'state':      return {display: r.state||'—', raw: r.state, style:"font-family:'Barlow Condensed',sans-serif;font-weight:700"};
-    case 'event':      return {display: r.event||'—', raw: r.event, style:'font-size:12px;color:var(--muted);white-space:nowrap'};
-    case 'excScore':   return {html: r.excScore==null?'<span class="score-badge dnc">DNC</span>':'<span class="score-badge '+(r.excScore>=72?'hi':'')+'">'+(r.excScore.toFixed(0))+'</span>', raw: r.excScore??-1};
-    case 'excSafety':  return {display: e?((function(){const s=parseFloat(e['Safety Score']);return isNaN(s)?'DNC':s.toFixed(0)})()):'—', raw: 0};
-    case 'excProd':    return {display: e?((function(){const s=parseFloat(e['Productivity Score']);return isNaN(s)?'DNC':s.toFixed(0)})()):'—', raw: 0};
-    case 'tAuto':      return {display: triviaScore(n,'Trivia Auto Mechanic Score'), raw:0};
-    case 'tCivil':     return {display: triviaScore(n,'Trivia Civil Construction Score'), raw:0};
-    case 'tElec':      return {display: triviaScore(n,'Trivia Electrical Score'), raw:0};
-    case 'tPlumb':     return {display: triviaScore(n,'Trivia Plumbing Score'), raw:0};
-    case 'tWeld':      return {display: triviaScore(n,'Trivia Welding Score'), raw:0};
-    case 'tConst':     return {display: triviaScore(n,'Trivia Construction Labor Score'), raw:0};
-    case 'tHvac':      return {display: triviaScore(n,'Trivia HVAC Score'), raw:0};
-    case 'tWarehouse': return {display: triviaScore(n,'Trivia Warehouse Score'), raw:0};
-    case 'tHeavy':     return {display: triviaScore(n,'Trivia Heavy Equipment Technician Score'), raw:0};
-    case 'triviaSum':  return {display: r.trivia, raw: 0, style:'font-size:11px;color:var(--muted);max-width:200px'};
-    case 'certs': {
-      if(!w) return {display:'—', raw:0};
-      const held=CERT_NAMES.filter((_,i)=>(w[CERT_COLS[i]]||'').trim()==='Yes');
-      return {display: held.length?held.join(', '):'None', raw:0, style:'font-size:11px;white-space:normal;max-width:200px'};
-    }
-    case 'ji': {
-      const v=r.ji;
-      return {html: v==='Yes'?'<span class="ip-yes">Yes</span>':v==='Maybe'?'<span class="ip-maybe">Maybe</span>':v==='No'?'<span class="ip-no">No</span>':'<span class="ip-na">N/A</span>', raw:0};
-    }
-    case 'industry': {
-      if(!w) return {display:'—', raw:0};
-      const ind=(w['What industry do you work in?']||'').trim();
-      const other=(w['What industry do you work in']||'').trim();
-      return {display: ind==='Other'&&other ? 'Other: '+other : ind||'—', raw:0, style:'font-size:11px;color:var(--muted)'};
-    }
-    case 'employment': return {display: w?({
-      'Currently employed in construction and/or a trade':'In Trades',
-      'Currently employed in another industry':'Other Industry',
-      'Retired':'Retired','Student':'Student',
-      'Unemployed and looking for work':'Unemployed','Other':'Other'
-    }[w['Job Status']||'']||w['Job Status']||'—'):'—', raw:0, style:'font-size:11px;color:var(--muted)'};
-    case 'gender':     return {display: w?(w['Gender']||'—'):'—', raw:0};
-    default:           return {display:'—', raw:0};
-  }
-}
-
-// ── RENDER TABLE ─────────────────────────────────────────────────────────────
+// ─── RENDER TABLE ─────────────────────────────────────────────────────────────
 function renderTable(webRows,excRows,winRows){
   const eMap=excMap(excRows),wMap=webMap(webRows),nMap=winMap(winRows);
   const allPhones=new Set();
@@ -1165,13 +1249,11 @@ function renderTable(webRows,excRows,winRows){
     let triviaStr='---';
     if(n){
       if(filters.trivia.size===1){
-        const selectedTest=[...filters.trivia][0];
-        const col=TRIVIA_COLS[selectedTest];
-        const score=col?parseFloat(n[col]):NaN;
-        triviaStr=isNaN(score)?'DNC':selectedTest+': '+score.toFixed(0);
-      } else {
+        const selTest=[...filters.trivia][0];const col=TRIVIA_COLS[selTest];const score=col?parseFloat(n[col]):NaN;
+        triviaStr=isNaN(score)?'DNC':selTest+': '+score.toFixed(0);
+      }else{
         const taken=Object.entries(TRIVIA_COLS).filter(([nm,col])=>n[col]!==''&&n[col]!=null&&!isNaN(parseFloat(n[col])));
-        if(taken.length){triviaStr=taken.map(([nm,col])=>nm+': '+parseFloat(n[col]).toFixed(0)).join(', ');}
+        if(taken.length)triviaStr=taken.map(([nm,col])=>nm+': '+parseFloat(n[col]).toFixed(0)).join(', ');
       }
     }
     const rawPhone=w?String(w['Mobile Phone']||'').split('.')[0].replace(/[^\d]/g,''):e?String(e['Login Code']||'').replace(/[^\d]/g,''):phone;
@@ -1182,26 +1264,20 @@ function renderTable(webRows,excRows,winRows){
   rows.sort((a,b)=>{if(a.excScore==null&&b.excScore==null)return 0;if(a.excScore==null)return 1;if(b.excScore==null)return -1;return b.excScore-a.excScore;});
   document.getElementById('tblCount').textContent=rows.length.toLocaleString()+' participants';
   window._lastTableRows=rows;
-
-  // Build header from activeColIds
-  const colDefs = activeColIds.map(id=>ALL_COLS.find(c=>c.id===id)).filter(Boolean);
-  const thead = '<tr><th>#</th>' + colDefs.map(c=>`<th>${c.label}</th>`).join('') + '</tr>';
-  document.querySelector('.ptbl thead').innerHTML = thead;
-
+  const colDefs=activeColIds.map(id=>ALL_COLS.find(c=>c.id===id)).filter(Boolean);
+  document.querySelector('.ptbl thead').innerHTML='<tr><th>#</th>'+colDefs.map(c=>'<th>'+c.label+'</th>').join('')+'</tr>';
   const tbody=document.getElementById('ptblBody');
-  if(!rows.length){tbody.innerHTML=`<tr><td colspan="${colDefs.length+1}" class="no-data">No participants match the current filters.</td></tr>`;return;}
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="'+(colDefs.length+1)+'" class="no-data">No participants match the current filters.</td></tr>';return;}
   tbody.innerHTML=rows.map((r,i)=>{
     const w=r._w,e=r._e,n=r._n;
-    const cells = colDefs.map(col=>{
-      const v = getCellValue(col.id, r, w, e, n);
-      if(v.html) return `<td>${v.html}</td>`;
-      return `<td${v.style?` style="${v.style}"`:v.class?` class="${v.class}"`:''}>${v.display}</td>`;
+    const cells=colDefs.map(col=>{
+      const v=getCellValue(col.id,r,w,e,n);
+      if(v.html)return '<td>'+v.html+'</td>';
+      return '<td'+(v.style?' style="'+v.style+'"':v.cls?' class="'+v.cls+'"':'')+'>'+(v.display||'—')+'</td>';
     }).join('');
-    const rowClass = i%2===0?'':'';
-    return `<tr><td class="fmuted">${i+1}</td>${cells}</tr>`;
+    return '<tr><td class="fmuted">'+(i+1)+'</td>'+cells+'</tr>';
   }).join('');
 }
-
 
 function toggleShowAll(){showAllParticipants=!showAllParticipants;const btn=document.getElementById('showAllToggle');if(btn){btn.classList.toggle('on',showAllParticipants);btn.textContent=showAllParticipants?'Hide Unmatched':'Show Unmatched';}if(window.webRows2)renderTable(window.webRows2,window.excRows2,window.winRows2);}
 
@@ -1217,514 +1293,412 @@ async function runDiag(){
     d.innerHTML=`<span class="diag-icon ${cls}">${icon}</span><span>${msg}</span>`;
     box.appendChild(d);
   }
-  function updateLast(icon,cls,msg){
-    const last=box.lastChild;
-    last.innerHTML=`<span class="diag-icon ${cls}">${icon}</span><span>${msg}</span>`;
-    last.className='diag-row';
+
+  // Check 1: credentials look valid (not still placeholder text)
+  const urlOk = SUPABASE_URL.startsWith('https://') && SUPABASE_URL.includes('.supabase.co');
+  const keyOk = SUPABASE_ANON.startsWith('eyJ') && SUPABASE_ANON.length > 100;
+
+  if(!urlOk){
+    row('✗','diag-fail',`URL looks wrong: <code style="color:var(--accent)">${SUPABASE_URL.slice(0,40)}…</code><br>Should start with <b>https://</b> and contain <b>.supabase.co</b>`);
+    return;
   }
+  row('✓','diag-ok',`URL format OK: <b>${SUPABASE_URL.replace('https://','').split('.')[0]}.supabase.co</b>`);
 
-  // CHECK 1: URL format
-  const urlOk=SUPABASE_URL.startsWith('https://')&&SUPABASE_URL.includes('.supabase.co');
-  if(!urlOk){row('✗','diag-fail',`URL looks wrong: <b>${SUPABASE_URL.slice(0,50)}</b><br>Should start with https:// and contain .supabase.co`);return;}
-  row('✓','diag-ok',`URL format OK`);
-
-  // CHECK 2: Key format
-  const keyOk=SUPABASE_ANON.startsWith('eyJ')&&SUPABASE_ANON.length>100;
-  if(!keyOk){row('✗','diag-fail','Anon key looks wrong — should be a long string starting with eyJ');return;}
+  if(!keyOk){
+    row('✗','diag-fail','Anon key looks wrong — should be a long string starting with <b>eyJ</b>');
+    return;
+  }
   row('✓','diag-ok','Anon key format OK');
 
-  // CHECK 3: Try login with entered credentials (uses Supabase JS client directly — no raw fetch)
+  // Check 2: can we reach Supabase at all (unauthenticated ping)
+  row('…','diag-wait','Pinging Supabase…');
+  try{
+    const t0=Date.now();
+    const res=await fetch(SUPABASE_URL+'/rest/v1/',{
+      headers:{'apikey':SUPABASE_ANON,'Authorization':'Bearer '+SUPABASE_ANON}
+    });
+    const ms=Date.now()-t0;
+    if(res.ok||res.status===200||res.status===404){
+      // 404 is fine — it just means no table called '' — server IS responding
+      box.lastChild.remove();
+      row('✓','diag-ok',`Supabase server reachable (${ms}ms response)`);
+    } else if(res.status===401){
+      box.lastChild.remove();
+      row('✗','diag-fail','<b>HTTP 401 — most likely your Supabase project is paused.</b><br>Fix: go to supabase.com → open your project → click the orange <b>Restore project</b> button → wait 1–2 minutes → try again.<br><br>If the project is not paused, your anon key may have been copied incorrectly — go to Supabase → Settings → API and copy it again fresh.');
+      return;
+    } else if(res.status===403){
+      box.lastChild.remove();
+      row('✗','diag-fail','HTTP 403 — project found but access denied. Double-check your anon key in Supabase → Settings → API.');
+      return;
+    } else {
+      box.lastChild.remove();
+      row('✗','diag-fail',`HTTP ${res.status} from Supabase — check your Project URL in Settings → API.`);
+      return;
+    }
+  }catch(e){
+    box.lastChild.remove();
+    row('✗','diag-fail','Could not reach Supabase at all — check your URL or internet connection<br><small>'+e.message+'</small>');
+    return;
+  }
+
+  // Check 3: try to sign in with the entered credentials
   const email=document.getElementById('loginEmail').value.trim();
   const pass=document.getElementById('loginPassword').value;
   if(!email||!pass){
-    row('⚠','diag-warn','Enter your email + password above then run Test Connection again to verify login and table access');
-    return;
-  }
-  row('…','diag-wait','Testing login via Supabase client…');
-  const {data:authData,error:authErr}=await sb.auth.signInWithPassword({email,password:pass});
-  if(authErr){
-    updateLast('✗','diag-fail','Login failed: <b>'+authErr.message+'</b><br>Go to Supabase → Authentication → Users and verify this email exists and the password is correct');
-    return;
-  }
-  updateLast('✓','diag-ok','Login OK — Supabase client is connected');
-
-  // CHECK 4: Read from web_registration
-  row('…','diag-wait','Reading from web_registration table…');
-  const {data:rows,error:tErr,count}=await sb.from('web_registration').select('"Event Name"',{count:'exact'}).limit(1);
-  if(tErr){
-    updateLast('✗','diag-fail','Table read failed: <b>'+tErr.message+'</b><br>Go to Supabase → Authentication → Policies and confirm the "Authenticated read" policy exists on web_registration');
-    await sb.auth.signOut();return;
-  }
-  if(!rows||rows.length===0){
-    updateLast('⚠','diag-warn','web_registration table is empty — import your CSV via Table Editor first');
+    row('⚠','diag-warn','Enter your email + password above, then run the test again to verify login');
   } else {
-    updateLast('✓','diag-ok','web_registration readable — data present');
+    row('…','diag-wait','Testing login credentials…');
+    const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error){
+      box.lastChild.remove();
+      row('✗','diag-fail','Login failed: <b>'+error.message+'</b><br>Check email/password in Supabase → Authentication → Users');
+      return;
+    }
+    box.lastChild.remove();
+    row('✓','diag-ok','Login credentials valid');
+
+    // Check 4: can we read the web_registration table?
+    row('…','diag-wait','Checking database table access…');
+    const {data:rows,error:tErr}=await sb.from('web_registration').select('"Event Name"').limit(1);
+    if(tErr){
+      box.lastChild.remove();
+      row('✗','diag-fail','Table read failed: <b>'+tErr.message+'</b><br>Check RLS policies in Supabase → Authentication → Policies');
+      return;
+    }
+    box.lastChild.remove();
+    if(!rows||rows.length===0){
+      row('⚠','diag-warn','Connected, but <b>web_registration</b> table is empty — import your CSV');
+    } else {
+      row('✓','diag-ok','Table access OK — data is present');
+      row('✓','diag-ok','<b>Everything looks good.</b> Click Sign In to load the dashboard.');
+    }
+    await sb.auth.signOut();
   }
-
-  // CHECK 5: Read from exc_truck_loading
-  row('…','diag-wait','Reading from exc_truck_loading table…');
-  const {error:eErr}=await sb.from('exc_truck_loading').select('"Total Score"').limit(1);
-  if(eErr){updateLast('✗','diag-fail','exc_truck_loading read failed: '+eErr.message);}
-  else{updateLast('✓','diag-ok','exc_truck_loading readable');}
-
-  // CHECK 6: Read from windows_trivia
-  row('…','diag-wait','Reading from windows_trivia table…');
-  const {error:wErr}=await sb.from('windows_trivia').select('"Mobile Phone"').limit(1);
-  if(wErr){updateLast('✗','diag-fail','windows_trivia read failed: '+wErr.message);}
-  else{updateLast('✓','diag-ok','windows_trivia readable');}
-
-  await sb.auth.signOut();
-  row('✓','diag-ok','<b>All checks passed — click Sign In to load the dashboard</b>');
 }
 
-// operations page logic moved to operations.html
+
+// ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
+let activeTab = 'analytics';
+let opsCharts = {};
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(tab === 'analytics' ? 'analytics' : 'operations')));
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
+  if (tab === 'operations') renderOps();
+}
+
+// ─── OPERATIONS PAGE ─────────────────────────────────────────────────────────
+function parseDate(str) {
+  if (!str) return null;
+  const d = new Date(str);
+  return isNaN(d) ? null : d;
+}
+
+function toYMD(d) {
+  if (!d) return null;
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function median(arr) {
+  if (!arr.length) return null;
+  const sorted = [...arr].sort((a,b) => a-b);
+  const mid = Math.floor(sorted.length/2);
+  return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
+}
+
+function destroyOpsCharts() {
+  Object.values(opsCharts).forEach(c => { if(c) c.destroy(); });
+  opsCharts = {};
+}
+
+function renderOps() {
+  destroyOpsCharts();
+
+  // Filter by event (shared filter)
+  const webF = filters.events.size===0 ? rawWeb : rawWeb.filter(r=>(r['Event Name']||'').trim()!=='' && filters.events.has((r['Event Name']||'').trim()));
+  const excF  = filters.events.size===0 ? rawExc : rawExc.filter(r=>(r['Event Name']||'').trim()!=='' && filters.events.has((r['Event Name']||'').trim()));
+  const winF  = filters.events.size===0 ? rawWin : rawWin.filter(r=>(r['Event Name']||'').trim()!=='' && filters.events.has((r['Event Name']||'').trim()));
+
+  // ── Phone → earliest timestamp maps ────────────────────────────────────────
+  const excTimeMap = new Map();
+  excF.forEach(r => {
+    const p = normalizePhone(r['Login Code'] || '');
+    const d = parseDate(r['Date']);
+    if (p && d) {
+      if (!excTimeMap.has(p) || d < excTimeMap.get(p)) excTimeMap.set(p, d);
+    }
+  });
+
+  const winTimeMap = new Map();
+  winF.forEach(r => {
+    const p = normalizePhone(r['QR Code Scan'] || r['Mobile Phone'] || '');
+    const d = parseDate(r['Date']);
+    if (p && d) {
+      if (!winTimeMap.has(p) || d < winTimeMap.get(p)) winTimeMap.set(p, d);
+    }
+  });
+
+  // ── Wait times: Registration → EXC ─────────────────────────────────────────
+  const excWaitMin = [];
+  const excWaitByDay = {};
+  webF.forEach(r => {
+    const p = normalizePhone(r['Mobile Phone'] || '');
+    const regTime = parseDate(r['Date']);
+    const excTime = excTimeMap.get(p);
+    if (p && regTime && excTime) {
+      const diff = (excTime - regTime) / 60000;
+      if (diff >= 0 && diff < 600) {
+        excWaitMin.push(diff);
+        const day = toYMD(regTime);
+        if (!excWaitByDay[day]) excWaitByDay[day] = [];
+        excWaitByDay[day].push(diff);
+      }
+    }
+  });
+
+  // ── Wait times: Registration → Trivia ──────────────────────────────────────
+  const winWaitMin = [];
+  const winWaitByDay = {};
+  webF.forEach(r => {
+    const p = normalizePhone(r['Mobile Phone'] || '');
+    const regTime = parseDate(r['Date']);
+    const winTime = winTimeMap.get(p);
+    if (p && regTime && winTime) {
+      const diff = (winTime - regTime) / 60000;
+      if (diff >= 0 && diff < 600) {
+        winWaitMin.push(diff);
+        const day = toYMD(regTime);
+        if (!winWaitByDay[day]) winWaitByDay[day] = [];
+        winWaitByDay[day].push(diff);
+      }
+    }
+  });
+
+  // ── Sign-ups per day ────────────────────────────────────────────────────────
+  const signupsByDay = {};
+  webF.forEach(r => {
+    const d = parseDate(r['Date']);
+    if (!d) return;
+    const day = toYMD(d);
+    signupsByDay[day] = (signupsByDay[day] || 0) + 1;
+  });
+
+  const excByDay = {};
+  excF.forEach(r => {
+    const d = parseDate(r['Date']);
+    if (!d) return;
+    excByDay[toYMD(d)] = (excByDay[toYMD(d)] || 0) + 1;
+  });
+
+  const winByDay = {};
+  winF.forEach(r => {
+    const d = parseDate(r['Date']);
+    if (!d) return;
+    winByDay[toYMD(d)] = (winByDay[toYMD(d)] || 0) + 1;
+  });
+
+  // ── Activity by hour of day ─────────────────────────────────────────────────
+  const byHour    = Array(24).fill(0);
+  const excByHour = Array(24).fill(0);
+  webF.forEach(r => { const d = parseDate(r['Date']); if (d) byHour[d.getHours()]++; });
+  excF.forEach(r => { const d = parseDate(r['Date']); if (d) excByHour[d.getHours()]++; });
+
+  // ── KPI calculations ────────────────────────────────────────────────────────
+  const totalReg  = webF.length;
+  const totalExc  = excF.length;
+  const convRate  = totalReg > 0 ? ((totalExc / totalReg) * 100).toFixed(1) : '—';
+
+  const medExcWait = median(excWaitMin);
+  const medWinWait = median(winWaitMin);
+  const fmtMin = m => m == null ? '—' : m < 60 ? m.toFixed(0) + ' min' : (m/60).toFixed(1) + ' hrs';
+
+  const peakHourIdx = byHour.indexOf(Math.max(...byHour));
+  const peakHourStr = peakHourIdx === 0 ? '12 AM' : peakHourIdx < 12 ? peakHourIdx + ' AM' : peakHourIdx === 12 ? '12 PM' : (peakHourIdx-12) + ' PM';
+
+  const busyDay    = Object.entries(signupsByDay).sort((a,b) => b[1]-a[1])[0];
+  const busyDayStr = busyDay ? busyDay[0].slice(5) + ' (' + busyDay[1] + ')' : '—';
+
+  // ── KPI cards (5: conversion + both waits + peak hour + busiest day) ────────
+  document.getElementById('opsKpiRow').innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-label">Simulator Conversion Rate</div>
+      <div class="kpi-value">${convRate}%</div>
+      <div class="kpi-sub">${totalExc.toLocaleString()} of ${totalReg.toLocaleString()} registrants ran EXC</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Median Wait → EXC</div>
+      <div class="kpi-value">${fmtMin(medExcWait)}</div>
+      <div class="kpi-sub">Registration to simulator</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Median Wait → Trivia</div>
+      <div class="kpi-value">${fmtMin(medWinWait)}</div>
+      <div class="kpi-sub">Registration to trivia</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Peak Sign-Up Hour</div>
+      <div class="kpi-value">${peakHourStr}</div>
+      <div class="kpi-sub">${Math.max(...byHour).toLocaleString()} sign-ups that hour</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Busiest Day</div>
+      <div class="kpi-value" style="font-size:22px">${busyDayStr}</div>
+      <div class="kpi-sub">By registration count</div>
+    </div>`;
+
+  // Swap kpi-row to 5 columns for ops page
+  document.getElementById('opsKpiRow').style.gridTemplateColumns = 'repeat(5,1fr)';
+
+  // ── Sorted day labels ───────────────────────────────────────────────────────
+  const allDays   = [...new Set([...Object.keys(signupsByDay),...Object.keys(excByDay),...Object.keys(winByDay)])].sort();
+  const dayLabels = allDays.map(d => { const dt=new Date(d+'T12:00:00'); return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}); });
+
+  const coLine = {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ labels:{ color:'#8b949e', font:{family:'Barlow Condensed',size:11,weight:'600'}, padding:12 } } },
+    scales:{
+      x:{ ticks:{color:'#8b949e',font:{family:'Barlow Condensed',size:10}}, grid:{color:'#21262d'} },
+      y:{ ticks:{color:'#8b949e',font:{family:'Barlow Condensed',size:10}}, grid:{color:'#21262d'}, beginAtZero:true }
+    }
+  };
+
+  // ── Render grid ─────────────────────────────────────────────────────────────
+  document.getElementById('opsGrid').innerHTML = `
+    <div class="card full">
+      <div class="card-title"><span class="dot"></span>Daily Activity — Registrations, EXC Runs &amp; Trivia Sessions</div>
+      <div class="chart-wrap" style="min-height:240px"><canvas id="chartDailyActivity"></canvas></div>
+    </div>
+    <div class="card full">
+      <div class="card-title"><span class="dot"></span>Sign-Up &amp; EXC Activity by Hour of Day</div>
+      <div class="chart-wrap" style="min-height:220px"><canvas id="chartHourly"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Median Wait Time by Day — Registration to EXC</div>
+      <div class="chart-wrap" style="min-height:220px"><canvas id="chartWaitExc"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Median Wait Time by Day — Registration to Trivia</div>
+      <div class="chart-wrap" style="min-height:220px"><canvas id="chartWaitWin"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>EXC Wait Time Distribution</div>
+      <div class="chart-wrap" style="min-height:220px"><canvas id="chartWaitDistExc"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Trivia Wait Time Distribution</div>
+      <div class="chart-wrap" style="min-height:220px"><canvas id="chartWaitDistWin"></canvas></div>
+    </div>`;
+
+  // Chart 1: Daily activity line
+  opsCharts.daily = new Chart(document.getElementById('chartDailyActivity'), {
+    type:'line',
+    data:{ labels:dayLabels, datasets:[
+      { label:'Registrations',     data:allDays.map(d=>signupsByDay[d]||0), borderColor:'#ce0e2d', backgroundColor:'rgba(206,14,45,.1)',  borderWidth:2, pointRadius:4, tension:.3, fill:true },
+      { label:'EXC Simulator Runs',data:allDays.map(d=>excByDay[d]||0),    borderColor:'#58a6ff', backgroundColor:'rgba(88,166,255,.08)', borderWidth:2, pointRadius:4, tension:.3, fill:true },
+      { label:'Trivia Sessions',   data:allDays.map(d=>winByDay[d]||0),    borderColor:'#3fb950', backgroundColor:'rgba(63,185,80,.08)',  borderWidth:2, pointRadius:4, tension:.3, fill:true },
+    ]},
+    options:{ ...coLine }
+  });
+
+  // Chart 2: Hourly bar
+  const hourLabels = Array.from({length:24},(_,i)=>i===0?'12a':i<12?i+'a':i===12?'12p':(i-12)+'p');
+  opsCharts.hourly = new Chart(document.getElementById('chartHourly'), {
+    type:'bar',
+    data:{ labels:hourLabels, datasets:[
+      { label:'Registrations', data:byHour,    backgroundColor:'rgba(206,14,45,.75)', borderRadius:3 },
+      { label:'EXC Runs',      data:excByHour, backgroundColor:'rgba(88,166,255,.65)', borderRadius:3 },
+    ]},
+    options:{ ...coLine }
+  });
+
+  // Helper: median wait by day chart
+  function waitByDayChart(canvasId, waitByDayObj, color) {
+    const days   = Object.keys(waitByDayObj).sort();
+    const labels = days.map(d => { const dt=new Date(d+'T12:00:00'); return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}); });
+    const data   = days.map(d => { const m=median(waitByDayObj[d]); return m!=null?+m.toFixed(1):null; });
+    return new Chart(document.getElementById(canvasId), {
+      type:'bar',
+      data:{ labels, datasets:[{ label:'Median Wait (min)', data, backgroundColor:color+'bb', borderRadius:3 }]},
+      options:{
+        ...coLine,
+        plugins:{ ...coLine.plugins, legend:{display:false} },
+        scales:{ ...coLine.scales, y:{...coLine.scales.y, title:{display:true,text:'Minutes',color:'#8b949e',font:{size:10}}} }
+      }
+    });
+  }
+
+  opsCharts.waitExc = waitByDayChart('chartWaitExc', excWaitByDay, '#58a6ff');
+  opsCharts.waitWin = waitByDayChart('chartWaitWin', winWaitByDay, '#3fb950');
+
+  // Helper: wait time distribution histogram
+  function waitDistChart(canvasId, waitArr, color) {
+    if (!waitArr.length) { return; }
+    const maxW = Math.min(Math.max(...waitArr, 10), 180);
+    const bSz  = maxW <= 60 ? 5 : 10;
+    const buckets = {};
+    for (let i=0; i<=maxW; i+=bSz) buckets[i]=0;
+    waitArr.forEach(w => {
+      const b = Math.floor(w/bSz)*bSz;
+      const key = Object.keys(buckets).map(Number).filter(k=>k<=b).pop();
+      if (key !== undefined) buckets[key]++;
+    });
+    const labels = Object.keys(buckets).map(k=>k+'–'+(+k+bSz)+'m');
+    return new Chart(document.getElementById(canvasId), {
+      type:'bar',
+      data:{ labels, datasets:[{ label:'Participants', data:Object.values(buckets), backgroundColor:color+'bb', borderRadius:3 }]},
+      options:{
+        ...coLine,
+        plugins:{ ...coLine.plugins, legend:{display:false} },
+        scales:{ ...coLine.scales, x:{...coLine.scales.x,ticks:{...coLine.scales.x.ticks,maxRotation:45}} }
+      }
+    });
+  }
+
+  opsCharts.distExc = waitDistChart('chartWaitDistExc', excWaitMin, '#58a6ff');
+  opsCharts.distWin = waitDistChart('chartWaitDistWin', winWaitMin, '#3fb950');
+}
 
 
 
 // ─── EXCEL EXPORT ────────────────────────────────────────────────────────────
 function exportExcel(){
-  try {
-    if(typeof XLSX === 'undefined'){
-      alert('Excel library is still loading. Please wait a moment and try again.');
-      return;
-    }
-    const rows = window._lastTableRows || [];
-    if(!rows.length){
-      alert('No participants to export. Make sure data is loaded and visible in the table.');
-      return;
-    }
-
-    const pdfColDefs = activeColIds.map(id=>ALL_COLS.find(c=>c.id===id)).filter(Boolean);
-
-    // ── Build header + data ───────────────────────────────────────────────
-    const headerRow = ['#', ...pdfColDefs.map(c=>c.label)];
-    const dataRows  = rows.map((r,i)=>{
-      const w=r._w, e=r._e, n=r._n;
-      return [i+1, ...pdfColDefs.map(col=>{
-        const v = getCellValue(col.id, r, w, e, n);
-        const raw = v.html ? v.html.replace(/<[^>]+>/g,'').trim() : (v.display||'');
-        return raw === '—' ? '' : raw;
+  try{
+    if(typeof XLSX==='undefined'){alert('Excel library loading, try again.');return;}
+    const rows=window._lastTableRows||[];
+    if(!rows.length){alert('No participants to export.');return;}
+    const colDefs=activeColIds.map(id=>ALL_COLS.find(c=>c.id===id)).filter(Boolean);
+    const head=['#',...colDefs.map(c=>c.label)];
+    const data=rows.map((r,i)=>{
+      const w=r._w,e=r._e,n=r._n;
+      return[i+1,...colDefs.map(col=>{
+        const v=getCellValue(col.id,r,w,e,n);
+        const raw=v.html?v.html.replace(/<[^>]+>/g,'').trim():(v.display||'');
+        return raw==='—'?'':raw;
       })];
     });
-
-    // ── Build worksheet ───────────────────────────────────────────────────
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows]);
-
-    // ── Column widths ─────────────────────────────────────────────────────
-    const COL_CHARS = {
-      name:22, phone:16, email:30, addr:30, city:16, state:8,  event:22,
-      excScore:10, excSafety:10, excProd:12,
-      tAuto:10, tCivil:10, tElec:10, tPlumb:10, tWeld:10,
-      tConst:10, tHvac:10, tWarehouse:10, tHeavy:10,
-      triviaSum:50, certs:40, ji:14, employment:24, gender:12, industry:24,
-    };
-    ws['!cols'] = [
-      {wch:5},
-      ...pdfColDefs.map(c=>({wch: COL_CHARS[c.id]||18}))
-    ];
-
-    // ── Row heights ───────────────────────────────────────────────────────
-    const certIdx  = pdfColDefs.findIndex(c=>c.id==='certs');
-    const trivIdx  = pdfColDefs.findIndex(c=>c.id==='triviaSum');
-    ws['!rows'] = [{hpt:18}];
-    dataRows.forEach((row,i)=>{
-      let maxLines = 1;
-      if(certIdx>=0){
-        const val = String(row[certIdx+1]||'');
-        maxLines = Math.max(maxLines, (val.match(/,/g)||[]).length + 1);
-      }
-      if(trivIdx>=0){
-        const val = String(row[trivIdx+1]||'');
-        maxLines = Math.max(maxLines, (val.match(/,/g)||[]).length + 1);
-      }
-      ws['!rows'].push({hpt: Math.max(16, maxLines * 14)});
-    });
-
-    // ── Freeze header row ─────────────────────────────────────────────────
-    ws['!freeze'] = {xSplit:0, ySplit:1, topLeftCell:'A2', activeCell:'A2', sqref:'A2'};
-
-    // ── Autofilter on header row ──────────────────────────────────────────
-    const lastCol = headerRow.length - 1;
-    const colLetter = n => {
-      let s='', r=n;
-      while(r>=0){s=String.fromCharCode(65+(r%26))+s;r=Math.floor(r/26)-1;}
-      return s;
-    };
-    ws['!autofilter'] = {ref:`A1:${colLetter(lastCol)}1`};
-
-    // ── Meta / filter info sheet ──────────────────────────────────────────
-    const parts = [];
-    if(filters.events.size>0) parts.push('Events: '+[...filters.events].join(', '));
-    if(filters.jobInterest.size>0) parts.push('Job Interest: '+[...filters.jobInterest].join(', '));
-    if(filters.employment.size>0) parts.push('Employment: '+[...filters.employment].map(e=>({
-      'Currently employed in construction and/or a trade':'Trades',
-      'Currently employed in another industry':'Other Industry',
-      'Retired':'Retired','Student':'Student',
-      'Unemployed and looking for work':'Unemployed','Other':'Other'
-    }[e]||e)).join(', '));
-    if(filters.states.size>0) parts.push('States: '+[...filters.states].join(', '));
-    if(filters.certs.size>0) parts.push('Certs: '+[...filters.certs].join(', '));
-    if(filters.trivia.size>0) parts.push('Trivia: '+[...filters.trivia].join(', '));
-    if(filters.excMin>0||filters.excMax<100) parts.push('EXC Score: '+filters.excMin+'\u2013'+filters.excMax);
-
-    const metaData = [
-      ['Built to Work — Event Analytics Export'],
-      ['Generated', new Date().toLocaleString()],
-      ['Participants', rows.length],
-      [''],
-      ['Active Filters'],
-      ...(parts.length ? parts.map(p=>[p]) : [['None — all participants']]),
-    ];
-    const wsMeta = XLSX.utils.aoa_to_sheet(metaData);
-    wsMeta['!cols'] = [{wch:22},{wch:60}];
-
-    // ── Write file ────────────────────────────────────────────────────────
-    XLSX.utils.book_append_sheet(wb, ws, 'Participants');
-    XLSX.utils.book_append_sheet(wb, wsMeta, 'Export Info');
-
-    const stamp = new Date().toISOString().slice(0,10);
-    const eventTag = filters.events.size===0
-      ? 'All-Events'
-      : [...filters.events].map(e=>e.replace(/\s+/g,'-')).join('_');
-
-    XLSX.writeFile(wb, `BTW-Participants_${eventTag}_${stamp}.xlsx`);
-
-  } catch(err){
-    console.error('Excel export error:', err);
-    alert('Excel export failed: ' + err.message + '\n\nCheck the browser console for details.');
-  }
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.aoa_to_sheet([head,...data]);
+    const COL_W={name:22,phone:16,email:30,addr:30,city:16,state:8,event:22,excScore:10,excSafety:10,excProd:12,tAuto:10,tCivil:10,tElec:10,tPlumb:10,tWeld:10,tConst:10,tHvac:10,tWarehouse:10,tHeavy:10,triviaSum:50,certs:40,ji:14,employment:24,gender:12,industry:24};
+    ws['!cols']=[{wch:5},...colDefs.map(c=>({wch:COL_W[c.id]||18}))];
+    ws['!freeze']={xSplit:0,ySplit:1,topLeftCell:'A2',activeCell:'A2',sqref:'A2'};
+    const lastCol=head.length-1;
+    const cl=n=>{let s='',r=n;while(r>=0){s=String.fromCharCode(65+(r%26))+s;r=Math.floor(r/26)-1;}return s;};
+    ws['!autofilter']={ref:'A1:'+cl(lastCol)+'1'};
+    const parts=[];
+    if(filters.events.size>0)parts.push('Events: '+[...filters.events].join(', '));
+    if(filters.excMin>0||filters.excMax<100)parts.push('EXC: '+filters.excMin+'–'+filters.excMax);
+    const wsMeta=XLSX.utils.aoa_to_sheet([['Built to Work — Export'],['Generated',new Date().toLocaleString()],['Participants',rows.length],[''],['Filters',...(parts.length?parts.map(p=>[p]):[['None']])]]);
+    wsMeta['!cols']=[{wch:20},{wch:60}];
+    XLSX.utils.book_append_sheet(wb,ws,'Participants');
+    XLSX.utils.book_append_sheet(wb,wsMeta,'Export Info');
+    const stamp=new Date().toISOString().slice(0,10);
+    const tag=filters.events.size===0?'All-Events':[...filters.events].map(e=>e.replace(/\s+/g,'-')).join('_');
+    XLSX.writeFile(wb,'BTW-Participants_'+tag+'_'+stamp+'.xlsx');
+  }catch(err){console.error('Excel export error:',err);alert('Excel export failed: '+err.message);}
 }
 </script>
-<body>
 
-<!-- ══ LOGIN SCREEN ══ -->
-<div id="loginScreen">
-  <div class="login-logo">
-    <img src="data:image/png;base64,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" alt="Built to Work" style="height:52px;display:block;image-rendering:auto">
-    <p class="login-tagline">Event Analytics Dashboard</p>
-    <p class="login-subtag">Powering the American Workforce</p>
-  </div>
-  <div class="login-card">
-    <div class="login-title">Sign In to Continue</div>
-    <div class="login-field">
-      <label class="login-label" for="loginEmail">Email Address</label>
-      <input class="login-input" id="loginEmail" type="email" placeholder="you@company.com" autocomplete="email">
-    </div>
-    <div class="login-field">
-      <label class="login-label" for="loginPassword">Password</label>
-      <input class="login-input" id="loginPassword" type="password" placeholder="Enter your password" autocomplete="current-password">
-    </div>
-    <div id="loginError"></div>
-    <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In &rarr;</button>
-    <hr class="login-divider">
-    <button class="diag-btn" onclick="runDiag()">&#128300; Test Connection</button>
-    <div class="diag-box" id="diagBox"></div>
-    <div class="login-footer">Access restricted to authorized Built to Work team members only.</div>
-  </div>
-</div>
-
-<!-- ══ LOADING OVERLAY ══ -->
-<div id="loadingOverlay">
-  <div class="spinner"></div>
-  <div class="loading-text" id="loadingText">Loading dashboard data&hellip;</div>
-</div>
-
-
-<!-- ══════════════════════════════════════════════ DASHBOARD -->
-<header id="appHeader" style="display:none;">
-  <div class="h-left">
-    <img src="data:image/png;base64,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" alt="Built to Work" style="height:28px;display:block;image-rendering:auto">
-    <div class="h-title">
-      <h1>Event Analytics Dashboard</h1>
-      <p id="userEmailDisplay">Built to Work USA</p>
-    </div>
-  </div>
-  <div class="h-controls">
-    <div class="refresh-wrap">
-      <div class="refresh-dot"></div>
-      <span class="refresh-label">Updated <span id="lastRefreshTime">&mdash;</span></span>
-    </div>
-    <div class="ms-wrap" id="msWrap">
-      <button class="ms-btn" id="msBtn" onclick="togglePicker()">All Events</button>
-      <div class="ms-panel" id="msPanel">
-        <div class="ms-all active" id="msAll" onclick="selectAllEvents()">
-          <span class="ms-check" id="msAllCheck">&#10003;</span>All Events
-        </div>
-        <div id="msOptions"></div>
-      </div>
-    </div>
-    <button class="hbtn hbtn-blue" onclick="refreshData()">&#8635; Refresh</button>
-    <button class="hbtn hbtn-danger" id="clearFiltersBtn" onclick="clearAllFilters()" style="display:none;">&#x2715; Clear Filters</button>
-    <a href="operations.html" class="hbtn hbtn-muted" style="text-decoration:none">&#9632; Operations</a>
-    <button class="hbtn hbtn-muted" onclick="doLogout()">Sign Out</button>
-  </div>
-</header>
-
-<div id="appLayout" style="display:none;">
-  <!-- SIDEBAR -->
-  <div id="sidebar">
-    <div class="sidebar-header">
-      Active Filters <span class="active-count" id="activeCount">0</span>
-    </div>
-
-    <!-- EXC Score Range -->
-    <div class="filter-section">
-      <div class="fs-title"><span class="fs-dot"></span>EXC Score Range</div>
-      <div class="range-wrap">
-        <div class="slider-track">Min: <span id="excMinVal">0</span></div>
-        <input type="range" id="excMin" min="0" max="100" value="0" oninput="onExcRange()">
-        <div class="slider-track">Max: <span id="excMaxVal">100</span></div>
-        <input type="range" id="excMax" min="0" max="100" value="100" oninput="onExcRange()">
-      </div>
-    </div>
-
-    <!-- Job Interest -->
-    <div class="filter-section">
-      <div class="fs-title"><span class="fs-dot"></span>Job Interest</div>
-      <div class="filter-chip-wrap" id="fJI"></div>
-    </div>
-
-    <!-- Employment Status -->
-    <div class="filter-section">
-      <div class="fs-title"><span class="fs-dot"></span>Employment Status</div>
-      <div class="filter-chip-wrap" id="fEmp"></div>
-    </div>
-
-    <!-- EXC Score Segments -->
-    <div class="filter-section">
-      <div class="fs-title"><span class="fs-dot"></span>EXC Score Segment</div>
-      <div class="filter-chip-wrap" id="fScore"></div>
-    </div>
-
-    <!-- Age Groups -->
-    <div class="filter-section">
-      <div class="fs-title"><span class="fs-dot"></span>Age Group</div>
-      <div class="filter-chip-wrap" id="fAge"></div>
-    </div>
-
-    <!-- Gender -->
-    <div class="filter-section">
-      <div class="fs-title"><span class="fs-dot"></span>Gender</div>
-      <div class="filter-chip-wrap" id="fGender"></div>
-    </div>
-
-    <!-- State -->
-    <div class="filter-section">
-      <div class="fs-title"><span class="fs-dot"></span>State (top 10)</div>
-      <div class="filter-chip-wrap" id="fState"></div>
-    </div>
-
-    <!-- Trivia Tests -->
-    <div class="filter-section">
-      <div class="fs-title"><span class="fs-dot"></span>Trivia Test Taken</div>
-      <div class="filter-chip-wrap" id="fTrivia"></div>
-    </div>
-    <div class="filter-section" id="triviaScoreSection" style="opacity:.4;pointer-events:none;">
-      <div class="fs-title"><span class="fs-dot"></span>Trivia Score Range <span style="font-size:9px;margin-left:4px;color:var(--muted)">(select 1 test)</span></div>
-      <div class="range-wrap">
-        <div class="slider-track">Min: <span id="tsMinVal">0</span></div>
-        <input type="range" id="triviaScoreMin" min="0" max="20" value="0" oninput="onTriviaRange()">
-        <div class="slider-track">Max: <span id="tsMaxVal">20</span></div>
-        <input type="range" id="triviaScoreMax" min="0" max="20" value="20" oninput="onTriviaRange()">
-      </div>
-    </div>
-    <div class="filter-section">
-      <div class="fs-title"><span class="fs-dot"></span>Trade Certifications</div>
-      <div class="filter-chip-wrap" id="fCerts"></div>
-    </div>
-  </div>
-
-  <!-- MAIN -->
-  <div id="mainContent">
-    <div class="kpi-row" id="kpiRow"></div>
-    <div class="dash-grid" id="dashGrid"></div>
-    <footer>BUILT TO WORK &bull; <span style="color:#ce0e2d;font-weight:700">POWERING THE AMERICAN WORKFORCE</span> &bull; Event Analytics Dashboard &bull; 2026</footer>
-  </div>
-</div>
-
-// ─── PDF EXPORT ──────────────────────────────────────────────────────────────
-function exportPDF(){
-  try {
-    if(!window.jspdf || !window.jspdf.jsPDF){
-      alert('PDF library is still loading. Please wait a few seconds and try again.');
-      return;
-    }
-    const {jsPDF} = window.jspdf;
-
-    const rows = window._lastTableRows || [];
-    if(!rows.length){
-      alert('No participants to export. Make sure data is loaded and visible in the table.');
-      return;
-    }
-
-    // ── Column definitions ─────────────────────────────────────────────────
-    const pdfColDefs = activeColIds.map(id=>ALL_COLS.find(c=>c.id===id)).filter(Boolean);
-
-    // Smart width per column type (landscape: ~720pt usable after margins)
-    const COL_WIDTHS = {
-      name:70, phone:62, email:90, addr:90, city:50, state:22, event:70,
-      excScore:28, excSafety:28, excProd:28,
-      tAuto:28, tCivil:28, tElec:28, tPlumb:28, tWeld:28,
-      tConst:28, tHvac:28, tWarehouse:28, tHeavy:28,
-      triviaSum:110, certs:110, ji:36, employment:60, gender:30, industry:70,
-    };
-    const NUM_COL = 18; // # column width
-
-    // Calculate total and scale to fit if over budget
-    const PAGE_W = 792, PAGE_H = 612, ML = 36, MR = 36;
-    const USABLE = PAGE_W - ML - MR - NUM_COL;
-    const rawTotal = pdfColDefs.reduce((s,c)=>s+(COL_WIDTHS[c.id]||60),0);
-    // Account for cell padding (8pt per col) in scale budget
-    const paddingTotal = (pdfColDefs.length + 1) * 8;
-    const scaleBudget = USABLE - paddingTotal;
-    const scale = rawTotal > scaleBudget ? scaleBudget / rawTotal : 1;
-    const scaledWidths = pdfColDefs.map(c=>Math.floor((COL_WIDTHS[c.id]||60)*scale));
-
-    // ── Build data ────────────────────────────────────────────────────────
-    const head = [['#', ...pdfColDefs.map(c=>c.label)]];
-    const body = rows.map((r,i)=>{
-      const w=r._w, e=r._e, n=r._n;
-      return [i+1, ...pdfColDefs.map(col=>{
-        const v = getCellValue(col.id, r, w, e, n);
-        return v.html ? v.html.replace(/<[^>]+>/g,'').trim() : (v.display||'—');
-      })];
-    });
-
-    // ── Filter summary ────────────────────────────────────────────────────
-    const parts = [];
-    if(filters.events.size>0) parts.push('Events: '+[...filters.events].join(', '));
-    if(filters.jobInterest.size>0) parts.push('Interest: '+[...filters.jobInterest].join(', '));
-    if(filters.employment.size>0) parts.push('Employment: '+[...filters.employment].map(e=>({
-      'Currently employed in construction and/or a trade':'Trades',
-      'Currently employed in another industry':'Other Industry',
-      'Retired':'Retired','Student':'Student',
-      'Unemployed and looking for work':'Unemployed','Other':'Other'
-    }[e]||e)).join(', '));
-    if(filters.states.size>0) parts.push('States: '+[...filters.states].join(', '));
-    if(filters.certs.size>0) parts.push('Certs: '+[...filters.certs].join(', '));
-    if(filters.trivia.size>0) parts.push('Trivia: '+[...filters.trivia].join(', '));
-    if(filters.excMin>0||filters.excMax<100) parts.push('EXC: '+filters.excMin+'\u2013'+filters.excMax);
-    const summaryText = parts.length ? parts.join('   \u2022   ') : 'All participants \u2014 no filters applied';
-
-    // ── Logo data URI ─────────────────────────────────────────────────────
-    const LOGO_DATA = 'data:image/png;base64,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';
-
-    // ── Render ─────────────────────────────────────────────────────────────
-    const doc = new jsPDF({orientation:'landscape', unit:'pt', format:'letter'});
-    const MT = 56, MB = 44;
-    // tableWidth = total page width minus margins, let autoTable fill exactly
-    const TABLE_W = PAGE_W - ML - MR;
-
-    doc.autoTable({
-      head, body,
-      startY: MT + 18,
-      margin: {left:ML, right:MR, top:MT+18, bottom:MB+14},
-      tableWidth: TABLE_W,
-      styles: {
-        font:'helvetica', fontSize:7.5,
-        cellPadding:{top:4,bottom:4,left:4,right:4},
-        textColor:[25,25,25], lineColor:[210,213,216], lineWidth:0.3,
-        overflow:'linebreak', minCellHeight:14,
-      },
-      headStyles: {
-        fillColor:[13,13,13], textColor:[206,14,45],
-        fontStyle:'bold', fontSize:8, minCellHeight:16,
-      },
-      alternateRowStyles: {fillColor:[247,247,247]},
-      columnStyles: Object.fromEntries([
-        [0, {cellWidth:NUM_COL, halign:'center'}],
-        ...scaledWidths.map((w,i)=>[i+1,{cellWidth:w}]),
-      ]),
-      rowPageBreak: 'avoid',
-      didParseCell(data){
-        if(data.section!=='body') return;
-        const col = pdfColDefs[data.column.index-1];
-        if(!col) return;
-        if(col.id==='excScore'){
-          const v=String(data.cell.raw||'');
-          if(v==='DNC') data.cell.styles.textColor=[150,150,150];
-          else if(parseInt(v)>=72){data.cell.styles.textColor=[30,140,60];data.cell.styles.fontStyle='bold';}
-        }
-        if(col.id==='ji'){
-          const v=String(data.cell.raw||'');
-          if(v==='Yes'){data.cell.styles.textColor=[30,140,60];data.cell.styles.fontStyle='bold';}
-          else if(v==='Maybe'){data.cell.styles.textColor=[180,110,0];data.cell.styles.fontStyle='bold';}
-          else if(v==='No') data.cell.styles.textColor=[180,30,30];
-        }
-        if(['certs','triviaSum'].includes(col.id)){
-          data.cell.styles.fontSize=7;
-        }
-      },
-      didDrawPage(data){
-        const pg=data.pageNumber;
-        const tot=doc.internal.getNumberOfPages();
-
-        // Header bar
-        doc.setFillColor(13,13,13);
-        doc.rect(0,0,PAGE_W,MT,'F');
-
-        // BTW logo
-        try { doc.addImage(LOGO_DATA,'PNG',ML,8,130,22); }
-        catch(e){
-          doc.setFont('helvetica','bold');doc.setFontSize(15);
-          doc.setTextColor(255,255,255);doc.text('BUILT TO WORK',ML,30);
-        }
-
-        // Right: subtitle
-        doc.setFont('helvetica','normal');doc.setFontSize(8);
-        doc.setTextColor(140,140,140);
-        doc.text('BUILT TO WORK  |  Event Analytics Dashboard',PAGE_W-MR,20,{align:'right'});
-        doc.text('Filtered Participant Export',PAGE_W-MR,32,{align:'right'});
-
-        // Red underline
-        doc.setDrawColor(206,14,45);doc.setLineWidth(2);doc.line(0,MT,PAGE_W,MT);
-
-        // Filter summary strip (page 1 only)
-        if(pg===1){
-          doc.setFillColor(22,22,22);doc.rect(0,MT,PAGE_W,16,'F');
-          doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(140,140,140);
-          const sumLines=doc.splitTextToSize(summaryText,PAGE_W-ML-MR-80);
-          doc.text(sumLines[0],ML,MT+11);
-          doc.setFont('helvetica','bold');doc.setTextColor(206,14,45);
-          doc.text(rows.length+' participants',PAGE_W-MR,MT+11,{align:'right'});
-        }
-
-        // Footer
-        const footY=PAGE_H-12;
-        doc.setDrawColor(200,200,200);doc.setLineWidth(0.5);doc.line(ML,footY-8,PAGE_W-MR,footY-8);
-        doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(30,30,30);
-        doc.text('POWERING THE ',ML,footY);
-        const pw1=doc.getTextWidth('POWERING THE ');
-        doc.setTextColor(206,14,45);doc.text('AMERICAN',ML+pw1,footY);
-        const pw2=doc.getTextWidth('AMERICAN');
-        doc.setTextColor(30,30,30);doc.text(' WORKFORCE',ML+pw1+pw2,footY);
-        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(120,120,120);
-        const now=new Date();
-        const dateStr=now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-        doc.text('Page '+pg+' of '+tot+'   |   '+dateStr,PAGE_W-MR,footY,{align:'right'});
-      }
-    });
-
-    // ── Download ──────────────────────────────────────────────────────────
-    const now=new Date();
-    const stamp=now.toISOString().slice(0,10);
-    const eventTag=filters.events.size===0?'All-Events':[...filters.events].map(e=>e.replace(/\s+/g,'-')).join('_');
-    const filename='BTW-Participants_'+eventTag+'_'+stamp+'.pdf';
-    const pdfBlob=doc.output('blob');
-    const blobURL=URL.createObjectURL(pdfBlob);
-    const a=document.createElement('a');
-    a.href=blobURL;a.download=filename;
-    document.body.appendChild(a);a.click();
-    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(blobURL);},1000);
-
-  } catch(err){
-    console.error('PDF export error:',err);
-    alert('PDF export failed: '+err.message+'\n\nCheck the browser console for details.');
-  }
-}
-
-// ─── CONNECTION DIAGNOSTIC ───────────────────────────────────────────────────
 <!-- COLUMN SELECTOR MODAL -->
 <div class="col-modal-overlay" id="colModalOverlay" onclick="closeColModal(event)">
   <div class="col-modal">
