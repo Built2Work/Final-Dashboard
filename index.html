@@ -1682,7 +1682,40 @@ function syncMobFilters() {
   const dest = document.getElementById('mobFilterBody');
   if (!src || !dest) return;
   dest.innerHTML = src.innerHTML;
-  // Re-wire all onclick handlers (chips, sliders) since innerHTML clone loses them
+  // ── Re-wire range sliders with unique IDs ─────────────────────────────────
+  dest.querySelectorAll('input[type=range]').forEach(input => {
+    const origId = input.id;
+    const mobId  = 'mob_' + origId;
+    input.id = mobId;
+    // Re-wire label span
+    const label = dest.querySelector('span[id="' + origId.replace('Min','MinVal').replace('Max','MaxVal') + '"], span[id="' + origId + 'Val"]');
+    if (label) label.id = 'mob_' + label.id;
+    // Re-wire oninput to call the same handler but read from mobile input
+    input.oninput = () => {
+      // Sync value back to the hidden sidebar input so the handler works
+      const sidebarInput = document.getElementById(origId);
+      if (sidebarInput) { sidebarInput.value = input.value; }
+      // Update the mobile label
+      const mobLabel = dest.querySelector('#mob_' + origId.replace('excMin','excMinVal').replace('excMax','excMaxVal').replace('triviaScoreMin','tsMinVal').replace('triviaScoreMax','tsMaxVal'));
+      if (mobLabel) mobLabel.textContent = input.value;
+      // Also update desktop label
+      const deskLabel = document.getElementById(
+        origId.replace('excMin','excMinVal').replace('excMax','excMaxVal')
+              .replace('triviaScoreMin','tsMinVal').replace('triviaScoreMax','tsMaxVal')
+      );
+      if (deskLabel) deskLabel.textContent = input.value;
+      // Call the appropriate handler
+      if (origId.startsWith('exc')) onExcRange();
+      else if (origId.startsWith('trivia')) onTriviaRange();
+    };
+    // Set current value from filters
+    if (origId === 'excMin')          input.value = filters.excMin;
+    if (origId === 'excMax')          input.value = filters.excMax;
+    if (origId === 'triviaScoreMin')  input.value = filters.triviaScoreMin;
+    if (origId === 'triviaScoreMax')  input.value = filters.triviaScoreMax;
+  });
+
+  // ── Re-wire all onclick handlers (chips, sliders) ─────────────────────────
   dest.querySelectorAll('.filter-chip').forEach(chip => {
     const val = chip.dataset.value;
     // Find which filter key this chip belongs to by checking its parent wrap id
