@@ -415,6 +415,132 @@ footer{border-top:1px solid var(--border);}
 .pin-col{width:30px;text-align:center!important;padding:4px 6px!important;}
 #selectAllPin{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
 
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE STYLES  (≤ 768px)
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── Body / layout ── */
+  html, body { overflow: hidden; height: 100%; }
+  body { font-size: 13px; }
+
+  /* ── Header ── */
+  header { padding: 8px 14px; }
+  .h-title h1 { font-size: 13px; letter-spacing: 1px; }
+  .h-title p  { display: none; }
+  /* Show mobile hamburger, hide desktop controls */
+  .h-controls { display: none !important; }
+  .mob-header-right { display: flex !important; align-items: center; gap: 8px; }
+
+  /* ── App layout: no sidebar ── */
+  #appLayout { flex-direction: column; overflow: hidden; }
+  #sidebar    { display: none; }
+
+  /* ── Main content ── */
+  #mainContent { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 72px; }
+
+  /* ── KPI cards: 2 per row ── */
+  .kpi-row { grid-template-columns: 1fr 1fr !important; padding: 10px 10px 0; gap: 8px; }
+  .kpi-value { font-size: 22px !important; }
+  .kpi-label { font-size: 9px !important; }
+  .kpi-sub   { font-size: 10px !important; }
+  .kpi-card  { padding: 10px 10px; }
+
+  /* ── Charts: full width, stacked ── */
+  .dash-grid { display: flex !important; flex-direction: column; gap: 10px; padding: 10px; }
+  .card      { width: 100% !important; grid-column: unset !important; }
+  .card.wide, .card.full { grid-column: unset !important; }
+  .chart-wrap { min-height: 220px !important; }
+
+  /* ── Participant table ── */
+  .tbl-toolbar { flex-wrap: wrap; gap: 6px; padding: 0 10px; }
+  .tbl-search  { width: 100% !important; order: -1; font-size: 13px; }
+  .tbl-toggle, .tbl-cols-btn { font-size: 10px; padding: 3px 8px; }
+  .tbl-count   { font-size: 10px; }
+  .table-scroll { max-height: 380px; }
+  .ptbl th, .ptbl td { font-size: 11px; padding: 6px 6px; }
+  .score-badge { font-size: 11px; padding: 1px 5px; }
+
+  /* ── Bottom nav bar ── */
+  .mob-nav {
+    display: flex !important;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 400;
+    background: #111; border-top: 2px solid #ce0e2d;
+    height: 56px;
+  }
+  .mob-nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 3px; background: transparent; border: none;
+    color: var(--muted); cursor: pointer; font-family: 'Oswald', sans-serif;
+    font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+    transition: color .15s; -webkit-tap-highlight-color: transparent;
+  }
+  .mob-nav-btn svg { width: 20px; height: 20px; }
+  .mob-nav-btn.active { color: #ce0e2d; }
+  .mob-nav-btn.active svg path { stroke: #ce0e2d; }
+
+  /* ── Full-screen filter overlay ── */
+  #mobFilterOverlay {
+    display: none; position: fixed; inset: 0; z-index: 600;
+    background: var(--bg); flex-direction: column;
+  }
+  #mobFilterOverlay.open { display: flex; }
+  .mob-filter-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    background: #111;
+  }
+  .mob-filter-title {
+    font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--text);
+  }
+  .mob-filter-done {
+    font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase; padding: 7px 18px;
+    background: #ce0e2d; color: #fff; border: none; border-radius: 3px; cursor: pointer;
+  }
+  .mob-filter-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .mob-filter-body .filter-section { padding: 12px 16px; }
+  .mob-filter-body .filter-chip    { font-size: 12px; padding: 5px 10px; }
+
+  /* ── Share/export modal ── */
+  #mobShareModal {
+    display: none; position: fixed; inset: 0; z-index: 700;
+    background: rgba(0,0,0,.6); align-items: flex-end; justify-content: center;
+  }
+  #mobShareModal.open { display: flex; }
+  .mob-share-sheet {
+    background: var(--surface); border-radius: 12px 12px 0 0; width: 100%;
+    padding: 20px 20px 36px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .mob-share-title {
+    font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase; color: var(--muted);
+    text-align: center; margin-bottom: 4px;
+  }
+  .mob-share-btn {
+    display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; text-align: left;
+    transition: background .15s;
+  }
+  .mob-share-btn:active { background: var(--surface3); }
+  .mob-share-btn .share-icon { font-size: 20px; width: 28px; text-align: center; flex-shrink: 0; }
+  .mob-share-cancel {
+    padding: 14px; text-align: center; font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700; color: var(--muted); cursor: pointer;
+    border: 1px solid var(--border); border-radius: 6px; background: transparent;
+  }
+}
+
+/* These are hidden on desktop, shown on mobile */
+.mob-header-right { display: none; }
+.mob-nav          { display: none; }
+#mobFilterOverlay { }
+#mobShareModal    { }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -465,6 +591,11 @@ footer{border-top:1px solid var(--border);}
       <h1>Event Analytics Dashboard</h1>
       <p id="userEmailDisplay">Built to Work USA</p>
     </div>
+  </div>
+  <!-- Mobile-only right side -->
+  <div class="mob-header-right">
+    <button class="hbtn hbtn-muted" style="font-size:10px;padding:5px 10px" onclick="openMobShare()">&#8679; Share</button>
+    <button class="hbtn hbtn-muted" style="font-size:10px;padding:5px 10px" onclick="doLogout()">Sign Out</button>
   </div>
   <div class="h-controls">
     <div class="refresh-wrap">
@@ -1783,6 +1914,180 @@ function toggleSelectAll(checked){
   }
   if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
 }
+
+// ─── MOBILE UTILITIES ────────────────────────────────────────────────────────
+const IS_MOBILE = () => window.innerWidth <= 768;
+
+// Show bottom nav + hide sidebar when on mobile after login
+const _origShowApp = showApp;
+function showApp(email) {
+  _origShowApp(email);
+  if (IS_MOBILE()) {
+    document.getElementById('mobNav').style.display = 'flex';
+    // Clone sidebar content into mobile filter panel
+    syncMobFilters();
+  }
+}
+
+function syncMobFilters() {
+  const src  = document.getElementById('sidebar');
+  const dest = document.getElementById('mobFilterBody');
+  if (!src || !dest) return;
+  dest.innerHTML = src.innerHTML;
+  // Re-wire all onclick handlers (chips, sliders) since innerHTML clone loses them
+  dest.querySelectorAll('.filter-chip').forEach(chip => {
+    const val = chip.dataset.value;
+    // Find which filter key this chip belongs to by checking its parent wrap id
+    const wrap = chip.closest('.filter-chip-wrap');
+    if (!wrap) return;
+    const wid = wrap.id;
+    const keyMap = {fJI:'jobInterest',fEmp:'employment',fScore:'scoreSegs',
+                    fAge:'ageGroups',fGender:'gender',fState:'states',
+                    fTrivia:'trivia',fCerts:'certs'};
+    const key = keyMap[wid];
+    if (!key) return;
+    chip.onclick = () => {
+      if (filters[key] instanceof Set) {
+        if (filters[key].has(val)) filters[key].delete(val);
+        else filters[key].add(val);
+        chip.classList.toggle('active', filters[key].has(val));
+        // Also sync desktop sidebar chip
+        document.querySelectorAll('#sidebar .filter-chip').forEach(dc => {
+          if (dc.dataset.value === val && dc.closest('.filter-chip-wrap')?.id === wid)
+            dc.classList.toggle('active', filters[key].has(val));
+        });
+        if (key === 'trivia') {
+          const ts = document.getElementById('triviaScoreSection');
+          if (ts) { const a = filters.trivia.size===1; ts.style.opacity=a?'1':'0.4'; ts.style.pointerEvents=a?'auto':'none'; }
+        }
+        updateActiveCount(); render();
+      }
+    };
+  });
+}
+
+function mobSwitchTab(tab) {
+  const filterOverlay = document.getElementById('mobFilterOverlay');
+  const dataBtn   = document.getElementById('mobDataBtn');
+  const filterBtn = document.getElementById('mobFilterBtn');
+  if (tab === 'filter') {
+    syncMobFilters();
+    filterOverlay.classList.add('open');
+    filterBtn.classList.add('active');
+    dataBtn.classList.remove('active');
+  } else {
+    filterOverlay.classList.remove('open');
+    dataBtn.classList.add('active');
+    filterBtn.classList.remove('active');
+  }
+}
+
+// ─── MOBILE SHARE / EXPORT ────────────────────────────────────────────────────
+function openMobShare()  { document.getElementById('mobShareModal').classList.add('open'); }
+function closeMobShare(e) {
+  if (e && e.target !== document.getElementById('mobShareModal')) return;
+  document.getElementById('mobShareModal').classList.remove('open');
+}
+
+async function shareFile(blob, filename, mimeType) {
+  // Try native Web Share API first (mobile)
+  if (navigator.share && navigator.canShare) {
+    try {
+      const file = new File([blob], filename, { type: mimeType });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Built to Work Export' });
+        closeMobShare();
+        return;
+      }
+    } catch (e) {
+      if (e.name !== 'AbortError') console.warn('Share API failed:', e);
+    }
+  }
+  // Fallback: download
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+  closeMobShare();
+}
+
+async function mobExportPDF() {
+  try {
+    if (!window.jspdf?.jsPDF) { alert('PDF library loading, try again.'); return; }
+    const rows = window._lastTableRows || [];
+    if (!rows.length) { alert('No participants to export.'); return; }
+    const { jsPDF } = window.jspdf;
+    const colDefs = activeColIds.map(id=>ALL_COLS.find(c=>c.id===id)).filter(Boolean);
+    const head = [['#', ...colDefs.map(c=>c.label)]];
+    const body = rows.map((r,i) => {
+      const w=r._w, e=r._e, n=r._n;
+      return [i+1, ...colDefs.map(col => {
+        const v = getCellValue(col.id,r,w,e,n);
+        return v.html ? v.html.replace(/<[^>]+>/g,'').trim() : (v.display||'—');
+      })];
+    });
+    const doc = new jsPDF({orientation:'landscape',unit:'pt',format:'letter'});
+    const PW=792,ML=36,MR=36,MT=52,MB=40,TW=PW-ML-MR;
+    doc.autoTable({head,body,startY:MT+8,margin:{left:ML,right:MR,top:MT+8,bottom:MB+10},
+      tableWidth:TW,styles:{font:'helvetica',fontSize:7.5,cellPadding:{top:4,bottom:4,left:4,right:4},
+      textColor:[25,25,25],lineColor:[210,213,216],lineWidth:0.3,overflow:'linebreak'},
+      headStyles:{fillColor:[13,13,13],textColor:[206,14,45],fontStyle:'bold',fontSize:8},
+      alternateRowStyles:{fillColor:[247,247,247]},
+      didDrawPage(data){
+        doc.setFillColor(13,13,13);doc.rect(0,0,PW,MT,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(255,255,255);
+        doc.text('BUILT TO WORK',ML,34);
+        doc.setDrawColor(206,14,45);doc.setLineWidth(2);doc.line(0,MT,PW,MT);
+        const pg=data.pageNumber,tot=doc.internal.getNumberOfPages();
+        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(120,120,120);
+        doc.text('Page '+pg+' of '+tot,PW-MR,PW<400?580:600,{align:'right'});
+      }
+    });
+    const blob = doc.output('blob');
+    const stamp = new Date().toISOString().slice(0,10);
+    await shareFile(blob, 'BTW-Participants_'+stamp+'.pdf', 'application/pdf');
+  } catch(err) { alert('Export failed: '+err.message); }
+}
+
+async function mobExportExcel() {
+  try {
+    if (typeof XLSX === 'undefined') { alert('Excel library loading, try again.'); return; }
+    const rows = window._lastTableRows || [];
+    if (!rows.length) { alert('No participants to export.'); return; }
+    const colDefs = activeColIds.map(id=>ALL_COLS.find(c=>c.id===id)).filter(Boolean);
+    const head = ['#',...colDefs.map(c=>c.label)];
+    const data = rows.map((r,i) => {
+      const w=r._w,e=r._e,n=r._n;
+      return [i+1,...colDefs.map(col=>{
+        const v=getCellValue(col.id,r,w,e,n);
+        const raw=v.html?v.html.replace(/<[^>]+>/g,'').trim():(v.display||'');
+        return raw==='—'?'':raw;
+      })];
+    });
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([head,...data]);
+    ws['!cols'] = [{wch:5},...colDefs.map(()=>({wch:18}))];
+    XLSX.utils.book_append_sheet(wb, ws, 'Participants');
+    const wbArray = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+    const blob = new Blob([wbArray], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const stamp = new Date().toISOString().slice(0,10);
+    await shareFile(blob, 'BTW-Participants_'+stamp+'.xlsx',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  } catch(err) { alert('Export failed: '+err.message); }
+}
+
+// Resize handler: show/hide nav on orientation change
+window.addEventListener('resize', () => {
+  const nav = document.getElementById('mobNav');
+  if (!nav) return;
+  if (IS_MOBILE() && document.getElementById('appLayout').style.display !== 'none') {
+    nav.style.display = 'flex';
+  } else {
+    nav.style.display = 'none';
+  }
+});
+
 </script>
 
 <!-- COLUMN SELECTOR MODAL -->
@@ -1799,5 +2104,58 @@ function toggleSelectAll(checked){
     </div>
   </div>
 </div>
+
+<!-- ══ MOBILE BOTTOM NAV ══ -->
+<nav class="mob-nav" id="mobNav" style="display:none;">
+  <button class="mob-nav-btn active" id="mobDataBtn" onclick="mobSwitchTab('data')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+    Data
+  </button>
+  <button class="mob-nav-btn" id="mobFilterBtn" onclick="mobSwitchTab('filter')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/>
+      <line x1="11" y1="18" x2="13" y2="18"/>
+    </svg>
+    Filters
+  </button>
+  <button class="mob-nav-btn" id="mobExportBtn" onclick="openMobShare()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+    Export
+  </button>
+</nav>
+
+<!-- ══ MOBILE FILTER OVERLAY ══ -->
+<div id="mobFilterOverlay">
+  <div class="mob-filter-header">
+    <span class="mob-filter-title">&#9632; Filters</span>
+    <button class="mob-filter-done" onclick="mobSwitchTab('data')">View Data &#8250;</button>
+  </div>
+  <div class="mob-filter-body" id="mobFilterBody">
+    <!-- Sidebar content cloned here on mobile -->
+  </div>
+</div>
+
+<!-- ══ MOBILE SHARE / EXPORT SHEET ══ -->
+<div id="mobShareModal" onclick="closeMobShare(event)">
+  <div class="mob-share-sheet">
+    <div class="mob-share-title">Export &amp; Share</div>
+    <button class="mob-share-btn" onclick="mobExportPDF()">
+      <span class="share-icon">&#128196;</span>
+      Export as PDF &amp; Share
+    </button>
+    <button class="mob-share-btn" onclick="mobExportExcel()">
+      <span class="share-icon">&#128202;</span>
+      Export as Excel &amp; Share
+    </button>
+    <button class="mob-share-cancel" onclick="closeMobShare()">Cancel</button>
+  </div>
+</div>
+
 </body>
 </html>
