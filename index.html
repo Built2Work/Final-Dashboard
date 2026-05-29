@@ -407,8 +407,48 @@ footer{border-top:1px solid var(--border);}
 .tbl-cols-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border:1.5px solid var(--border);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;}
 .tbl-cols-btn:hover{border-color:var(--accent);color:var(--accent);}
 
+
+/* PINNED PARTICIPANTS */
+.pin-check{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
+.ptbl tr.pinned td{background:rgba(206,14,45,.08)!important;border-left:2px solid var(--accent);}
+.ptbl tr.pinned:hover td{background:rgba(206,14,45,.14)!important;}
+.pin-col{width:30px;text-align:center!important;padding:4px 6px!important;}
+#selectAllPin{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
+
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
+// ─── PIN / UNPIN PARTICIPANTS ────────────────────────────────────────────────
+function togglePin(checkbox, phone){
+  if(checkbox.checked) pinnedPhones.add(phone);
+  else pinnedPhones.delete(phone);
+  // Re-render table to move pinned rows to top / remove from pinned section
+  if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
+}
+
+function toggleShowSelected(){
+  showSelectedOnly=!showSelectedOnly;
+  if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
+}
+
+function clearSelection(){
+  showSelectedOnly=false;
+  pinnedPhones.clear();
+  if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
+}
+
+function toggleSelectAll(checked){
+  if(!window._lastTableRows) return;
+  if(checked){
+    // Pin every currently visible row
+    window._lastTableRows.forEach(r=>pinnedPhones.add(r.phone));
+  } else {
+    // Unpin every currently visible row
+    window._lastTableRows.forEach(r=>pinnedPhones.delete(r.phone));
+  }
+  if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
+}
+
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -473,13 +513,6 @@ footer{border-top:1px solid var(--border);}
     <button class="hbtn hbtn-blue" onclick="refreshData()">&#8635; Refresh</button>
     <button class="hbtn hbtn-danger" id="clearFiltersBtn" onclick="clearAllFilters()" style="display:none;">&#x2715; Clear Filters</button>
     <a href="operations.html" class="hbtn hbtn-muted" style="text-decoration:none">&#9632; Operations</a>
-    <button class="hbtn hbtn-muted" onclick="doLogout()">Sign Out</button>
-  </div></div>
-      <span class="refresh-label">Updated <span id="lastRefreshTime">&mdash;</span></span>
-    </div>
-    <select class="event-select" id="eventSelect" onchange="onEventChange()"><option value="ALL">All Events</option></select>
-    <button class="hbtn hbtn-blue" onclick="refreshData()">&#8635; Refresh</button>
-    <button class="hbtn hbtn-danger" id="clearFiltersBtn" onclick="clearAllFilters()" style="display:none;">&#x2715; Clear Filters</button>
     <button class="hbtn hbtn-muted" onclick="doLogout()">Sign Out</button>
   </div>
 </header>
@@ -744,6 +777,8 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 let rawWeb=[], rawExc=[], rawWin=[];
 let charts={}, refreshTimer=null, showAllParticipants=false, tblSearch='';
+let pinnedPhones=new Set(); // phones of rows the user has pinned
+let showSelectedOnly=false; // toggle: show only checked participants
 
 const PIE_PALETTE=['#f0a500','#e85d04','#3fb950','#58a6ff','#bc8cff','#f85149','#39c5cf','#ff6eb4','#56d4c8','#ff9f43','#a8ff78','#ffd700','#ff6b9d','#c0c0c0','#87ceeb','#dda0dd'];
 const CERT_NAMES=['CDL','HEO Cert','Journeyman Electrician','Master Electrician','NEC Cert','CCM','PMP','CCO','EPA 608 Cert','HVAC Excellence Cert','Journeyman Plumber License','Master Plumber License','CW','CWI','CLC','MCAA'];
@@ -1048,7 +1083,9 @@ function renderKPIs(w,e,n){
   document.getElementById('kpiRow').innerHTML=`<div class="kpi-card"><div class="kpi-label">Registrations Shown</div><div class="kpi-value">${w.length.toLocaleString()}</div><div class="kpi-sub">of ${rawWeb.length} total</div></div><div class="kpi-card"><div class="kpi-label">EXC Simulator Runs</div><div class="kpi-value">${e.length.toLocaleString()}</div><div class="kpi-sub">of ${rawExc.length} total</div></div><div class="kpi-card"><div class="kpi-label">Trivia Sessions</div><div class="kpi-value">${n.length.toLocaleString()}</div><div class="kpi-sub">of ${rawWin.length} total</div></div><div class="kpi-card"><div class="kpi-label">Yes/Maybe \u2014 Construction</div><div class="kpi-value" style="color:var(--green)">${hot.toLocaleString()}</div><div class="kpi-sub">interested in opportunities</div></div>`;
 }
 function renderGrid(webRows,excRows,winRows){
-  document.getElementById('dashGrid').innerHTML=`<div class="card"><div class="card-title"><span class="dot"></span>EXC Score Distribution <span class="fab" id="badgeExc">FILTERED</span></div><div class="chart-wrap"><canvas id="chartExc"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Employment Status <span class="fab" id="badgeEmp">FILTERED</span></div><div class="chart-wrap"><canvas id="chartEmp"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Interest in Construction Jobs <span class="fab" id="badgeJI">FILTERED</span></div><div class="chart-wrap"><canvas id="chartJI"></canvas></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Age Distribution <span class="fab" id="badgeAge">FILTERED</span></div><div class="chart-wrap"><canvas id="chartAge"></canvas></div></div><div class="card" style="grid-row:span 2"><div class="card-title"><span class="dot"></span>Trade Certifications &amp; Licenses <span class="fab" id="badgeCerts">FILTERED</span></div><div class="chart-wrap" style="min-height:460px"><canvas id="chartCerts"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Participants by State <span class="fab" id="badgeState">FILTERED</span></div><div class="state-grid" id="stateGrid"></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Windows Trivia \u2014 Tests Taken &amp; Avg Scores <span class="fab" id="badgeTrivia">FILTERED</span></div><table class="ttbl"><thead><tr><th>Test</th><th>Participants</th><th>Avg Score</th><th>Bar</th></tr></thead><tbody id="triviaBody"></tbody></table></div><div class="card full"><div class="card-title"><span class="dot"></span>Filtered Participants</div><div class="tbl-toolbar"><button class="tbl-toggle" id="showAllToggle" onclick="toggleShowAll()">Show Unmatched</button><input class="tbl-search" type="text" placeholder="Search name / phone\u2026" oninput="tblSearch=this.value;renderTable(window.webRows2,window.excRows2,window.winRows2)"><div class="tbl-count" id="tblCount"></div><button class="tbl-toggle" onclick="exportPDF()" style="border-color:var(--accent);color:var(--accent);white-space:nowrap;">&#8681; Export PDF</button>
+  document.getElementById('dashGrid').innerHTML=`<div class="card"><div class="card-title"><span class="dot"></span>EXC Score Distribution <span class="fab" id="badgeExc">FILTERED</span></div><div class="chart-wrap"><canvas id="chartExc"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Employment Status <span class="fab" id="badgeEmp">FILTERED</span></div><div class="chart-wrap"><canvas id="chartEmp"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Interest in Construction Jobs <span class="fab" id="badgeJI">FILTERED</span></div><div class="chart-wrap"><canvas id="chartJI"></canvas></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Age Distribution <span class="fab" id="badgeAge">FILTERED</span></div><div class="chart-wrap"><canvas id="chartAge"></canvas></div></div><div class="card" style="grid-row:span 2"><div class="card-title"><span class="dot"></span>Trade Certifications &amp; Licenses <span class="fab" id="badgeCerts">FILTERED</span></div><div class="chart-wrap" style="min-height:460px"><canvas id="chartCerts"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Participants by State <span class="fab" id="badgeState">FILTERED</span></div><div class="state-grid" id="stateGrid"></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Windows Trivia \u2014 Tests Taken &amp; Avg Scores <span class="fab" id="badgeTrivia">FILTERED</span></div><table class="ttbl"><thead><tr><th>Test</th><th>Participants</th><th>Avg Score</th><th>Bar</th></tr></thead><tbody id="triviaBody"></tbody></table></div><div class="card full"><div class="card-title"><span class="dot"></span>Filtered Participants</div><div class="tbl-toolbar"><button class="tbl-toggle" id="showAllToggle" onclick="toggleShowAll()">Show Unmatched</button>
+        <button class="tbl-toggle" id="showSelBtn" onclick="toggleShowSelected()" style="display:none;">&#9632; Show Selected</button>
+        <button class="tbl-toggle" id="clearSelBtn" onclick="clearSelection()" style="display:none;border-color:var(--red);color:var(--red);">&#x2715; Clear All</button><input class="tbl-search" type="text" placeholder="Search any column\u2026" oninput="tblSearch=this.value;renderTable(window.webRows2,window.excRows2,window.winRows2)"><div class="tbl-count" id="tblCount"></div><button class="tbl-toggle" onclick="exportPDF()" style="border-color:var(--accent);color:var(--accent);white-space:nowrap;">&#8681; Export PDF</button>
         <button class="tbl-cols-btn" onclick="openColModal()">&#9776; Columns</button>
         <button class="tbl-toggle" onclick="exportExcel()" style="border-color:var(--green);color:var(--green);white-space:nowrap;">&#8681; Excel</button></div><div class="table-scroll"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Address</th><th>State</th><th>Event</th><th>EXC Score</th><th>Trivia Tests (Avg)</th><th>Job Interest</th></tr></thead><tbody id="ptblBody"></tbody></table></div></div>`;
   if(filters.scoreSegs.size>0||filters.excMin>0||filters.excMax<100){const b=document.getElementById('badgeExc');if(b)b.style.display='inline';}
@@ -1259,13 +1296,56 @@ function renderTable(webRows,excRows,winRows){
     const rawPhone=w?String(w['Mobile Phone']||'').split('.')[0].replace(/[^\d]/g,''):e?String(e['Login Code']||'').replace(/[^\d]/g,''):phone;
     rows.push({phone,displayPhone:rawPhone||phone,name:name.trim()||'---',addr,state,event,excScore,trivia:triviaStr,ji,_w:w,_e:e,_n:n});
   });
-  const q=tblSearch.toLowerCase();
-  if(q)rows=rows.filter(r=>r.name.toLowerCase().includes(q)||r.displayPhone.includes(q)||r.phone.includes(q));
+  const q=tblSearch.toLowerCase().trim();
+
+  // ── Show Selected Only mode (toggled by button) ────────────────────────────
+  if(showSelectedOnly && pinnedPhones.size>0){
+    rows=rows.filter(r=>pinnedPhones.has(r.phone));
+  }
+
+  // ── Search filters across whatever is shown ──────────────────────────────────
+  if(q){
+    rows=rows.filter(r=>{
+      if(r.name.toLowerCase().includes(q)||r.displayPhone.includes(q)) return true;
+      const w=r._w,e=r._e,n=r._n;
+      return activeColIds.some(colId=>{
+        const v=getCellValue(colId,r,w,e,n);
+        const text=(v.html?v.html.replace(/<[^>]+>/g,''):(v.display||'')).toLowerCase();
+        return text.includes(q);
+      });
+    });
+  }
   rows.sort((a,b)=>{if(a.excScore==null&&b.excScore==null)return 0;if(a.excScore==null)return 1;if(b.excScore==null)return -1;return b.excScore-a.excScore;});
-  document.getElementById('tblCount').textContent=rows.length.toLocaleString()+' participants';
+
+
+  document.getElementById('tblCount').textContent=
+    showSelectedOnly&&pinnedPhones.size>0
+      ? rows.length.toLocaleString()+' of '+pinnedPhones.size+' selected'
+      : rows.length.toLocaleString()+' participants'+(pinnedPhones.size>0?' ('+pinnedPhones.size+' checked)':'');
   window._lastTableRows=rows;
+  // Sync UI state
+  setTimeout(()=>{
+    const allChk   = document.getElementById('selectAllPin');
+    const showBtn  = document.getElementById('showSelBtn');
+    const clearBtn = document.getElementById('clearSelBtn');
+    const hasPins  = pinnedPhones.size>0;
+    if(showBtn){
+      showBtn.style.display = hasPins?'inline':'none';
+      showBtn.style.background = showSelectedOnly?'var(--accent)':'';
+      showBtn.style.color = showSelectedOnly?'#fff':'var(--muted)';
+      showBtn.style.borderColor = showSelectedOnly?'var(--accent)':'var(--border)';
+      showBtn.textContent = showSelectedOnly
+        ? '\u25a0 Showing '+pinnedPhones.size+' Selected'
+        : '\u25a0 Show Selected ('+pinnedPhones.size+')';
+    }
+    if(clearBtn) clearBtn.style.display = hasPins?'inline':'none';
+    if(allChk){
+      allChk.indeterminate=false;
+      allChk.checked=hasPins;
+    }
+  },0);
   const colDefs=activeColIds.map(id=>ALL_COLS.find(c=>c.id===id)).filter(Boolean);
-  document.querySelector('.ptbl thead').innerHTML='<tr><th>#</th>'+colDefs.map(c=>'<th>'+c.label+'</th>').join('')+'</tr>';
+  document.querySelector('.ptbl thead').innerHTML='<tr><th class="pin-col"><input type="checkbox" id="selectAllPin" title="Select all / deselect all" onchange="toggleSelectAll(this.checked)"></th><th>#</th>'+colDefs.map(c=>'<th>'+c.label+'</th>').join('')+'</tr>';
   const tbody=document.getElementById('ptblBody');
   if(!rows.length){tbody.innerHTML='<tr><td colspan="'+(colDefs.length+1)+'" class="no-data">No participants match the current filters.</td></tr>';return;}
   tbody.innerHTML=rows.map((r,i)=>{
@@ -1275,7 +1355,8 @@ function renderTable(webRows,excRows,winRows){
       if(v.html)return '<td>'+v.html+'</td>';
       return '<td'+(v.style?' style="'+v.style+'"':v.cls?' class="'+v.cls+'"':'')+'>'+(v.display||'—')+'</td>';
     }).join('');
-    return '<tr><td class="fmuted">'+(i+1)+'</td>'+cells+'</tr>';
+    const isPinned=pinnedPhones.has(r.phone);
+    return '<tr class="'+(isPinned?'pinned':'')+'"><td class="pin-col"><input type="checkbox" class="pin-check" '+(isPinned?'checked ':'')+'onchange="togglePin(this,\''+r.phone+'\')" title="Pin this person"></td><td class="fmuted">'+(i+1)+'</td>'+cells+'</tr>';
   }).join('');
 }
 
