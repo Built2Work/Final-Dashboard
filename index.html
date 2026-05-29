@@ -348,20 +348,7 @@ footer{border-top:1px solid var(--border);}
 #triviaScoreSection{transition:opacity .2s;}
 
 
-/* ── TAB NAVIGATION ── */
-.tab-bar{display:flex;gap:0;border-bottom:2px solid #ce0e2d;flex-shrink:0;background:#111;}
-.tab-btn{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:10px 28px;border:none;background:transparent;color:#666;cursor:pointer;transition:all .2s;border-bottom:3px solid transparent;margin-bottom:-2px;}
-.tab-btn:hover{color:#e0e0e0;background:rgba(255,255,255,.04);}
-.tab-btn.active{color:#fff;background:rgba(206,14,45,.12);border-bottom-color:#ce0e2d;}
-.tab-page{display:none;flex:1;overflow-y:auto;flex-direction:column;}
-.tab-page.active{display:flex;}
-
-/* ── OPS PAGE ── */
-.ops-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 18px;}
-.ops-grid .card.full{grid-column:span 2;}
-.ops-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 18px 0;flex-shrink:0;}
-.ops-kpi-row .kpi-card{border-top-color:#ce0e2d;}
-.kpi-accent{font-family:'Oswald',sans-serif;font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:#ce0e2d;margin-top:4px;}
+/* ops tab CSS removed */
 
 
 /* MULTI-SELECT EVENT PICKER */
@@ -616,10 +603,7 @@ footer{border-top:1px solid var(--border);}
   </div>
 </header>
 
-<div class="tab-bar" id="tabBar" style="display:none;">
-  <button class="tab-btn active" onclick="switchTab('analytics')">&#9632; Analytics</button>
-  <button class="tab-btn" onclick="switchTab('operations')">&#9632; Operations</button>
-</div>
+
 <div id="appLayout" style="display:none;">
   <!-- SIDEBAR -->
   <div id="sidebar">
@@ -695,17 +679,10 @@ footer{border-top:1px solid var(--border);}
   </div>
 
   <!-- MAIN -->
-  <div id="mainContent" class="tab-page active" data-tab="analytics">
+  <div id="mainContent">
     <div class="kpi-row" id="kpiRow"></div>
     <div class="dash-grid" id="dashGrid"></div>
     <footer>BUILT TO WORK &bull; <span style="color:#ce0e2d;font-weight:700">POWERING THE AMERICAN WORKFORCE</span> &bull; Event Analytics Dashboard &bull; 2026</footer>
-  </div>
-
-  <!-- OPERATIONS PAGE -->
-  <div id="opsContent" class="tab-page" data-tab="operations">
-    <div class="ops-kpi-row" id="opsKpiRow"></div>
-    <div class="ops-grid" id="opsGrid"></div>
-    <footer>BUILT TO WORK &bull; <span style="color:#ce0e2d;font-weight:700">POWERING THE AMERICAN WORKFORCE</span> &bull; Operations Dashboard &bull; 2026</footer>
   </div>
 </div>
 
@@ -913,7 +890,6 @@ async function doLogout(){clearInterval(refreshTimer);clearCache();destroyOpsCha
 function showApp(email){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appHeader').style.display='flex';
-  document.getElementById('tabBar').style.display='flex';
   document.getElementById('appLayout').style.display='flex';
   const ued=document.getElementById('userEmailDisplay');
   if(ued)ued.textContent=email;
@@ -1160,7 +1136,7 @@ function buildSidebar(){
 }
 function buildChipFilter(id,opts,key,lm={}){
   const c=document.getElementById(id);c.innerHTML='';
-  opts.forEach(opt=>{const ch=document.createElement('button');ch.className='filter-chip';ch.textContent=lm[opt]||opt;ch.dataset.value=opt;ch.onclick=()=>{
+  opts.forEach(opt=>{const ch=document.createElement('button');const isActive=filters[key] instanceof Set&&filters[key].has(opt);ch.className='filter-chip'+(isActive?' active':'');ch.textContent=lm[opt]||opt;ch.dataset.value=opt;ch.onclick=()=>{
     if(filters[key] instanceof Set){if(filters[key].has(opt))filters[key].delete(opt);else filters[key].add(opt);ch.classList.toggle('active',filters[key].has(opt));}
     // Enable trivia score slider only when exactly 1 trivia test selected
     if(key==='trivia'){const ts=document.getElementById('triviaScoreSection');if(ts){const active=filters.trivia.size===1;ts.style.opacity=active?'1':'0.4';ts.style.pointerEvents=active?'auto':'none';}}
@@ -1182,7 +1158,7 @@ function clearAllFilters(){filters.excMin=0;filters.excMax=100;document.getEleme
 function toggleFilter(key,value){if(filters[key] instanceof Set){if(filters[key].has(value))filters[key].delete(value);else filters[key].add(value);document.querySelectorAll('.filter-chip').forEach(c=>{if(c.dataset.value===value)c.classList.toggle('active',filters[key].has(value));});}updateActiveCount();render();}
 
 // RENDER
-function render(){const {webRows,excRows,winRows}=crossFiltered();destroyCharts();renderKPIs(webRows,excRows,winRows);renderGrid(webRows,excRows,winRows);if(activeTab==='operations')renderOps();}
+function render(){const {webRows,excRows,winRows}=crossFiltered();destroyCharts();renderKPIs(webRows,excRows,winRows);renderGrid(webRows,excRows,winRows);}
 function destroyCharts(){Object.values(charts).forEach(c=>{if(c)c.destroy();});charts={};}
 function renderKPIs(w,e,n){
   const hot=w.filter(r=>['Yes','Maybe'].includes((r['Interested in Construction Jobs']||'').trim())).length;
@@ -1571,15 +1547,9 @@ async function runDiag(){
 
 
 // ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
-let activeTab = 'analytics';
-let opsCharts = {};
+// tab state removed
 
-function switchTab(tab) {
-  activeTab = tab;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(tab === 'analytics' ? 'analytics' : 'operations')));
-  document.querySelectorAll('.tab-page').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
-  if (tab === 'operations') renderOps();
-}
+// switchTab moved to operations.html
 
 // ─── OPERATIONS PAGE ─────────────────────────────────────────────────────────
 function parseDate(str) {
@@ -1600,257 +1570,9 @@ function median(arr) {
   return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
 }
 
-function destroyOpsCharts() {
-  Object.values(opsCharts).forEach(c => { if(c) c.destroy(); });
-  opsCharts = {};
-}
+// destroyOpsCharts moved to operations.html
 
-function renderOps() {
-  destroyOpsCharts();
-
-  // Filter by event (shared filter)
-  const webF = filters.events.size===0 ? rawWeb : rawWeb.filter(r=>(r['Event Name']||'').trim()!=='' && filters.events.has((r['Event Name']||'').trim()));
-  const excF  = filters.events.size===0 ? rawExc : rawExc.filter(r=>(r['Event Name']||'').trim()!=='' && filters.events.has((r['Event Name']||'').trim()));
-  const winF  = filters.events.size===0 ? rawWin : rawWin.filter(r=>(r['Event Name']||'').trim()!=='' && filters.events.has((r['Event Name']||'').trim()));
-
-  // ── Phone → earliest timestamp maps ────────────────────────────────────────
-  const excTimeMap = new Map();
-  excF.forEach(r => {
-    const p = normalizePhone(r['Login Code'] || '');
-    const d = parseDate(r['Date']);
-    if (p && d) {
-      if (!excTimeMap.has(p) || d < excTimeMap.get(p)) excTimeMap.set(p, d);
-    }
-  });
-
-  const winTimeMap = new Map();
-  winF.forEach(r => {
-    const p = normalizePhone(r['QR Code Scan'] || r['Mobile Phone'] || '');
-    const d = parseDate(r['Date']);
-    if (p && d) {
-      if (!winTimeMap.has(p) || d < winTimeMap.get(p)) winTimeMap.set(p, d);
-    }
-  });
-
-  // ── Wait times: Registration → EXC ─────────────────────────────────────────
-  const excWaitMin = [];
-  const excWaitByDay = {};
-  webF.forEach(r => {
-    const p = normalizePhone(r['Mobile Phone'] || '');
-    const regTime = parseDate(r['Date']);
-    const excTime = excTimeMap.get(p);
-    if (p && regTime && excTime) {
-      const diff = (excTime - regTime) / 60000;
-      if (diff >= 0 && diff < 600) {
-        excWaitMin.push(diff);
-        const day = toYMD(regTime);
-        if (!excWaitByDay[day]) excWaitByDay[day] = [];
-        excWaitByDay[day].push(diff);
-      }
-    }
-  });
-
-  // ── Wait times: Registration → Trivia ──────────────────────────────────────
-  const winWaitMin = [];
-  const winWaitByDay = {};
-  webF.forEach(r => {
-    const p = normalizePhone(r['Mobile Phone'] || '');
-    const regTime = parseDate(r['Date']);
-    const winTime = winTimeMap.get(p);
-    if (p && regTime && winTime) {
-      const diff = (winTime - regTime) / 60000;
-      if (diff >= 0 && diff < 600) {
-        winWaitMin.push(diff);
-        const day = toYMD(regTime);
-        if (!winWaitByDay[day]) winWaitByDay[day] = [];
-        winWaitByDay[day].push(diff);
-      }
-    }
-  });
-
-  // ── Sign-ups per day ────────────────────────────────────────────────────────
-  const signupsByDay = {};
-  webF.forEach(r => {
-    const d = parseDate(r['Date']);
-    if (!d) return;
-    const day = toYMD(d);
-    signupsByDay[day] = (signupsByDay[day] || 0) + 1;
-  });
-
-  const excByDay = {};
-  excF.forEach(r => {
-    const d = parseDate(r['Date']);
-    if (!d) return;
-    excByDay[toYMD(d)] = (excByDay[toYMD(d)] || 0) + 1;
-  });
-
-  const winByDay = {};
-  winF.forEach(r => {
-    const d = parseDate(r['Date']);
-    if (!d) return;
-    winByDay[toYMD(d)] = (winByDay[toYMD(d)] || 0) + 1;
-  });
-
-  // ── Activity by hour of day ─────────────────────────────────────────────────
-  const byHour    = Array(24).fill(0);
-  const excByHour = Array(24).fill(0);
-  webF.forEach(r => { const d = parseDate(r['Date']); if (d) byHour[d.getHours()]++; });
-  excF.forEach(r => { const d = parseDate(r['Date']); if (d) excByHour[d.getHours()]++; });
-
-  // ── KPI calculations ────────────────────────────────────────────────────────
-  const totalReg  = webF.length;
-  const totalExc  = excF.length;
-  const convRate  = totalReg > 0 ? ((totalExc / totalReg) * 100).toFixed(1) : '—';
-
-  const medExcWait = median(excWaitMin);
-  const medWinWait = median(winWaitMin);
-  const fmtMin = m => m == null ? '—' : m < 60 ? m.toFixed(0) + ' min' : (m/60).toFixed(1) + ' hrs';
-
-  const peakHourIdx = byHour.indexOf(Math.max(...byHour));
-  const peakHourStr = peakHourIdx === 0 ? '12 AM' : peakHourIdx < 12 ? peakHourIdx + ' AM' : peakHourIdx === 12 ? '12 PM' : (peakHourIdx-12) + ' PM';
-
-  const busyDay    = Object.entries(signupsByDay).sort((a,b) => b[1]-a[1])[0];
-  const busyDayStr = busyDay ? busyDay[0].slice(5) + ' (' + busyDay[1] + ')' : '—';
-
-  // ── KPI cards (5: conversion + both waits + peak hour + busiest day) ────────
-  document.getElementById('opsKpiRow').innerHTML = `
-    <div class="kpi-card">
-      <div class="kpi-label">Simulator Conversion Rate</div>
-      <div class="kpi-value">${convRate}%</div>
-      <div class="kpi-sub">${totalExc.toLocaleString()} of ${totalReg.toLocaleString()} registrants ran EXC</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Median Wait → EXC</div>
-      <div class="kpi-value">${fmtMin(medExcWait)}</div>
-      <div class="kpi-sub">Registration to simulator</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Median Wait → Trivia</div>
-      <div class="kpi-value">${fmtMin(medWinWait)}</div>
-      <div class="kpi-sub">Registration to trivia</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Peak Sign-Up Hour</div>
-      <div class="kpi-value">${peakHourStr}</div>
-      <div class="kpi-sub">${Math.max(...byHour).toLocaleString()} sign-ups that hour</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Busiest Day</div>
-      <div class="kpi-value" style="font-size:22px">${busyDayStr}</div>
-      <div class="kpi-sub">By registration count</div>
-    </div>`;
-
-  // Swap kpi-row to 5 columns for ops page
-  document.getElementById('opsKpiRow').style.gridTemplateColumns = 'repeat(5,1fr)';
-
-  // ── Sorted day labels ───────────────────────────────────────────────────────
-  const allDays   = [...new Set([...Object.keys(signupsByDay),...Object.keys(excByDay),...Object.keys(winByDay)])].sort();
-  const dayLabels = allDays.map(d => { const dt=new Date(d+'T12:00:00'); return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}); });
-
-  const coLine = {
-    responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ labels:{ color:'#8b949e', font:{family:'Barlow Condensed',size:11,weight:'600'}, padding:12 } } },
-    scales:{
-      x:{ ticks:{color:'#8b949e',font:{family:'Barlow Condensed',size:10}}, grid:{color:'#21262d'} },
-      y:{ ticks:{color:'#8b949e',font:{family:'Barlow Condensed',size:10}}, grid:{color:'#21262d'}, beginAtZero:true }
-    }
-  };
-
-  // ── Render grid ─────────────────────────────────────────────────────────────
-  document.getElementById('opsGrid').innerHTML = `
-    <div class="card full">
-      <div class="card-title"><span class="dot"></span>Daily Activity — Registrations, EXC Runs &amp; Trivia Sessions</div>
-      <div class="chart-wrap" style="min-height:240px"><canvas id="chartDailyActivity"></canvas></div>
-    </div>
-    <div class="card full">
-      <div class="card-title"><span class="dot"></span>Sign-Up &amp; EXC Activity by Hour of Day</div>
-      <div class="chart-wrap" style="min-height:220px"><canvas id="chartHourly"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title"><span class="dot"></span>Median Wait Time by Day — Registration to EXC</div>
-      <div class="chart-wrap" style="min-height:220px"><canvas id="chartWaitExc"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title"><span class="dot"></span>Median Wait Time by Day — Registration to Trivia</div>
-      <div class="chart-wrap" style="min-height:220px"><canvas id="chartWaitWin"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title"><span class="dot"></span>EXC Wait Time Distribution</div>
-      <div class="chart-wrap" style="min-height:220px"><canvas id="chartWaitDistExc"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title"><span class="dot"></span>Trivia Wait Time Distribution</div>
-      <div class="chart-wrap" style="min-height:220px"><canvas id="chartWaitDistWin"></canvas></div>
-    </div>`;
-
-  // Chart 1: Daily activity line
-  opsCharts.daily = new Chart(document.getElementById('chartDailyActivity'), {
-    type:'line',
-    data:{ labels:dayLabels, datasets:[
-      { label:'Registrations',     data:allDays.map(d=>signupsByDay[d]||0), borderColor:'#ce0e2d', backgroundColor:'rgba(206,14,45,.1)',  borderWidth:2, pointRadius:4, tension:.3, fill:true },
-      { label:'EXC Simulator Runs',data:allDays.map(d=>excByDay[d]||0),    borderColor:'#58a6ff', backgroundColor:'rgba(88,166,255,.08)', borderWidth:2, pointRadius:4, tension:.3, fill:true },
-      { label:'Trivia Sessions',   data:allDays.map(d=>winByDay[d]||0),    borderColor:'#3fb950', backgroundColor:'rgba(63,185,80,.08)',  borderWidth:2, pointRadius:4, tension:.3, fill:true },
-    ]},
-    options:{ ...coLine }
-  });
-
-  // Chart 2: Hourly bar
-  const hourLabels = Array.from({length:24},(_,i)=>i===0?'12a':i<12?i+'a':i===12?'12p':(i-12)+'p');
-  opsCharts.hourly = new Chart(document.getElementById('chartHourly'), {
-    type:'bar',
-    data:{ labels:hourLabels, datasets:[
-      { label:'Registrations', data:byHour,    backgroundColor:'rgba(206,14,45,.75)', borderRadius:3 },
-      { label:'EXC Runs',      data:excByHour, backgroundColor:'rgba(88,166,255,.65)', borderRadius:3 },
-    ]},
-    options:{ ...coLine }
-  });
-
-  // Helper: median wait by day chart
-  function waitByDayChart(canvasId, waitByDayObj, color) {
-    const days   = Object.keys(waitByDayObj).sort();
-    const labels = days.map(d => { const dt=new Date(d+'T12:00:00'); return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}); });
-    const data   = days.map(d => { const m=median(waitByDayObj[d]); return m!=null?+m.toFixed(1):null; });
-    return new Chart(document.getElementById(canvasId), {
-      type:'bar',
-      data:{ labels, datasets:[{ label:'Median Wait (min)', data, backgroundColor:color+'bb', borderRadius:3 }]},
-      options:{
-        ...coLine,
-        plugins:{ ...coLine.plugins, legend:{display:false} },
-        scales:{ ...coLine.scales, y:{...coLine.scales.y, title:{display:true,text:'Minutes',color:'#8b949e',font:{size:10}}} }
-      }
-    });
-  }
-
-  opsCharts.waitExc = waitByDayChart('chartWaitExc', excWaitByDay, '#58a6ff');
-  opsCharts.waitWin = waitByDayChart('chartWaitWin', winWaitByDay, '#3fb950');
-
-  // Helper: wait time distribution histogram
-  function waitDistChart(canvasId, waitArr, color) {
-    if (!waitArr.length) { return; }
-    const maxW = Math.min(Math.max(...waitArr, 10), 180);
-    const bSz  = maxW <= 60 ? 5 : 10;
-    const buckets = {};
-    for (let i=0; i<=maxW; i+=bSz) buckets[i]=0;
-    waitArr.forEach(w => {
-      const b = Math.floor(w/bSz)*bSz;
-      const key = Object.keys(buckets).map(Number).filter(k=>k<=b).pop();
-      if (key !== undefined) buckets[key]++;
-    });
-    const labels = Object.keys(buckets).map(k=>k+'–'+(+k+bSz)+'m');
-    return new Chart(document.getElementById(canvasId), {
-      type:'bar',
-      data:{ labels, datasets:[{ label:'Participants', data:Object.values(buckets), backgroundColor:color+'bb', borderRadius:3 }]},
-      options:{
-        ...coLine,
-        plugins:{ ...coLine.plugins, legend:{display:false} },
-        scales:{ ...coLine.scales, x:{...coLine.scales.x,ticks:{...coLine.scales.x.ticks,maxRotation:45}} }
-      }
-    });
-  }
-
-  opsCharts.distExc = waitDistChart('chartWaitDistExc', excWaitMin, '#58a6ff');
-  opsCharts.distWin = waitDistChart('chartWaitDistWin', winWaitMin, '#3fb950');
-}
+// renderOps moved to operations.html
 
 
 
@@ -1930,6 +1652,32 @@ const _origShowApp = showApp;
 
 
 function syncMobFilters() {
+  // Populate mobile event chips
+  const mobEvents = document.getElementById('mobEventChips');
+  if (mobEvents) {
+    const evNames = getEvents().filter(e=>e!=='ALL');
+    mobEvents.innerHTML = '';
+    // "All" chip
+    const allChip = document.createElement('button');
+    allChip.className = 'filter-chip' + (filters.events.size===0 ? ' active' : '');
+    allChip.textContent = 'All Events';
+    allChip.onclick = () => { filters.events.clear(); syncMobFilters(); updateActiveCount(); render(); };
+    mobEvents.appendChild(allChip);
+    evNames.forEach(name => {
+      const chip = document.createElement('button');
+      chip.className = 'filter-chip' + (filters.events.has(name) ? ' active' : '');
+      chip.textContent = name;
+      chip.style.fontSize = '11px';
+      chip.onclick = () => {
+        if (filters.events.has(name)) filters.events.delete(name);
+        else filters.events.add(name);
+        if (filters.events.size === evNames.length) filters.events.clear();
+        syncMobFilters(); updatePickerLabel(); updateActiveCount(); render();
+      };
+      mobEvents.appendChild(chip);
+    });
+  }
+
   const src  = document.getElementById('sidebar');
   const dest = document.getElementById('mobFilterBody');
   if (!src || !dest) return;
@@ -2135,6 +1883,11 @@ window.addEventListener('resize', () => {
   <div class="mob-filter-header">
     <span class="mob-filter-title">&#9632; Filters</span>
     <button class="mob-filter-done" onclick="mobSwitchTab('data')">View Data &#8250;</button>
+  </div>
+  <!-- Mobile event picker -->
+  <div style="padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">&#9632; Event</div>
+    <div id="mobEventChips" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
   </div>
   <div class="mob-filter-body" id="mobFilterBody">
     <!-- Sidebar content cloned here on mobile -->
