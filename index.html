@@ -917,6 +917,13 @@ function showApp(email){
   document.getElementById('appLayout').style.display='flex';
   const ued=document.getElementById('userEmailDisplay');
   if(ued)ued.textContent=email;
+
+  // Mobile: show bottom nav
+  if(IS_MOBILE()){
+    const nav=document.getElementById('mobNav');
+    if(nav) nav.style.display='flex';
+    syncMobFilters();
+  }
 }
 
 function showLoading(text='Loading data\u2026'){document.getElementById('loadingText').textContent=text;document.getElementById('loadingOverlay').style.display='flex';}
@@ -1920,14 +1927,7 @@ const IS_MOBILE = () => window.innerWidth <= 768;
 
 // Show bottom nav + hide sidebar when on mobile after login
 const _origShowApp = showApp;
-function showApp(email) {
-  _origShowApp(email);
-  if (IS_MOBILE()) {
-    document.getElementById('mobNav').style.display = 'flex';
-    // Clone sidebar content into mobile filter panel
-    syncMobFilters();
-  }
-}
+
 
 function syncMobFilters() {
   const src  = document.getElementById('sidebar');
