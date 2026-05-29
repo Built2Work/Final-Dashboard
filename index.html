@@ -416,39 +416,7 @@ footer{border-top:1px solid var(--border);}
 #selectAllPin{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
 
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
-// ─── PIN / UNPIN PARTICIPANTS ────────────────────────────────────────────────
-function togglePin(checkbox, phone){
-  if(checkbox.checked) pinnedPhones.add(phone);
-  else pinnedPhones.delete(phone);
-  // Re-render table to move pinned rows to top / remove from pinned section
-  if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
-}
-
-function toggleShowSelected(){
-  showSelectedOnly=!showSelectedOnly;
-  if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
-}
-
-function clearSelection(){
-  showSelectedOnly=false;
-  pinnedPhones.clear();
-  if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
-}
-
-function toggleSelectAll(checked){
-  if(!window._lastTableRows) return;
-  if(checked){
-    // Pin every currently visible row
-    window._lastTableRows.forEach(r=>pinnedPhones.add(r.phone));
-  } else {
-    // Unpin every currently visible row
-    window._lastTableRows.forEach(r=>pinnedPhones.delete(r.phone));
-  }
-  if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
-}
-
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1783,6 +1751,37 @@ function exportExcel(){
     const tag=filters.events.size===0?'All-Events':[...filters.events].map(e=>e.replace(/\s+/g,'-')).join('_');
     XLSX.writeFile(wb,'BTW-Participants_'+tag+'_'+stamp+'.xlsx');
   }catch(err){console.error('Excel export error:',err);alert('Excel export failed: '+err.message);}
+}
+
+// ─── PIN / UNPIN PARTICIPANTS ────────────────────────────────────────────────
+function togglePin(checkbox, phone){
+  if(checkbox.checked) pinnedPhones.add(phone);
+  else pinnedPhones.delete(phone);
+  // Re-render table to move pinned rows to top / remove from pinned section
+  if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
+}
+
+function toggleShowSelected(){
+  showSelectedOnly=!showSelectedOnly;
+  if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
+}
+
+function clearSelection(){
+  showSelectedOnly=false;
+  pinnedPhones.clear();
+  if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
+}
+
+function toggleSelectAll(checked){
+  if(!window._lastTableRows) return;
+  if(checked){
+    // Pin every currently visible row
+    window._lastTableRows.forEach(r=>pinnedPhones.add(r.phone));
+  } else {
+    // Unpin every currently visible row
+    window._lastTableRows.forEach(r=>pinnedPhones.delete(r.phone));
+  }
+  if(window.webRows2) renderTable(window.webRows2, window.excRows2, window.winRows2);
 }
 </script>
 
