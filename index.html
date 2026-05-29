@@ -1348,6 +1348,7 @@ function renderTable(webRows,excRows,winRows){
   document.querySelector('.ptbl thead').innerHTML='<tr><th class="pin-col"><input type="checkbox" id="selectAllPin" title="Select all / deselect all" onchange="toggleSelectAll(this.checked)"></th><th>#</th>'+colDefs.map(c=>'<th>'+c.label+'</th>').join('')+'</tr>';
   const tbody=document.getElementById('ptblBody');
   if(!rows.length){tbody.innerHTML='<tr><td colspan="'+(colDefs.length+1)+'" class="no-data">No participants match the current filters.</td></tr>';return;}
+  // Build rows without inline checked attr — set via JS after render for reliability
   tbody.innerHTML=rows.map((r,i)=>{
     const w=r._w,e=r._e,n=r._n;
     const cells=colDefs.map(col=>{
@@ -1356,8 +1357,13 @@ function renderTable(webRows,excRows,winRows){
       return '<td'+(v.style?' style="'+v.style+'"':v.cls?' class="'+v.cls+'"':'')+'>'+(v.display||'—')+'</td>';
     }).join('');
     const isPinned=pinnedPhones.has(r.phone);
-    return '<tr class="'+(isPinned?'pinned':'')+'"><td class="pin-col"><input type="checkbox" class="pin-check" '+(isPinned?'checked ':'')+'onchange="togglePin(this,\''+r.phone+'\')" title="Pin this person"></td><td class="fmuted">'+(i+1)+'</td>'+cells+'</tr>';
+    return '<tr class="'+(isPinned?'pinned':'')+'"><td class="pin-col"><input type="checkbox" class="pin-check" data-phone="'+r.phone+'" onchange="togglePin(this,\''+r.phone+'\')" title="Pin this person"></td><td class="fmuted">'+(i+1)+'</td>'+cells+'</tr>';
   }).join('');
+  // Set checked state via JS property (more reliable than HTML attribute)
+  tbody.querySelectorAll('.pin-check').forEach(chk=>{
+    chk.checked = pinnedPhones.has(chk.dataset.phone);
+    chk.closest('tr').classList.toggle('pinned', chk.checked);
+  });
 }
 
 function toggleShowAll(){showAllParticipants=!showAllParticipants;const btn=document.getElementById('showAllToggle');if(btn){btn.classList.toggle('on',showAllParticipants);btn.textContent=showAllParticipants?'Hide Unmatched':'Show Unmatched';}if(window.webRows2)renderTable(window.webRows2,window.excRows2,window.winRows2);}
