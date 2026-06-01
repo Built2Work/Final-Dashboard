@@ -1229,6 +1229,7 @@ function renderKPIs(w,e,n){
 function renderGrid(webRows,excRows,winRows){
   document.getElementById('dashGrid').innerHTML=`<div class="card"><div class="card-title"><span class="dot"></span>EXC Score Distribution <span class="fab" id="badgeExc">FILTERED</span></div><div class="chart-wrap"><canvas id="chartExc"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Employment Status <span class="fab" id="badgeEmp">FILTERED</span></div><div class="chart-wrap"><canvas id="chartEmp"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Interest in Construction Jobs <span class="fab" id="badgeJI">FILTERED</span></div><div class="chart-wrap"><canvas id="chartJI"></canvas></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Age Distribution <span class="fab" id="badgeAge">FILTERED</span></div><div class="chart-wrap"><canvas id="chartAge"></canvas></div></div><div class="card" style="grid-row:span 2"><div class="card-title"><span class="dot"></span>Trade Certifications &amp; Licenses <span class="fab" id="badgeCerts">FILTERED</span></div><div class="chart-wrap" style="min-height:460px"><canvas id="chartCerts"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Participants by State <span class="fab" id="badgeState">FILTERED</span></div><div class="state-grid" id="stateGrid"></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Windows Trivia \u2014 Tests Taken &amp; Avg Scores <span class="fab" id="badgeTrivia">FILTERED</span></div><table class="ttbl"><thead><tr><th>Test</th><th>Participants</th><th>Avg Score</th><th>Bar</th></tr></thead><tbody id="triviaBody"></tbody></table></div><div class="card full"><div class="card-title"><span class="dot"></span>Filtered Participants</div><div class="tbl-toolbar"><button class="tbl-toggle" id="showAllToggle" onclick="toggleShowAll()">Show Unmatched</button>
         <button class="tbl-toggle" id="showSelBtn" onclick="toggleShowSelected()" style="display:none;">&#9632; Show Selected</button>
+        <button class="tbl-toggle" id="assignSelBtn" onclick="openBulkAssign()" style="display:none;border-color:#58a6ff;color:#58a6ff;white-space:nowrap;">&#8679; Assign Selected</button>
         <button class="tbl-toggle" id="clearSelBtn" onclick="clearSelection()" style="display:none;border-color:var(--red);color:var(--red);">&#x2715; Clear All</button><input class="tbl-search" type="text" placeholder="Search any column\u2026" oninput="tblSearch=this.value;renderTable(window.webRows2,window.excRows2,window.winRows2)"><div class="tbl-count" id="tblCount"></div><button class="tbl-toggle" onclick="exportPDF()" style="border-color:var(--accent);color:var(--accent);white-space:nowrap;">&#8681; Export PDF</button>
         <button class="tbl-cols-btn" onclick="openColModal()">&#9776; Columns</button>
         <button class="tbl-toggle" onclick="exportExcel()" style="border-color:var(--green);color:var(--green);white-space:nowrap;">&#8681; Excel</button></div><div class="table-scroll"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Address</th><th>State</th><th>Event</th><th>EXC Score</th><th>Trivia Tests (Avg)</th><th>Job Interest</th></tr></thead><tbody id="ptblBody"></tbody></table></div></div>`;
@@ -1483,6 +1484,8 @@ function renderTable(webRows,excRows,winRows){
         : '\u25a0 Show Selected ('+pinnedPhones.size+')';
     }
     if(clearBtn) clearBtn.style.display = hasPins?'inline':'none';
+    const assignBtn=document.getElementById('assignSelBtn');
+    if(assignBtn) assignBtn.style.display = hasPins?'inline':'none';
     if(allChk){
       allChk.indeterminate=false;
       allChk.checked=hasPins;
@@ -2153,6 +2156,63 @@ function wireAssignDblClick(){
 
 // CRM showApp logic merged into main showApp
 
+
+// ─── BULK ASSIGNMENT ─────────────────────────────────────────────────────────
+function openBulkAssign(){
+  if(pinnedPhones.size===0){alert('Check at least one candidate first.');return;}
+  // Populate company dropdown
+  const sel=document.getElementById('bulkAssignCompany');
+  sel.innerHTML='<option value="">— Select Company —</option>';
+  companies.forEach(c=>{
+    const o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o);
+  });
+  // Show count
+  document.getElementById('bulkAssignCount').textContent=
+    pinnedPhones.size+' candidate'+(pinnedPhones.size===1?'':'s')+' selected';
+  // Clear fields
+  ['bulkHopefulJob','bulkPayScale','bulkCurrentJob','bulkNotes'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('bulkAssignMsg').textContent='';
+  document.getElementById('bulkAssignOverlay').classList.add('open');
+}
+
+function closeBulkAssign(e){
+  if(e&&e.target!==document.getElementById('bulkAssignOverlay'))return;
+  document.getElementById('bulkAssignOverlay').classList.remove('open');
+}
+
+async function saveBulkAssignment(){
+  const companyId=document.getElementById('bulkAssignCompany').value;
+  if(!companyId){document.getElementById('bulkAssignMsg').textContent='Please select a company.';return;}
+  const msg=document.getElementById('bulkAssignMsg');
+  msg.style.color='var(--muted)';msg.textContent='Saving…';
+  const {data:{user}}=await sb.auth.getUser();
+  const hopefulJob  = document.getElementById('bulkHopefulJob').value.trim();
+  const payScale    = document.getElementById('bulkPayScale').value.trim();
+  const currentJob  = document.getElementById('bulkCurrentJob').value.trim();
+  const notes       = document.getElementById('bulkNotes').value.trim();
+  const assignedBy  = user?.email||'';
+  // Build upsert rows for all pinned phones
+  const rows=[...pinnedPhones].map(phone=>({
+    phone, company_id:companyId,
+    hopeful_job:hopefulJob, pay_scale:payScale,
+    current_job:currentJob, notes, assigned_by:assignedBy,
+    status:'Not Contacted',
+  }));
+  const {error}=await sb.from('candidate_assignments')
+    .upsert(rows,{onConflict:'phone,company_id'});
+  if(error){
+    msg.style.color='#f85149';msg.textContent='Error: '+error.message;return;
+  }
+  msg.style.color='var(--green)';
+  msg.textContent='✓ '+rows.length+' candidate'+(rows.length===1?'':'s')+' assigned!';
+  await loadCRMData();
+  setTimeout(()=>{
+    document.getElementById('bulkAssignOverlay').classList.remove('open');
+  },900);
+}
+
 </script>
 
 <!-- COLUMN SELECTOR MODAL -->
@@ -2301,6 +2361,48 @@ function wireAssignDblClick(){
       <button class="assign-cancel" onclick="closeAssignModal()">Cancel</button>
       <span class="assign-msg" id="assignMsg"></span>
       <button class="assign-save" onclick="saveAssignment()">&#10003; Save Assignment</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ BULK ASSIGN MODAL ══ -->
+<div class="assign-overlay" id="bulkAssignOverlay" onclick="closeBulkAssign(event)">
+  <div class="assign-modal">
+    <div class="assign-header">
+      <div>
+        <div class="assign-title">Assign Candidates</div>
+        <div class="assign-name" id="bulkAssignCount"></div>
+      </div>
+      <button class="assign-close" onclick="closeBulkAssign()">&#x2715;</button>
+    </div>
+    <div class="assign-body">
+      <div class="assign-field">
+        <label class="assign-label">Company</label>
+        <select class="assign-input assign-select" id="bulkAssignCompany"></select>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:2px 0 6px;border-top:1px solid var(--border);margin-top:2px;">Optional — applies to all selected candidates</div>
+      <div class="assign-field">
+        <label class="assign-label">Hopeful Job</label>
+        <input class="assign-input" id="bulkHopefulJob" placeholder="e.g. CDL Driver, Welder…">
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Pay Scale</label>
+        <input class="assign-input" id="bulkPayScale" placeholder="e.g. $22-28/hr, $55k…">
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Current Job</label>
+        <input class="assign-input" id="bulkCurrentJob" placeholder="e.g. Warehouse Associate…">
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Notes</label>
+        <textarea class="assign-textarea" id="bulkNotes" placeholder="Optional notes applied to all selected candidates…"></textarea>
+      </div>
+    </div>
+    <div class="assign-footer">
+      <button class="assign-cancel" onclick="closeBulkAssign()">Cancel</button>
+      <span class="assign-msg" id="bulkAssignMsg"></span>
+      <button class="assign-save" onclick="saveBulkAssignment()">&#10003; Assign All</button>
     </div>
   </div>
 </div>
