@@ -924,7 +924,12 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   document.getElementById('loginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   document.getElementById('loginEmail').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   const {data:{session}}=await sb.auth.getSession();
-  if(session){showApp(session.user.email);await loadData();}
+  if(session){
+    // Check if logged-in user is a customer
+    const {data:cos}=await sb.from('companies').select('id').eq('email',session.user.email).limit(1);
+    if(cos&&cos.length){window.location.href='customer.html';return;}
+    showApp(session.user.email);await loadData();
+  }
 });
 
 async function doLogin(){
@@ -937,6 +942,9 @@ async function doLogin(){
   btn.disabled=true;btn.textContent='Signing in\u2026';
   const {data,error}=await sb.auth.signInWithPassword({email,password});
   if(error){errEl.textContent='Invalid email or password. Please try again.';btn.disabled=false;btn.textContent='Sign In \u2192';return;}
+  // Check if this user is a customer — if so, redirect to customer portal
+  const {data:cos}=await sb.from('companies').select('id').eq('email',email).limit(1);
+  if(cos&&cos.length){window.location.href='customer.html';return;}
   showApp(data.user.email);
   await loadData();
 }
