@@ -2008,17 +2008,20 @@ function onCandidateDblClick(phone, name){
   });
   // Pre-fill if already assigned to a company
   const existing = assignments.find(a=>a.phone===phone);
+  const unassignBtn = document.getElementById('unassignBtn');
   if(existing){
     sel.value = existing.company_id || '';
     document.getElementById('assignHopefulJob').value  = existing.hopeful_job  || '';
     document.getElementById('assignPayScale').value    = existing.pay_scale    || '';
     document.getElementById('assignCurrentJob').value  = existing.current_job  || '';
     document.getElementById('assignNotes').value       = existing.notes        || '';
+    if(unassignBtn) unassignBtn.style.display='inline';
   } else {
     sel.value='';
     ['assignHopefulJob','assignPayScale','assignCurrentJob','assignNotes'].forEach(id=>{
       document.getElementById(id).value='';
     });
+    if(unassignBtn) unassignBtn.style.display='none';
   }
   document.getElementById('assignMsg').textContent='';
   document.getElementById('assignOverlay').classList.add('open');
@@ -2028,6 +2031,20 @@ function closeAssignModal(e){
   if(e&&e.target!==document.getElementById('assignOverlay'))return;
   document.getElementById('assignOverlay').classList.remove('open');
   assignPhone=null;
+}
+
+async function unassignCandidate(){
+  if(!assignPhone) return;
+  const companyId = document.getElementById('assignCompany').value;
+  if(!companyId){ document.getElementById('assignMsg').textContent='Select the company to unassign from.'; return; }
+  const msg = document.getElementById('assignMsg');
+  msg.style.color='var(--muted)'; msg.textContent='Removing…';
+  const {error} = await sb.from('candidate_assignments')
+    .delete().eq('phone', assignPhone).eq('company_id', companyId);
+  if(error){ msg.style.color='#f85149'; msg.textContent='Error: '+error.message; return; }
+  msg.style.color='var(--green)'; msg.textContent='✓ Unassigned';
+  await loadCRMData();
+  setTimeout(()=>document.getElementById('assignOverlay').classList.remove('open'), 700);
 }
 
 async function saveAssignment(){
@@ -2188,6 +2205,20 @@ function openBulkAssign(){
 function closeBulkAssign(e){
   if(e&&e.target!==document.getElementById('bulkAssignOverlay'))return;
   document.getElementById('bulkAssignOverlay').classList.remove('open');
+}
+
+async function bulkUnassign(){
+  const companyId=document.getElementById('bulkAssignCompany').value;
+  if(!companyId){document.getElementById('bulkAssignMsg').textContent='Select the company to unassign from.';return;}
+  const msg=document.getElementById('bulkAssignMsg');
+  msg.style.color='var(--muted)';msg.textContent='Removing…';
+  const phones=[...pinnedPhones];
+  const {error}=await sb.from('candidate_assignments')
+    .delete().in('phone',phones).eq('company_id',companyId);
+  if(error){msg.style.color='#f85149';msg.textContent='Error: '+error.message;return;}
+  msg.style.color='var(--green)';msg.textContent='✓ '+phones.length+' unassigned';
+  await loadCRMData();
+  setTimeout(()=>document.getElementById('bulkAssignOverlay').classList.remove('open'),700);
 }
 
 async function saveBulkAssignment(){
@@ -2367,6 +2398,7 @@ async function saveBulkAssignment(){
     </div>
     <div class="assign-footer">
       <button class="assign-cancel" onclick="closeAssignModal()">Cancel</button>
+      <button class="assign-cancel" id="unassignBtn" onclick="unassignCandidate()" style="display:none;border-color:#f85149;color:#f85149;">&#x2715; Unassign</button>
       <span class="assign-msg" id="assignMsg"></span>
       <button class="assign-save" onclick="saveAssignment()">&#10003; Save Assignment</button>
     </div>
@@ -2409,6 +2441,7 @@ async function saveBulkAssignment(){
     </div>
     <div class="assign-footer">
       <button class="assign-cancel" onclick="closeBulkAssign()">Cancel</button>
+      <button class="assign-cancel" onclick="bulkUnassign()" style="border-color:#f85149;color:#f85149;">&#x2715; Unassign All</button>
       <span class="assign-msg" id="bulkAssignMsg"></span>
       <button class="assign-save" onclick="saveBulkAssignment()">&#10003; Assign All</button>
     </div>
