@@ -528,6 +528,58 @@ footer{border-top:1px solid var(--border);}
 #mobFilterOverlay { }
 #mobShareModal    { }
 
+
+/* ── ASSIGN MODAL ── */
+.assign-overlay{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;}
+.assign-overlay.open{display:flex;}
+.assign-modal{background:var(--surface);border:1px solid var(--border);border-top:3px solid #ce0e2d;border-radius:6px;width:480px;max-width:95vw;display:flex;flex-direction:column;box-shadow:0 16px 56px rgba(0,0,0,.6);max-height:90vh;overflow-y:auto;}
+.assign-header{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.assign-title{font-family:'Oswald',sans-serif;font-size:16px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text);}
+.assign-name{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--accent);font-weight:700;margin-top:2px;}
+.assign-close{background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px;}
+.assign-close:hover{color:var(--text);}
+.assign-body{padding:18px 20px;display:flex;flex-direction:column;gap:14px;}
+.assign-field{display:flex;flex-direction:column;gap:6px;}
+.assign-label{font-family:'Oswald',sans-serif;font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.assign-input{font-family:'Barlow',sans-serif;font-size:13px;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);padding:9px 12px;border-radius:4px;width:100%;transition:border-color .2s;}
+.assign-input:focus{outline:none;border-color:#ce0e2d;}
+.assign-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b949e'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+.assign-textarea{font-family:'Barlow',sans-serif;font-size:13px;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);padding:9px 12px;border-radius:4px;width:100%;resize:vertical;min-height:70px;transition:border-color .2s;}
+.assign-textarea:focus{outline:none;border-color:#ce0e2d;}
+.assign-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;}
+.assign-save{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:9px 24px;border:none;background:#ce0e2d;color:#fff;border-radius:3px;cursor:pointer;transition:background .2s;margin-left:auto;}
+.assign-save:hover{background:#a00b22;}
+.assign-cancel{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:9px 16px;border:1.5px solid var(--border);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;}
+.assign-msg{font-size:12px;color:var(--green);font-family:'Barlow Condensed',sans-serif;}
+
+/* ── PIPELINE TAB ── */
+.pipe-toolbar{display:flex;align-items:center;gap:10px;padding:14px 18px 0;flex-wrap:wrap;}
+.pipe-filter-select{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);padding:5px 28px 5px 10px;border-radius:4px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b949e'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;cursor:pointer;}
+.pipe-filter-select:hover{border-color:#ce0e2d;}
+.pipe-search{font-family:'Barlow',sans-serif;font-size:12px;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);padding:5px 10px;border-radius:4px;width:200px;}
+.pipe-search:focus{outline:none;border-color:#ce0e2d;}
+.pipe-count{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--muted);margin-left:auto;}
+.pipe-export-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border:1.5px solid var(--green);background:transparent;color:var(--green);border-radius:3px;cursor:pointer;transition:all .15s;}
+.pipe-export-btn:hover{background:var(--green);color:#000;}
+.pipe-table-wrap{padding:12px 18px;overflow-x:auto;}
+.pipe-tbl{width:100%;border-collapse:collapse;}
+.pipe-tbl th{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;cursor:pointer;white-space:nowrap;}
+.pipe-tbl th:hover{color:var(--text);}
+.pipe-tbl td{padding:8px 10px;border-bottom:1px solid #21262d;font-size:12px;vertical-align:middle;}
+.pipe-tbl tr:hover td{background:var(--surface2);}
+.pipe-tbl tr:last-child td{border-bottom:none;}
+.pipe-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;}
+.pipe-company{font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--blue);font-weight:700;}
+.status-badge{display:inline-block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:3px;text-transform:uppercase;white-space:nowrap;}
+.status-not-contacted{background:rgba(139,148,158,.15);color:#8b949e;}
+.status-contacted{background:rgba(88,166,255,.15);color:#58a6ff;}
+.status-interviewed{background:rgba(240,165,0,.15);color:#f0a500;}
+.status-offered{background:rgba(188,140,255,.15);color:#bc8cff;}
+.status-hired{background:rgba(63,185,80,.2);color:#3fb950;}
+.status-rejected{background:rgba(248,81,73,.15);color:#f85149;}
+.pipe-notes-cell{max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:11px;}
+.pipe-time{font-size:11px;color:var(--muted);white-space:nowrap;}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -604,6 +656,10 @@ footer{border-top:1px solid var(--border);}
 </header>
 
 
+<div id="pipeTabBar" style="display:none;background:#111;border-bottom:1px solid var(--border);padding:0 18px;flex-shrink:0;display:none;">
+  <button class="pipe-tab active" id="tabAnalytics" onclick="switchPipeTab('analytics')" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 18px;background:transparent;border:none;border-bottom:2px solid #ce0e2d;color:#ce0e2d;cursor:pointer;margin-bottom:-1px;">&#9632; Analytics</button>
+  <button class="pipe-tab" id="tabPipeline" onclick="switchPipeTab('pipeline')" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 18px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;margin-bottom:-1px;">&#9632; Pipeline</button>
+</div>
 <div id="appLayout" style="display:none;">
   <!-- SIDEBAR -->
   <div id="sidebar">
@@ -900,6 +956,12 @@ function showApp(email){
     if(nav) nav.style.display='flex';
     syncMobFilters();
   }
+
+  // Show pipeline tab bar
+  const tb = document.getElementById('pipeTabBar');
+  if(tb) tb.style.display='flex';
+  // Load CRM data
+  loadCRMData();
 }
 
 function showLoading(text='Loading data\u2026'){document.getElementById('loadingText').textContent=text;document.getElementById('loadingOverlay').style.display='flex';}
@@ -1446,6 +1508,8 @@ function renderTable(webRows,excRows,winRows){
     chk.checked = pinnedPhones.has(chk.dataset.phone);
     chk.closest('tr').classList.toggle('pinned', chk.checked);
   });
+  // Wire double-click for CRM assignment
+  if(typeof wireAssignDblClick==='function') wireAssignDblClick();
 }
 
 function toggleShowAll(){showAllParticipants=!showAllParticipants;const btn=document.getElementById('showAllToggle');if(btn){btn.classList.toggle('on',showAllParticipants);btn.textContent=showAllParticipants?'Hide Unmatched':'Show Unmatched';}if(window.webRows2)renderTable(window.webRows2,window.excRows2,window.winRows2);}
@@ -1869,6 +1933,226 @@ window.addEventListener('resize', () => {
   }
 });
 
+
+// ═══════════════════════════════════════════════════════════════
+//  CRM — COMPANIES, ASSIGNMENTS, PIPELINE
+// ═══════════════════════════════════════════════════════════════
+
+let companies = [];           // [{id, name, email}]
+let assignments = [];         // [{id, phone, company_id, ...}]
+let assignPhone = null;       // phone of candidate being assigned
+let pipeSort = {col:'updated', dir:-1};
+
+// ── Load CRM data alongside main data ────────────────────────────────────────
+async function loadCRMData(){
+  try{
+    const [compRes, assRes] = await Promise.all([
+      sb.from('companies').select('*').order('name'),
+      sb.from('candidate_assignments').select('*').order('updated_at', {ascending:false})
+    ]);
+    if(!compRes.error) companies = compRes.data || [];
+    if(!assRes.error)  assignments = assRes.data || [];
+    // Populate pipeline company filter
+    const cf = document.getElementById('pipeCompanyFilter');
+    if(cf){
+      cf.innerHTML = '<option value="">All Companies</option>';
+      companies.forEach(c=>{
+        const o=document.createElement('option');o.value=c.id;o.textContent=c.name;cf.appendChild(o);
+      });
+    }
+  } catch(e){ console.error('CRM load error:',e); }
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────────────────────
+function switchPipeTab(tab){
+  const analytics = document.getElementById('appLayout');
+  const pipeline  = document.getElementById('pipelinePanel');
+  const tA = document.getElementById('tabAnalytics');
+  const tP = document.getElementById('tabPipeline');
+  if(tab==='pipeline'){
+    analytics.style.display='none';
+    pipeline.style.display='flex';
+    tA.style.color='var(--muted)';tA.style.borderBottomColor='transparent';
+    tP.style.color='#ce0e2d';tP.style.borderBottomColor='#ce0e2d';
+    loadCRMData().then(renderPipeline);
+  } else {
+    analytics.style.display='flex';
+    pipeline.style.display='none';
+    tA.style.color='#ce0e2d';tA.style.borderBottomColor='#ce0e2d';
+    tP.style.color='var(--muted)';tP.style.borderBottomColor='transparent';
+  }
+}
+
+// Patch showApp to show tab bar
+
+// ── DOUBLE-CLICK ON CANDIDATE NAME ───────────────────────────────────────────
+function onCandidateDblClick(phone, name){
+  assignPhone = phone;
+  document.getElementById('assignCandidateName').textContent = name;
+  // Populate company dropdown
+  const sel = document.getElementById('assignCompany');
+  sel.innerHTML = '<option value="">— Select Company —</option>';
+  companies.forEach(c=>{
+    const o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o);
+  });
+  // Pre-fill if already assigned to a company
+  const existing = assignments.find(a=>a.phone===phone);
+  if(existing){
+    sel.value = existing.company_id || '';
+    document.getElementById('assignHopefulJob').value  = existing.hopeful_job  || '';
+    document.getElementById('assignPayScale').value    = existing.pay_scale    || '';
+    document.getElementById('assignCurrentJob').value  = existing.current_job  || '';
+    document.getElementById('assignNotes').value       = existing.notes        || '';
+  } else {
+    sel.value='';
+    ['assignHopefulJob','assignPayScale','assignCurrentJob','assignNotes'].forEach(id=>{
+      document.getElementById(id).value='';
+    });
+  }
+  document.getElementById('assignMsg').textContent='';
+  document.getElementById('assignOverlay').classList.add('open');
+}
+
+function closeAssignModal(e){
+  if(e&&e.target!==document.getElementById('assignOverlay'))return;
+  document.getElementById('assignOverlay').classList.remove('open');
+  assignPhone=null;
+}
+
+async function saveAssignment(){
+  const companyId = document.getElementById('assignCompany').value;
+  if(!companyId){ document.getElementById('assignMsg').textContent='Please select a company.'; return; }
+  const {data:{user}} = await sb.auth.getUser();
+  const payload = {
+    phone:        assignPhone,
+    company_id:   companyId,
+    hopeful_job:  document.getElementById('assignHopefulJob').value.trim(),
+    pay_scale:    document.getElementById('assignPayScale').value.trim(),
+    current_job:  document.getElementById('assignCurrentJob').value.trim(),
+    notes:        document.getElementById('assignNotes').value.trim(),
+    assigned_by:  user?.email || '',
+    status:       'Not Contacted',
+  };
+  const msg = document.getElementById('assignMsg');
+  msg.textContent='Saving…';
+  // Upsert (update if same phone+company_id exists)
+  const {error} = await sb.from('candidate_assignments')
+    .upsert(payload, {onConflict:'phone,company_id'});
+  if(error){ msg.style.color='#f85149'; msg.textContent='Error: '+error.message; return; }
+  msg.style.color='var(--green)'; msg.textContent='✓ Saved!';
+  await loadCRMData();
+  setTimeout(()=>document.getElementById('assignOverlay').classList.remove('open'), 800);
+}
+
+// ── PIPELINE RENDER ───────────────────────────────────────────────────────────
+function statusClass(s){
+  const m={'Not Contacted':'not-contacted','Contacted':'contacted',
+           'Interviewed':'interviewed','Offered':'offered','Hired':'hired','Rejected':'rejected'};
+  return 'status-badge status-'+(m[s]||'not-contacted');
+}
+
+function fmtDate(str){
+  if(!str)return '—';
+  const d=new Date(str);
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+function pipeSortBy(col){
+  if(pipeSort.col===col) pipeSort.dir*=-1;
+  else { pipeSort.col=col; pipeSort.dir=-1; }
+  renderPipeline();
+}
+
+function renderPipeline(){
+  const compFilter   = document.getElementById('pipeCompanyFilter')?.value  || '';
+  const statusFilter = document.getElementById('pipeStatusFilter')?.value   || '';
+  const q            = (document.getElementById('pipeSearch')?.value || '').toLowerCase().trim();
+
+  // Join assignments with companies + web_registration lookup
+  let rows = assignments.map(a=>{
+    const company = companies.find(c=>c.id===a.company_id);
+    // Look up name from rawWeb
+    const w = rawWeb.find(r=>normalizePhone(r['Mobile Phone']||'')===a.phone);
+    const name = w?(w['First Name']||'')+' '+(w['Last Name']||''):'Phone: '+a.phone;
+    return {...a, companyName: company?.name||'Unknown', name: name.trim()};
+  });
+
+  // Filter
+  if(compFilter)   rows=rows.filter(r=>r.company_id===compFilter);
+  if(statusFilter) rows=rows.filter(r=>r.status===statusFilter);
+  if(q) rows=rows.filter(r=>
+    r.name.toLowerCase().includes(q)||
+    r.phone.includes(q)||
+    (r.companyName||'').toLowerCase().includes(q)||
+    (r.hopeful_job||'').toLowerCase().includes(q)
+  );
+
+  // Sort
+  rows.sort((a,b)=>{
+    let av,bv;
+    if(pipeSort.col==='name')    {av=a.name;bv=b.name;}
+    else if(pipeSort.col==='company'){av=a.companyName;bv=b.companyName;}
+    else if(pipeSort.col==='status'){av=a.status;bv=b.status;}
+    else if(pipeSort.col==='updated'){av=a.updated_at;bv=b.updated_at;}
+    else if(pipeSort.col==='assigned'){av=a.assigned_at;bv=b.assigned_at;}
+    else {av='';bv='';}
+    if(av<bv)return -1*pipeSort.dir;
+    if(av>bv)return  1*pipeSort.dir;
+    return 0;
+  });
+
+  document.getElementById('pipeCount').textContent = rows.length.toLocaleString()+' assignments';
+  const tbody = document.getElementById('pipeTbody');
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted);font-style:italic;">No assignments found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r=>`
+    <tr>
+      <td><span class="pipe-name">${r.name}</span><br><span style="font-size:11px;color:var(--muted)">${r.phone}</span></td>
+      <td><span class="pipe-company">${r.companyName}</span></td>
+      <td><span class="${statusClass(r.status)}">${r.status||'Not Contacted'}</span></td>
+      <td style="font-size:12px">${r.hopeful_job||'—'}</td>
+      <td style="font-size:12px">${r.pay_scale||'—'}</td>
+      <td style="font-size:12px">${r.current_job||'—'}</td>
+      <td class="pipe-notes-cell" title="${(r.notes||'').replace(/"/g,'&quot;')}">${r.notes||'—'}</td>
+      <td class="pipe-time">${fmtDate(r.updated_at)}</td>
+      <td class="pipe-time">${fmtDate(r.assigned_at)}<br><span style="font-size:10px;color:var(--muted)">${r.assigned_by||''}</span></td>
+    </tr>`).join('');
+}
+
+// ── PIPELINE EXCEL EXPORT ─────────────────────────────────────────────────────
+function exportPipelineExcel(){
+  if(typeof XLSX==='undefined'){alert('Excel library loading.');return;}
+  const rows=[...document.querySelectorAll('#pipeTbody tr')].map(tr=>{
+    const cells=[...tr.querySelectorAll('td')].map(td=>td.innerText.replace(/\n/g,' ').trim());
+    return cells;
+  });
+  const head=['Candidate','Company','Status','Hopeful Job','Pay Scale','Current Job','Notes','Last Updated','Assigned'];
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([head,...rows]);
+  ws['!cols']=[{wch:24},{wch:20},{wch:16},{wch:20},{wch:14},{wch:20},{wch:30},{wch:14},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws,'Pipeline');
+  XLSX.writeFile(wb,'BTW-Pipeline_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+// ── WIRE DOUBLE-CLICK — called after renderTable ─────────────────────────────
+function wireAssignDblClick(){
+  document.querySelectorAll('#ptblBody tr').forEach(tr=>{
+    const checkbox = tr.querySelector('.pin-check');
+    if(!checkbox) return;
+    const phone = checkbox.dataset.phone;
+    if(!phone) return;
+    const nameTd = tr.querySelector('td.fname') || tr.querySelectorAll('td')[2];
+    if(!nameTd) return;
+    nameTd.style.cursor='pointer';
+    nameTd.title='Double-click to assign to a company';
+    nameTd.ondblclick=()=>onCandidateDblClick(phone, nameTd.textContent.trim());
+  });
+}
+
+// CRM showApp logic merged into main showApp
+
 </script>
 
 <!-- COLUMN SELECTOR MODAL -->
@@ -1940,6 +2224,84 @@ window.addEventListener('resize', () => {
       Export as Excel &amp; Share
     </button>
     <button class="mob-share-cancel" onclick="closeMobShare()">Cancel</button>
+  </div>
+</div>
+
+
+<!-- ══ PIPELINE PANEL ══ -->
+<div id="pipelinePanel" style="display:none;flex:1;overflow-y:auto;flex-direction:column;">
+  <div class="pipe-toolbar">
+    <select class="pipe-filter-select" id="pipeCompanyFilter" onchange="renderPipeline()">
+      <option value="">All Companies</option>
+    </select>
+    <select class="pipe-filter-select" id="pipeStatusFilter" onchange="renderPipeline()">
+      <option value="">All Statuses</option>
+      <option>Not Contacted</option>
+      <option>Contacted</option>
+      <option>Interviewed</option>
+      <option>Offered</option>
+      <option>Hired</option>
+      <option>Rejected</option>
+    </select>
+    <input class="pipe-search" id="pipeSearch" placeholder="Search name / phone…" oninput="renderPipeline()">
+    <span class="pipe-count" id="pipeCount"></span>
+    <button class="pipe-export-btn" onclick="exportPipelineExcel()">&#8681; Excel</button>
+  </div>
+  <div class="pipe-table-wrap">
+    <table class="pipe-tbl">
+      <thead><tr>
+        <th onclick="pipeSortBy('name')">Candidate &#8597;</th>
+        <th onclick="pipeSortBy('company')">Company &#8597;</th>
+        <th onclick="pipeSortBy('status')">Status &#8597;</th>
+        <th>Hopeful Job</th>
+        <th>Pay Scale</th>
+        <th>Current Job</th>
+        <th>Notes</th>
+        <th onclick="pipeSortBy('updated')">Last Updated &#8597;</th>
+        <th onclick="pipeSortBy('assigned')">Assigned &#8597;</th>
+      </tr></thead>
+      <tbody id="pipeTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ ASSIGN CANDIDATE MODAL ══ -->
+<div class="assign-overlay" id="assignOverlay" onclick="closeAssignModal(event)">
+  <div class="assign-modal">
+    <div class="assign-header">
+      <div>
+        <div class="assign-title">Assign Candidate</div>
+        <div class="assign-name" id="assignCandidateName"></div>
+      </div>
+      <button class="assign-close" onclick="closeAssignModal()">&#x2715;</button>
+    </div>
+    <div class="assign-body">
+      <div class="assign-field">
+        <label class="assign-label">Company</label>
+        <select class="assign-input assign-select" id="assignCompany"></select>
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Hopeful Job</label>
+        <input class="assign-input" id="assignHopefulJob" placeholder="e.g. CDL Driver, Welder…">
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Pay Scale</label>
+        <input class="assign-input" id="assignPayScale" placeholder="e.g. $22-28/hr, $55k…">
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Current Job</label>
+        <input class="assign-input" id="assignCurrentJob" placeholder="e.g. Warehouse Associate…">
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Notes</label>
+        <textarea class="assign-textarea" id="assignNotes" placeholder="Any notes about this candidate…"></textarea>
+      </div>
+    </div>
+    <div class="assign-footer">
+      <button class="assign-cancel" onclick="closeAssignModal()">Cancel</button>
+      <span class="assign-msg" id="assignMsg"></span>
+      <button class="assign-save" onclick="saveAssignment()">&#10003; Save Assignment</button>
+    </div>
   </div>
 </div>
 
