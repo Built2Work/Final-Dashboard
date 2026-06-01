@@ -211,11 +211,33 @@ async function loadData(){
   const phones=assignments.map(a=>a.phone);
   if(!phones.length){renderCandidates();return;}
   const webCols = '"Mobile Phone","First Name","Last Name","DOB","Street Address","City","State","Email Address","Gender","Job Status","Interested in Construction Jobs","What industry do you work in?","What industry do you work in","Trade Certifications or Licenses","Trade Certifications or Licenses_1","Trade Certifications or Licenses_2","Trade Certifications or Licenses_3","Trade Certifications or Licenses_4","Trade Certifications or Licenses_5","Trade Certifications or Licenses_6","Trade Certifications or Licenses_7","Trade Certifications or Licenses_8","Trade Certifications or Licenses_9","Trade Certifications or Licenses_10","Trade Certifications or Licenses_11","Trade Certifications or Licenses_12","Trade Certifications or Licenses_13","Trade Certifications or Licenses_14","Trade Certifications or Licenses_15"';
-  const [webRes,excRes,winRes]=await Promise.all([
-    sb.from('web_registration').select(webCols).in('"Mobile Phone"',phones),
-    sb.from('exc_truck_loading').select('"Login Code","Total Score","Safety Score","Productivity Score"').in('"Login Code"',phones),
-    sb.from('windows_trivia').select('"Mobile Phone","QR Code Scan","Trivia Auto Mechanic Score","Trivia Civil Construction Score","Trivia Electrical Score","Trivia Plumbing Score","Trivia Welding Score","Trivia Construction Labor Score","Trivia HVAC Score","Trivia Warehouse Score","Trivia Heavy Equipment Technician Score"').in('"Mobile Phone"',phones),
+  // Build a Set of normalized phones for fast lookup
+  const phoneSet = new Set(phones);
+
+  // Fetch all data for this company's assigned phones
+  // We can't use .in() directly because stored phone formats vary (raw vs normalized)
+  // Instead fetch in chunks with ilike not viable — use paginated full fetch then filter
+  async function fetchFiltered(table, cols){
+    const PAGE=1000;
+    const {count} = await sb.from(table).select(cols,{count:'exact',head:true});
+    if(!count) return [];
+    const pages = Math.ceil(count/PAGE);
+    const results = await Promise.all(
+      Array.from({length:pages},(_,i)=>sb.from(table).select(cols).range(i*PAGE,(i+1)*PAGE-1))
+    );
+    return results.flatMap(r=>r.data||[]);
+  }
+
+  const [webAll, excAll, winAll] = await Promise.all([
+    fetchFiltered('web_registration', webCols),
+    fetchFiltered('exc_truck_loading', '"Login Code","Total Score","Safety Score","Productivity Score"'),
+    fetchFiltered('windows_trivia', '"Mobile Phone","QR Code Scan","Trivia Auto Mechanic Score","Trivia Civil Construction Score","Trivia Electrical Score","Trivia Plumbing Score","Trivia Welding Score","Trivia Construction Labor Score","Trivia HVAC Score","Trivia Warehouse Score","Trivia Heavy Equipment Technician Score"'),
   ]);
+
+  // Filter to only assigned phones using normalized matching
+  const webRes = { data: webAll.filter(r=>phoneSet.has(normalizePhone(r['Mobile Phone']||''))) };
+  const excRes = { data: excAll.filter(r=>phoneSet.has(normalizePhone(r['Login Code']||''))) };
+  const winRes = { data: winAll.filter(r=>phoneSet.has(normalizePhone(r['Mobile Phone']||r['QR Code Scan']||''))) };
   webData={};
   (webRes.data||[]).forEach(r=>{const p=normalizePhone(r['Mobile Phone']||'');if(p)webData[p]=r;});
   excData={};
