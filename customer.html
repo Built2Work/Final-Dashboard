@@ -306,7 +306,7 @@ function renderCandidates(){
   tbody.innerHTML=rows.map(r=>{
     const w=r._w,e=r._e;
     const excScore=e.total!=null?e.total:null;
-    const excBadge=excScore==null?'<span class="score-badge dnc">DNC</span>':`<span class="score-badge ${excScore>=72?'hi':''}">${excScore.toFixed(0)}</span>`;
+    const excBadge=excTier(excScore);
     const ji=w['Interested in Construction Jobs']||'';
     const jiHtml=ji==='Yes'?'<span class="ip-yes">Yes</span>':ji==='Maybe'?'<span class="ip-maybe">Maybe</span>':ji==='No'?'<span class="ip-no">No</span>':ji||'—';
     const statusOpts=STATUSES.map(s=>`<option${s===r.status?' selected':''}>${s}</option>`).join('');
