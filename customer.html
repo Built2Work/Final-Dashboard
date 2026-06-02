@@ -125,8 +125,7 @@ tr:hover td{background:var(--surface2);}
         <th onclick="sortBy('state')">State &#8597;</th>
         <th>Phone</th><th>Email</th>
         <th onclick="sortBy('exc')">EXC &#8597;</th>
-        <th>Trivia</th><th>Certifications</th><th>Job Interest</th>
-        <th>Work History</th>
+        <th>Trivia</th><th>Certifications</th><th>Work History</th>
         <th onclick="sortBy('status')">Status &#8597;</th>
         <th>Notes</th>
       </tr></thead>
@@ -322,7 +321,6 @@ function renderCandidates(){
       <td>${excBadge}</td>
       <td style="font-size:11px;color:var(--muted);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.triviaStr}">${r.triviaStr||'—'}</td>
       <td style="font-size:11px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.certs.join(', ')}">${certDisplay}</td>
-      <td>${jiHtml}</td>
       <td style="font-size:11px;color:var(--muted);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.work_history||''}">${r.work_history||'—'}</td>
       <td><select class="status-sel ${sc}" onchange="updateStatus('${r.id}',this)">${statusOpts}</select></td>
       <td id="nc_${r.id}"><div class="notes-txt" onclick="editNotes('${r.id}')" title="${(r.notes||'').replace(/"/g,'&quot;')}">${r.notes||'<em style=color:var(--muted)>Add note…</em>'}</div></td>
@@ -380,7 +378,6 @@ function showDetail(phone){
     <div class="det-item"><div class="det-item-label">Gender</div><div class="det-item-val">${w['Gender']||'—'}</div></div>
     <div class="det-item"><div class="det-item-label">Employment</div><div class="det-item-val" style="font-size:13px">${employment}</div></div>
     <div class="det-item"><div class="det-item-label">Industry</div><div class="det-item-val" style="font-size:13px">${industry}</div></div>
-    <div class="det-item"><div class="det-item-label">Job Interest</div><div class="det-item-val">${ji}</div></div>
   </div></div>`;
   const excScore=e.total!=null?e.total:null;
   html+=`<div class="det-section"><div class="det-section-title">EXC Simulator</div><div class="det-grid three">
@@ -452,7 +449,7 @@ function closeDetail(e){if(e&&e.target!==document.getElementById('detOverlay'))r
 function exportExcel(){
   if(typeof XLSX==='undefined'){alert('Loading...');return;}
   const head=['Name','Phone','Email','Address','City','State','Age','Gender','Employment',
-    'Job Interest','EXC Score','EXC Safety','EXC Productivity','Trivia Tests',
+    'EXC Score','EXC Safety','EXC Productivity','Trivia Tests',
     'Certifications','Hopeful Job','Pay Scale','Current Job','Work History','Status','Notes','File'];
   const rows=assignments.map(a=>{
     const w=webData[a.phone]||{},e=excData[a.phone]||{},t=triviaData[a.phone]||{};
@@ -461,7 +458,7 @@ function exportExcel(){
     const name=((w['First Name']||'')+' '+(w['Last Name']||'')).trim()||a.phone;
     const phone=w['Mobile Phone']?String(w['Mobile Phone']).split('.')[0].replace(/[^\d]/g,''):a.phone;
     return [name,phone,w['Email Address']||'',w['Street Address']||'',w['City']||'',w['State']||'',
-      getAge(w['DOB'])||'',w['Gender']||'',w['Job Status']||'',w['Interested in Construction Jobs']||'',
+      getAge(w['DOB'])||'',w['Gender']||'',w['Job Status']||'',
       e.total!=null?e.total.toFixed(0):'DNC',!isNaN(e.safety)?e.safety.toFixed(0):'',!isNaN(e.prod)?e.prod.toFixed(0):'',
       trivia,certs,a.hopeful_job||'',a.pay_scale||'',a.current_job||'',a.work_history||'',a.status||'',a.notes||'',a.file_url||''];
   });
