@@ -2187,7 +2187,10 @@ function renderPipeline(){
         </label>
         <span id="pf_${r.id}" style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;"></span>
       </td>
-      <td><button onclick="pipelineUnassign('${r.id}','${r.name.replace(/'/g,"\\'")}','${r.companyName.replace(/'/g,"\\'")}',this)" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border:1.5px solid #f85149;background:transparent;color:#f85149;border-radius:3px;cursor:pointer;white-space:nowrap;transition:all .15s;" onmouseover="this.style.background='#f85149';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#f85149'">&#x2715; Unassign</button></td>
+      <td style="white-space:nowrap;display:flex;gap:6px;align-items:center">
+        <button onclick="openPipeEdit('${r.id}')" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border:1.5px solid var(--border);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;white-space:nowrap;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">&#9998; Edit</button>
+        <button onclick="pipelineUnassign('${r.id}','${r.name.replace(/'/g,"\\'")}','${r.companyName.replace(/'/g,"\\'")}',this)" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border:1.5px solid #f85149;background:transparent;color:#f85149;border-radius:3px;cursor:pointer;white-space:nowrap;transition:all .15s;" onmouseover="this.style.background='#f85149';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#f85149'">&#x2715; Unassign</button>
+      </td>
     </tr>`).join('');
 }
 
@@ -2325,6 +2328,86 @@ async function saveBulkAssignment(){
   setTimeout(()=>{
     document.getElementById('bulkAssignOverlay').classList.remove('open');
   },900);
+}
+
+
+// ─── PIPELINE EDIT ───────────────────────────────────────────────────────────
+let pipeEditId = null;
+
+function openPipeEdit(id){
+  const r = assignments.find(x=>x.id===id);
+  if(!r) return;
+  pipeEditId = id;
+  const w = rawWeb.find(row=>normalizePhone(row['Mobile Phone']||'')===r.phone)||{};
+  const name = ((w['First Name']||'')+' '+(w['Last Name']||'')).trim() || ('Phone: '+r.phone);
+  document.getElementById('pipeEditName').textContent = name;
+  document.getElementById('pipeEditStatus').value       = r.status        || 'Not Contacted';
+  document.getElementById('pipeEditHopefulJob').value   = r.hopeful_job   || '';
+  document.getElementById('pipeEditPayScale').value     = r.pay_scale     || '';
+  document.getElementById('pipeEditCurrentJob').value   = r.current_job   || '';
+  document.getElementById('pipeEditWorkHistory').value  = r.work_history  || '';
+  document.getElementById('pipeEditNotes').value        = r.notes         || '';
+  document.getElementById('pipeEditFileName').textContent = '';
+  const exEl = document.getElementById('pipeEditFileExisting');
+  exEl.innerHTML = r.file_url
+    ? `<a href="${r.file_url}" target="_blank" style="color:var(--blue)">&#128206; View current file</a>`
+    : '<span style="color:var(--muted)">No file attached</span>';
+  document.getElementById('pipeEditMsg').textContent = '';
+  document.getElementById('pipeEditOverlay').classList.add('open');
+}
+
+function closePipeEdit(e){
+  if(e && e.target !== document.getElementById('pipeEditOverlay')) return;
+  document.getElementById('pipeEditOverlay').classList.remove('open');
+  pipeEditId = null;
+}
+
+function onPipeEditFileChange(input){
+  const el = document.getElementById('pipeEditFileName');
+  el.textContent = input.files && input.files[0] ? input.files[0].name : '';
+  el.style.color = 'var(--green)';
+}
+
+async function savePipeEdit(){
+  if(!pipeEditId) return;
+  const msg = document.getElementById('pipeEditMsg');
+  msg.style.color = 'var(--muted)'; msg.textContent = 'Saving\u2026';
+
+  const r = assignments.find(x=>x.id===pipeEditId);
+  let fileUrl = r?.file_url || null;
+
+  // Handle optional new file upload
+  const fileInput = document.getElementById('pipeEditFile');
+  if(fileInput && fileInput.files && fileInput.files[0]){
+    const file = fileInput.files[0];
+    const ext  = file.name.split('.').pop();
+    const path = `assignments/${r.phone}_${r.company_id}_${Date.now()}.${ext}`;
+    const {error:upErr} = await sb.storage.from('candidate-files').upload(path, file, {upsert:true});
+    if(upErr){ msg.style.color='#f85149'; msg.textContent='File upload failed: '+upErr.message; return; }
+    const {data:urlData} = sb.storage.from('candidate-files').getPublicUrl(path);
+    fileUrl = urlData?.publicUrl || fileUrl;
+  }
+
+  const updates = {
+    status:       document.getElementById('pipeEditStatus').value,
+    hopeful_job:  document.getElementById('pipeEditHopefulJob').value.trim(),
+    pay_scale:    document.getElementById('pipeEditPayScale').value.trim(),
+    current_job:  document.getElementById('pipeEditCurrentJob').value.trim(),
+    work_history: document.getElementById('pipeEditWorkHistory').value.trim(),
+    notes:        document.getElementById('pipeEditNotes').value.trim(),
+    file_url:     fileUrl,
+  };
+
+  const {error} = await sb.from('candidate_assignments').update(updates).eq('id', pipeEditId);
+  if(error){ msg.style.color='#f85149'; msg.textContent='Error: '+error.message; return; }
+
+  msg.style.color = 'var(--green)'; msg.textContent = '\u2713 Saved!';
+  await loadCRMData();
+  renderPipeline();
+  setTimeout(()=>{
+    document.getElementById('pipeEditOverlay').classList.remove('open');
+    pipeEditId = null;
+  }, 700);
 }
 
 </script>
@@ -2540,6 +2623,69 @@ async function saveBulkAssignment(){
       <button class="assign-cancel" onclick="bulkUnassign()" style="border-color:#f85149;color:#f85149;">&#x2715; Unassign All</button>
       <span class="assign-msg" id="bulkAssignMsg"></span>
       <button class="assign-save" onclick="saveBulkAssignment()">&#10003; Assign All</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ PIPELINE EDIT MODAL ══ -->
+<div class="assign-overlay" id="pipeEditOverlay" onclick="closePipeEdit(event)">
+  <div class="assign-modal">
+    <div class="assign-header">
+      <div>
+        <div class="assign-title">Edit Candidate</div>
+        <div class="assign-name" id="pipeEditName"></div>
+      </div>
+      <button class="assign-close" onclick="closePipeEdit()">&#x2715;</button>
+    </div>
+    <div class="assign-body">
+      <div class="assign-field">
+        <label class="assign-label">Status</label>
+        <select class="assign-input assign-select" id="pipeEditStatus">
+          <option>Not Contacted</option>
+          <option>Contacted</option>
+          <option>Interviewed</option>
+          <option>Offered</option>
+          <option>Hired</option>
+          <option>Rejected</option>
+        </select>
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Hopeful Job</label>
+        <input class="assign-input" id="pipeEditHopefulJob" placeholder="e.g. CDL Driver, Welder&hellip;">
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Pay Scale</label>
+        <input class="assign-input" id="pipeEditPayScale" placeholder="e.g. $22-28/hr, $55k&hellip;">
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Current Job</label>
+        <input class="assign-input" id="pipeEditCurrentJob" placeholder="e.g. Warehouse Associate&hellip;">
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Work History</label>
+        <textarea class="assign-textarea" id="pipeEditWorkHistory" placeholder="Previous employers, roles, years of experience&hellip;" style="min-height:80px"></textarea>
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Notes</label>
+        <textarea class="assign-textarea" id="pipeEditNotes" placeholder="Notes about this candidate&hellip;"></textarea>
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Attachment <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px">(replace existing file)</span></label>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <label style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border:1.5px dashed var(--border);border-radius:4px;cursor:pointer;color:var(--muted);">
+            &#8679; Choose File
+            <input type="file" id="pipeEditFile" style="display:none" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="onPipeEditFileChange(this)">
+          </label>
+          <span id="pipeEditFileName" style="font-size:11px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;"></span>
+          <span id="pipeEditFileExisting" style="font-size:11px;font-family:'Barlow Condensed',sans-serif;"></span>
+        </div>
+      </div>
+    </div>
+    <div class="assign-footer">
+      <button class="assign-cancel" onclick="closePipeEdit()">Cancel</button>
+      <span class="assign-msg" id="pipeEditMsg"></span>
+      <button class="assign-save" onclick="savePipeEdit()">&#10003; Save Changes</button>
     </div>
   </div>
 </div>
