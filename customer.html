@@ -90,6 +90,27 @@ tr:hover td{background:var(--surface2);}
 .det-item-val.green{color:var(--green);}
 .cert-tag{display:inline-block;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;background:rgba(88,166,255,.15);color:var(--blue);padding:3px 9px;border-radius:3px;margin:2px;}
 @media(max-width:600px){.tb-search{width:100%;}.table-wrap{padding:0 10px 20px;}.det-grid,.det-grid.three{grid-template-columns:1fr 1fr;}}
+
+/* ── TIER TOOLTIPS + WIGGLE ── */
+@keyframes wiggle{0%,100%{transform:rotate(0deg)}20%{transform:rotate(-15deg)}40%{transform:rotate(15deg)}60%{transform:rotate(-10deg)}80%{transform:rotate(10deg)}}
+.tier-wrap{position:relative;display:inline-block;cursor:default;}
+.tier-wrap .tier-tip{
+  visibility:hidden;opacity:0;
+  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:#1e1e1e;border:1px solid #444;color:#e0e0e0;
+  font-family:'Barlow',sans-serif;font-size:12px;font-weight:400;
+  padding:8px 12px;border-radius:5px;width:220px;line-height:1.5;
+  white-space:normal;text-align:center;z-index:999;
+  transition:opacity .2s;pointer-events:none;
+  box-shadow:0 4px 16px rgba(0,0,0,.5);
+}
+.tier-wrap .tier-tip::after{
+  content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:6px solid transparent;border-top-color:#444;
+}
+.tier-wrap:hover .tier-tip{visibility:visible;opacity:1;}
+.star-tier:hover{animation:wiggle .5s ease;}
+
 </style>
 </head>
 <body>
@@ -161,12 +182,19 @@ const STATUS_MAP = {'Not Contacted':'s-nc','Contacted':'s-co','Interviewed':'s-i
 const STATUSES   = ['Not Contacted','Contacted','Interviewed','Offered','Hired','Rejected'];
 
 function excTier(score){
-  if(score==null||isNaN(score)) return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap">No Score</span>';
-  if(score>=70) return '<span style="font-size:18px" title="70+ Star Tier">&#11088;</span>';
-  if(score>=60) return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(63,185,80,.2);color:#3fb950;white-space:nowrap">Tier 1</span>';
-  if(score>=50) return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(88,166,255,.2);color:#58a6ff;white-space:nowrap">Tier 2</span>';
-  if(score>=40) return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(240,165,0,.2);color:#f0a500;white-space:nowrap">Tier 3</span>';
-  return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(248,81,73,.15);color:#f85149;white-space:nowrap">Below Benchmark</span>';
+  const tip=(lbl,badge,tip,star=false)=>
+    `<span class="tier-wrap">${star?`<span class="star-tier" style="font-size:20px;display:inline-block">${badge}</span>`:`<span class="tier-badge" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;white-space:nowrap;display:inline-block;${lbl}">${badge}</span>`}<span class="tier-tip">${tip}</span></span>`;
+  if(score==null||isNaN(score))
+    return tip('color:var(--muted)','No Score','This candidate did not attempt an excavator simulation.');
+  if(score>=70)
+    return tip('','&#11088;','A star denotes that this candidate excelled and differentiated themselves on the excavator simulation.',true);
+  if(score>=60)
+    return tip('background:rgba(63,185,80,.2);color:#3fb950','Tier 1','This candidate did very well on the excavator simulator.');
+  if(score>=50)
+    return tip('background:rgba(88,166,255,.2);color:#58a6ff','Tier 2','This candidate was average or slightly better than average on the excavator simulator.');
+  if(score>=40)
+    return tip('background:rgba(240,165,0,.2);color:#f0a500','Tier 3','This candidate was average or slightly worse than average on the excavator simulator but could have potential with training.');
+  return tip('background:rgba(248,81,73,.15);color:#f85149','Below Benchmark','This candidate performed poorly on the excavator simulator.');
 }
 
 function normalizePhone(p){const s=String(p||'').split('.')[0];const d=s.replace(/[^0-9]/g,'').replace(/^1/,'');return d.slice(-9);}
@@ -381,7 +409,7 @@ function showDetail(phone){
   </div></div>`;
   const excScore=e.total!=null?e.total:null;
   html+=`<div class="det-section"><div class="det-section-title">EXC Simulator</div>
-    <div style="padding:8px 0">${excTier(excScore)}</div>
+    <div style="padding:12px 0;font-size:15px">${excTier(excScore)}</div>
   </div>`;
   const trivEntries=Object.entries(t);
   if(trivEntries.length){
