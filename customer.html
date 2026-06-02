@@ -125,6 +125,7 @@ tr:hover td{background:var(--surface2);}
         <th>Phone</th><th>Email</th>
         <th onclick="sortBy('exc')">EXC &#8597;</th>
         <th>Trivia</th><th>Certifications</th><th>Job Interest</th>
+        <th>Work History</th>
         <th onclick="sortBy('status')">Status &#8597;</th>
         <th>Notes</th>
       </tr></thead>
@@ -290,7 +291,7 @@ function renderCandidates(){
   });
   document.getElementById('countLabel').textContent=rows.length.toLocaleString()+' candidates';
   const tbody=document.getElementById('tbody');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted);font-style:italic;">No candidates found.</td></tr>';return;}
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--muted);font-style:italic;">No candidates found.</td></tr>';return;}
   tbody.innerHTML=rows.map(r=>{
     const w=r._w,e=r._e;
     const excScore=e.total!=null?e.total:null;
@@ -310,6 +311,7 @@ function renderCandidates(){
       <td style="font-size:11px;color:var(--muted);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.triviaStr}">${r.triviaStr||'—'}</td>
       <td style="font-size:11px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.certs.join(', ')}">${certDisplay}</td>
       <td>${jiHtml}</td>
+      <td style="font-size:11px;color:var(--muted);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.work_history||''}">${r.work_history||'—'}</td>
       <td><select class="status-sel ${sc}" onchange="updateStatus('${r.id}',this)">${statusOpts}</select></td>
       <td id="nc_${r.id}"><div class="notes-txt" onclick="editNotes('${r.id}')" title="${(r.notes||'').replace(/"/g,'&quot;')}">${r.notes||'<em style=color:var(--muted)>Add note…</em>'}</div></td>
     </tr>`;
@@ -350,11 +352,15 @@ function showDetail(phone){
   document.getElementById('detName').textContent=name;
   document.getElementById('detSub').innerHTML=rawPhone+' &bull; '+(w['Email Address']||'—')+' &bull; '+(w['City']||'')+' '+(w['State']||'');
   let html='';
-  html+=`<div class="det-section"><div class="det-section-title">Assignment</div><div class="det-grid three">
-    <div class="det-item"><div class="det-item-label">Hopeful Job</div><div class="det-item-val">${a.hopeful_job||'—'}</div></div>
-    <div class="det-item"><div class="det-item-label">Pay Scale</div><div class="det-item-val">${a.pay_scale||'—'}</div></div>
-    <div class="det-item"><div class="det-item-label">Current Job</div><div class="det-item-val">${a.current_job||'—'}</div></div>
-  </div></div>`;
+  html+=`<div class="det-section"><div class="det-section-title">Assignment</div>
+    <div class="det-grid three">
+      <div class="det-item"><div class="det-item-label">Hopeful Job</div><div class="det-item-val">${a.hopeful_job||'—'}</div></div>
+      <div class="det-item"><div class="det-item-label">Pay Scale</div><div class="det-item-val">${a.pay_scale||'—'}</div></div>
+      <div class="det-item"><div class="det-item-label">Current Job</div><div class="det-item-val">${a.current_job||'—'}</div></div>
+    </div>
+    ${a.work_history?`<div class="det-item" style="margin-top:10px;grid-column:span 2"><div class="det-item-label">Work History</div><div class="det-item-val" style="font-size:13px;font-weight:400;font-family:'Barlow',sans-serif;white-space:pre-wrap">${a.work_history}</div></div>`:''}
+    ${a.file_url?`<div style="margin-top:10px"><a href="${a.file_url}" target="_blank" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid var(--blue);border-radius:4px;">&#128206; View Attachment</a></div>`:''}
+  </div>`;
   html+=`<div class="det-section"><div class="det-section-title">Personal Info</div><div class="det-grid">
     <div class="det-item"><div class="det-item-label">Address</div><div class="det-item-val" style="font-size:13px;font-weight:400;font-family:'Barlow',sans-serif">${w['Street Address']||'—'}<br>${w['City']||''} ${w['State']||''}</div></div>
     <div class="det-item"><div class="det-item-label">Email</div><div class="det-item-val" style="font-size:12px;font-weight:400;font-family:'Barlow',sans-serif;word-break:break-all">${w['Email Address']||'—'}</div></div>
@@ -375,17 +381,67 @@ function showDetail(phone){
     html+=`<div class="det-section"><div class="det-section-title">Trivia Scores</div><div class="det-grid">${trivEntries.map(([n,s])=>`<div class="det-item"><div class="det-item-label">${n}</div><div class="det-item-val">${s.toFixed(0)}</div></div>`).join('')}</div></div>`;
   }
   html+=`<div class="det-section"><div class="det-section-title">Certifications &amp; Licenses</div><div style="padding:8px 0">${certs.length?certs.map(c=>`<span class="cert-tag">${c}</span>`).join(''):'<span style="color:var(--muted);font-size:13px">None on file</span>'}</div></div>`;
-  html+=`<div class="det-section"><div class="det-section-title">Notes</div><div style="font-size:13px;color:${a.notes?'var(--text)':'var(--muted)'};font-style:${a.notes?'normal':'italic'};padding:8px 0">${a.notes||'No notes yet.'}</div><div style="font-size:11px;color:var(--muted);margin-top:4px">Last updated: ${fmtDate(a.updated_at)}</div></div>`;
+  html+=`<div class="det-section"><div class="det-section-title">Notes</div>
+    <div id="detNotesWrap_${a.id}" style="padding:4px 0">
+      <div style="font-size:13px;color:${a.notes?'var(--text)':'var(--muted)'};font-style:${a.notes?'normal':'italic'};padding:4px 0;cursor:pointer" onclick="editDetNotes('${a.id}')" title="Click to edit">${a.notes||'<em>Click to add notes…</em>'}</div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px">Last updated: ${fmtDate(a.updated_at)}</div>
+  </div>`;
   document.getElementById('detBody').innerHTML=html;
   document.getElementById('detOverlay').classList.add('open');
 }
+function editDetNotes(id){
+  const wrap=document.getElementById('detNotesWrap_'+id);
+  if(!wrap)return;
+  const a=assignments.find(x=>x.id===id);
+  wrap.innerHTML=`<textarea class="notes-inp" id="detNI_${id}" style="width:100%;min-height:80px">${a?.notes||''}</textarea>
+    <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+      <button class="save-notes" onclick="saveDetNotes('${id}')">Save</button>
+      <label style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:4px 10px;border:1.5px dashed var(--border);border-radius:3px;cursor:pointer;color:var(--muted)">
+        &#8679; Attach File
+        <input type="file" style="display:none" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="uploadDetFile('${id}',this)">
+      </label>
+      <span id="detFileStatus_${id}" style="font-size:11px;color:var(--muted);font-family:'Barlow Condensed',sans-serif"></span>
+    </div>`;
+  document.getElementById('detNI_'+id).focus();
+}
+
+async function saveDetNotes(id){
+  const val=document.getElementById('detNI_'+id).value.trim();
+  await sb.from('candidate_assignments').update({notes:val}).eq('id',id);
+  const a=assignments.find(x=>x.id===id);
+  if(a){a.notes=val;a.updated_at=new Date().toISOString();}
+  renderCandidates();
+  // Re-open detail to reflect update
+  const wrap=document.getElementById('detNotesWrap_'+id);
+  if(wrap) wrap.innerHTML=`<div style="font-size:13px;color:${val?'var(--text)':'var(--muted)'};font-style:${val?'normal':'italic'};padding:4px 0;cursor:pointer" onclick="editDetNotes('${id}')" title="Click to edit">${val||'<em>Click to add notes…</em>'}</div>`;
+}
+
+async function uploadDetFile(id, input){
+  if(!input.files||!input.files[0])return;
+  const statusEl=document.getElementById('detFileStatus_'+id);
+  statusEl.textContent='Uploading…';
+  const a=assignments.find(x=>x.id===id);
+  const file=input.files[0];
+  const ext=file.name.split('.').pop();
+  const path=`assignments/${a.phone}_${a.company_id}_${Date.now()}.${ext}`;
+  const {error:upErr}=await sb.storage.from('candidate-files').upload(path,file,{upsert:true});
+  if(upErr){statusEl.style.color='#f85149';statusEl.textContent='Upload failed: '+upErr.message;return;}
+  const {data:urlData}=sb.storage.from('candidate-files').getPublicUrl(path);
+  const fileUrl=urlData?.publicUrl;
+  await sb.from('candidate_assignments').update({file_url:fileUrl}).eq('id',id);
+  if(a) a.file_url=fileUrl;
+  statusEl.style.color='var(--green)';
+  statusEl.innerHTML=`✓ Uploaded — <a href="${fileUrl}" target="_blank" style="color:var(--blue)">View</a>`;
+}
+
 function closeDetail(e){if(e&&e.target!==document.getElementById('detOverlay'))return;document.getElementById('detOverlay').classList.remove('open');}
 
 function exportExcel(){
   if(typeof XLSX==='undefined'){alert('Loading...');return;}
   const head=['Name','Phone','Email','Address','City','State','Age','Gender','Employment',
     'Job Interest','EXC Score','EXC Safety','EXC Productivity','Trivia Tests',
-    'Certifications','Hopeful Job','Pay Scale','Current Job','Status','Notes'];
+    'Certifications','Hopeful Job','Pay Scale','Current Job','Work History','Status','Notes','File'];
   const rows=assignments.map(a=>{
     const w=webData[a.phone]||{},e=excData[a.phone]||{},t=triviaData[a.phone]||{};
     const certs=CERT_NAMES.filter((_,i)=>(w[CERT_COLS[i]]||'').trim()==='Yes').join(', ');
@@ -395,7 +451,7 @@ function exportExcel(){
     return [name,phone,w['Email Address']||'',w['Street Address']||'',w['City']||'',w['State']||'',
       getAge(w['DOB'])||'',w['Gender']||'',w['Job Status']||'',w['Interested in Construction Jobs']||'',
       e.total!=null?e.total.toFixed(0):'DNC',!isNaN(e.safety)?e.safety.toFixed(0):'',!isNaN(e.prod)?e.prod.toFixed(0):'',
-      trivia,certs,a.hopeful_job||'',a.pay_scale||'',a.current_job||'',a.status||'',a.notes||''];
+      trivia,certs,a.hopeful_job||'',a.pay_scale||'',a.current_job||'',a.work_history||'',a.status||'',a.notes||'',a.file_url||''];
   });
   const wb=XLSX.utils.book_new();
   const ws=XLSX.utils.aoa_to_sheet([head,...rows]);
