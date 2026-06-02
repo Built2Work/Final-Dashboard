@@ -92,24 +92,21 @@ tr:hover td{background:var(--surface2);}
 @media(max-width:600px){.tb-search{width:100%;}.table-wrap{padding:0 10px 20px;}.det-grid,.det-grid.three{grid-template-columns:1fr 1fr;}}
 
 /* ── TIER TOOLTIPS + WIGGLE ── */
-@keyframes wiggle{0%,100%{transform:rotate(0deg)}20%{transform:rotate(-15deg)}40%{transform:rotate(15deg)}60%{transform:rotate(-10deg)}80%{transform:rotate(10deg)}}
-.tier-wrap{position:relative;display:inline-block;cursor:default;}
-.tier-wrap .tier-tip{
-  visibility:hidden;opacity:0;
-  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
-  background:#1e1e1e;border:1px solid #444;color:#e0e0e0;
+#floatTip{
+  position:fixed;z-index:9999;
+  background:#1e1e1e;border:1px solid #555;color:#e0e0e0;
   font-family:'Barlow',sans-serif;font-size:12px;font-weight:400;
-  padding:8px 12px;border-radius:5px;width:220px;line-height:1.5;
-  white-space:normal;text-align:center;z-index:999;
-  transition:opacity .2s;pointer-events:none;
-  box-shadow:0 4px 16px rgba(0,0,0,.5);
+  padding:9px 13px;border-radius:5px;max-width:240px;line-height:1.5;
+  text-align:center;pointer-events:none;
+  box-shadow:0 4px 16px rgba(0,0,0,.6);
+  white-space:normal;display:none;
 }
-.tier-wrap .tier-tip::after{
-  content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
-  border:6px solid transparent;border-top-color:#444;
-}
-.tier-wrap:hover .tier-tip{visibility:visible;opacity:1;}
+@keyframes wiggle{0%,100%{transform:rotate(0deg)}20%{transform:rotate(-15deg)}40%{transform:rotate(15deg)}60%{transform:rotate(-10deg)}80%{transform:rotate(10deg)}}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.12)}70%{transform:scale(0.97)}100%{transform:scale(1)}}
+.tier-wrap{position:relative;display:inline-block;cursor:default;}
+.tier-wrap{cursor:default;}
 .star-tier:hover{animation:wiggle .5s ease;}
+.tier-badge:hover{animation:bump .3s ease;}
 
 </style>
 </head>
@@ -183,7 +180,7 @@ const STATUSES   = ['Not Contacted','Contacted','Interviewed','Offered','Hired',
 
 function excTier(score){
   const tip=(lbl,badge,tip,star=false)=>
-    `<span class="tier-wrap">${star?`<span class="star-tier" style="font-size:20px;display:inline-block">${badge}</span>`:`<span class="tier-badge" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;white-space:nowrap;display:inline-block;${lbl}">${badge}</span>`}<span class="tier-tip">${tip}</span></span>`;
+    `<span class="tier-wrap" data-tip="${tip}" onmouseenter="showTip(event,this)" onmouseleave="hideTip()">${star?`<span class="star-tier" style="font-size:20px;display:inline-block">${badge}</span>`:`<span class="tier-badge" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;white-space:nowrap;display:inline-block;${lbl}">${badge}</span>`}</span>`;
   if(score==null||isNaN(score))
     return tip('color:var(--muted)','No Score','This candidate did not attempt an excavator simulation.');
   if(score>=70)
@@ -195,6 +192,40 @@ function excTier(score){
   if(score>=40)
     return tip('background:rgba(240,165,0,.2);color:#f0a500','Tier 3','This candidate was average or slightly worse than average on the excavator simulator but could have potential with training.');
   return tip('background:rgba(248,81,73,.15);color:#f85149','Below Benchmark','This candidate performed poorly on the excavator simulator.');
+}
+
+function excTierDesc(score){
+  if(score==null||isNaN(score)) return 'This candidate did not attempt an excavator simulation.';
+  if(score>=70) return 'A star denotes that this candidate excelled and differentiated themselves on the excavator simulation.';
+  if(score>=60) return 'This candidate did very well on the excavator simulator.';
+  if(score>=50) return 'This candidate was average or slightly better than average on the excavator simulator.';
+  if(score>=40) return 'This candidate was average or slightly worse than average on the excavator simulator but could have potential with training.';
+  return 'This candidate performed poorly on the excavator simulator.';
+}
+
+function showTip(e, el){
+  const tip = document.getElementById('floatTip');
+  if(!tip) return;
+  tip.textContent = el.dataset.tip || '';
+  tip.style.display = 'block';
+  positionTip(e, tip);
+  el.addEventListener('mousemove', function mm(ev){ positionTip(ev, tip); });
+}
+function positionTip(e, tip){
+  const x = e.clientX, y = e.clientY;
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let left = x - tw/2;
+  let top  = y - th - 12;
+  if(left < 8) left = 8;
+  if(left + tw > vw - 8) left = vw - tw - 8;
+  if(top < 8) top = y + 20; // flip below if near top
+  tip.style.left = left + 'px';
+  tip.style.top  = top  + 'px';
+}
+function hideTip(){
+  const tip = document.getElementById('floatTip');
+  if(tip) tip.style.display = 'none';
 }
 
 function normalizePhone(p){const s=String(p||'').split('.')[0];const d=s.replace(/[^0-9]/g,'').replace(/^1/,'');return d.slice(-9);}
@@ -409,7 +440,10 @@ function showDetail(phone){
   </div></div>`;
   const excScore=e.total!=null?e.total:null;
   html+=`<div class="det-section"><div class="det-section-title">EXC Simulator</div>
-    <div style="padding:12px 0;font-size:15px">${excTier(excScore)}</div>
+    <div style="padding:10px 0;display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:16px">${excTier(excScore)}</div>
+      <div style="font-size:12px;color:var(--muted);font-family:'Barlow',sans-serif;line-height:1.5;font-style:italic">${excTierDesc(excScore)}</div>
+    </div>
   </div>`;
   const trivEntries=Object.entries(t);
   if(trivEntries.length){
@@ -497,5 +531,6 @@ function exportExcel(){
 }
 
 </script>
+<div id="floatTip"></div>
 </body>
 </html>
