@@ -2011,20 +2011,37 @@ function onCandidateDblClick(phone, name){
   const unassignBtn = document.getElementById('unassignBtn');
   if(existing){
     sel.value = existing.company_id || '';
-    document.getElementById('assignHopefulJob').value  = existing.hopeful_job  || '';
-    document.getElementById('assignPayScale').value    = existing.pay_scale    || '';
-    document.getElementById('assignCurrentJob').value  = existing.current_job  || '';
-    document.getElementById('assignNotes').value       = existing.notes        || '';
+    document.getElementById('assignHopefulJob').value    = existing.hopeful_job   || '';
+    document.getElementById('assignPayScale').value      = existing.pay_scale     || '';
+    document.getElementById('assignCurrentJob').value    = existing.current_job   || '';
+    document.getElementById('assignWorkHistory').value   = existing.work_history  || '';
+    document.getElementById('assignNotes').value         = existing.notes         || '';
+    const fileEx = document.getElementById('assignFileExisting');
+    if(fileEx) fileEx.innerHTML = existing.file_url ? `<a href="${existing.file_url}" target="_blank" style="color:var(--blue)">&#128206; View existing file</a>` : '';
     if(unassignBtn) unassignBtn.style.display='inline';
   } else {
     sel.value='';
-    ['assignHopefulJob','assignPayScale','assignCurrentJob','assignNotes'].forEach(id=>{
+    ['assignHopefulJob','assignPayScale','assignCurrentJob','assignWorkHistory','assignNotes'].forEach(id=>{
       document.getElementById(id).value='';
     });
+    const fileEx2 = document.getElementById('assignFileExisting');
+    if(fileEx2) fileEx2.innerHTML='';
+    const fileNm = document.getElementById('assignFileName');
+    if(fileNm) fileNm.textContent='';
     if(unassignBtn) unassignBtn.style.display='none';
   }
   document.getElementById('assignMsg').textContent='';
   document.getElementById('assignOverlay').classList.add('open');
+}
+
+function onAssignFileChange(input){
+  const nameEl = document.getElementById('assignFileName');
+  if(input.files && input.files[0]){
+    nameEl.textContent = input.files[0].name;
+    nameEl.style.color = 'var(--green)';
+  } else {
+    nameEl.textContent = '';
+  }
 }
 
 function closeAssignModal(e){
@@ -2051,19 +2068,35 @@ async function saveAssignment(){
   const companyId = document.getElementById('assignCompany').value;
   if(!companyId){ document.getElementById('assignMsg').textContent='Please select a company.'; return; }
   const {data:{user}} = await sb.auth.getUser();
+  const msg = document.getElementById('assignMsg');
+  msg.style.color='var(--muted)'; msg.textContent='Saving…';
+
+  // Handle file upload to Supabase Storage
+  let fileUrl = null;
+  const fileInput = document.getElementById('assignFile');
+  if(fileInput && fileInput.files && fileInput.files[0]){
+    const file = fileInput.files[0];
+    const ext  = file.name.split('.').pop();
+    const path = `assignments/${assignPhone}_${companyId}_${Date.now()}.${ext}`;
+    const {data:upData, error:upErr} = await sb.storage.from('candidate-files').upload(path, file, {upsert:true});
+    if(upErr){ msg.style.color='#f85149'; msg.textContent='File upload error: '+upErr.message; return; }
+    const {data:urlData} = sb.storage.from('candidate-files').getPublicUrl(path);
+    fileUrl = urlData?.publicUrl || null;
+  }
+
   const payload = {
     phone:        assignPhone,
     company_id:   companyId,
     hopeful_job:  document.getElementById('assignHopefulJob').value.trim(),
     pay_scale:    document.getElementById('assignPayScale').value.trim(),
     current_job:  document.getElementById('assignCurrentJob').value.trim(),
+    work_history: document.getElementById('assignWorkHistory').value.trim(),
     notes:        document.getElementById('assignNotes').value.trim(),
     assigned_by:  user?.email || '',
     status:       'Not Contacted',
   };
-  const msg = document.getElementById('assignMsg');
-  msg.textContent='Saving…';
-  // Upsert (update if same phone+company_id exists)
+  if(fileUrl) payload.file_url = fileUrl;
+
   const {error} = await sb.from('candidate_assignments')
     .upsert(payload, {onConflict:'phone,company_id'});
   if(error){ msg.style.color='#f85149'; msg.textContent='Error: '+error.message; return; }
@@ -2245,10 +2278,12 @@ async function saveBulkAssignment(){
   const notes       = document.getElementById('bulkNotes').value.trim();
   const assignedBy  = user?.email||'';
   // Build upsert rows for all pinned phones
+  const workHistory = document.getElementById('bulkWorkHistory').value.trim();
   const rows=[...pinnedPhones].map(phone=>({
     phone, company_id:companyId,
     hopeful_job:hopefulJob, pay_scale:payScale,
-    current_job:currentJob, notes, assigned_by:assignedBy,
+    current_job:currentJob, work_history:workHistory,
+    notes, assigned_by:assignedBy,
     status:'Not Contacted',
   }));
   const {error}=await sb.from('candidate_assignments')
@@ -2405,8 +2440,23 @@ async function saveBulkAssignment(){
         <input class="assign-input" id="assignCurrentJob" placeholder="e.g. Warehouse Associate…">
       </div>
       <div class="assign-field">
+        <label class="assign-label">Work History</label>
+        <textarea class="assign-textarea" id="assignWorkHistory" placeholder="Previous employers, roles, years of experience…" style="min-height:80px"></textarea>
+      </div>
+      <div class="assign-field">
         <label class="assign-label">Notes</label>
         <textarea class="assign-textarea" id="assignNotes" placeholder="Any notes about this candidate…"></textarea>
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Attachment <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px">(PDF, DOC, image — stored per candidate)</span></label>
+        <div id="assignFileWrap" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <label style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border:1.5px dashed var(--border);border-radius:4px;cursor:pointer;color:var(--muted);transition:border-color .2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            &#8679; Choose File
+            <input type="file" id="assignFile" style="display:none" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="onAssignFileChange(this)">
+          </label>
+          <span id="assignFileName" style="font-size:11px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;"></span>
+          <span id="assignFileExisting" style="font-size:11px;color:var(--blue);font-family:'Barlow Condensed',sans-serif;"></span>
+        </div>
       </div>
     </div>
     <div class="assign-footer">
@@ -2446,6 +2496,10 @@ async function saveBulkAssignment(){
       <div class="assign-field">
         <label class="assign-label">Current Job</label>
         <input class="assign-input" id="bulkCurrentJob" placeholder="e.g. Warehouse Associate…">
+      </div>
+      <div class="assign-field">
+        <label class="assign-label">Work History</label>
+        <textarea class="assign-textarea" id="bulkWorkHistory" placeholder="Optional — applied to all selected candidates…" style="min-height:60px"></textarea>
       </div>
       <div class="assign-field">
         <label class="assign-label">Notes</label>
