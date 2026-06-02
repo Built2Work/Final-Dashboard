@@ -380,11 +380,9 @@ function showDetail(phone){
     <div class="det-item"><div class="det-item-label">Industry</div><div class="det-item-val" style="font-size:13px">${industry}</div></div>
   </div></div>`;
   const excScore=e.total!=null?e.total:null;
-  html+=`<div class="det-section"><div class="det-section-title">EXC Simulator</div><div class="det-grid three">
-    <div class="det-item"><div class="det-item-label">Performance Tier</div><div class="det-item-val" style="font-size:16px">${excTier(excScore)}</div></div>
-    <div class="det-item"><div class="det-item-label">Safety Score</div><div class="det-item-val">${!isNaN(e.safety)?e.safety.toFixed(0):'—'}</div></div>
-    <div class="det-item"><div class="det-item-label">Productivity</div><div class="det-item-val">${!isNaN(e.prod)?e.prod.toFixed(0):'—'}</div></div>
-  </div></div>`;
+  html+=`<div class="det-section"><div class="det-section-title">EXC Simulator</div>
+    <div style="padding:8px 0">${excTier(excScore)}</div>
+  </div>`;
   const trivEntries=Object.entries(t);
   if(trivEntries.length){
     html+=`<div class="det-section"><div class="det-section-title">Trivia Scores</div><div class="det-grid">${trivEntries.map(([n,s])=>`<div class="det-item"><div class="det-item-label">${n}</div><div class="det-item-val">${s.toFixed(0)}</div></div>`).join('')}</div></div>`;
