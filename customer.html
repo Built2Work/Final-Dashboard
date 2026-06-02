@@ -90,24 +90,6 @@ tr:hover td{background:var(--surface2);}
 .det-item-val.green{color:var(--green);}
 .cert-tag{display:inline-block;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;background:rgba(88,166,255,.15);color:var(--blue);padding:3px 9px;border-radius:3px;margin:2px;}
 @media(max-width:600px){.tb-search{width:100%;}.table-wrap{padding:0 10px 20px;}.det-grid,.det-grid.three{grid-template-columns:1fr 1fr;}}
-
-/* ── TIER TOOLTIPS + WIGGLE ── */
-#floatTip{
-  position:fixed;z-index:9999;
-  background:#1e1e1e;border:1px solid #555;color:#e0e0e0;
-  font-family:'Barlow',sans-serif;font-size:12px;font-weight:400;
-  padding:9px 13px;border-radius:5px;max-width:240px;line-height:1.5;
-  text-align:center;pointer-events:none;
-  box-shadow:0 4px 16px rgba(0,0,0,.6);
-  white-space:normal;display:none;
-}
-@keyframes wiggle{0%,100%{transform:rotate(0deg)}20%{transform:rotate(-15deg)}40%{transform:rotate(15deg)}60%{transform:rotate(-10deg)}80%{transform:rotate(10deg)}}
-@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.12)}70%{transform:scale(0.97)}100%{transform:scale(1)}}
-.tier-wrap{position:relative;display:inline-block;cursor:default;}
-.tier-wrap{cursor:default;}
-.star-tier:hover{animation:wiggle .5s ease;}
-.tier-badge:hover{animation:bump .3s ease;}
-
 </style>
 </head>
 <body>
@@ -143,7 +125,8 @@ tr:hover td{background:var(--surface2);}
         <th onclick="sortBy('state')">State &#8597;</th>
         <th>Phone</th><th>Email</th>
         <th onclick="sortBy('exc')">EXC &#8597;</th>
-        <th>Trivia</th><th>Certifications</th><th>Work History</th>
+        <th>Certifications</th>
+        <th>Work History</th>
         <th onclick="sortBy('status')">Status &#8597;</th>
         <th>Notes</th>
       </tr></thead>
@@ -179,53 +162,12 @@ const STATUS_MAP = {'Not Contacted':'s-nc','Contacted':'s-co','Interviewed':'s-i
 const STATUSES   = ['Not Contacted','Contacted','Interviewed','Offered','Hired','Rejected'];
 
 function excTier(score){
-  const tip=(lbl,badge,tip,star=false)=>
-    `<span class="tier-wrap" data-tip="${tip}" onmouseenter="showTip(event,this)" onmouseleave="hideTip()">${star?`<span class="star-tier" style="font-size:20px;display:inline-block">${badge}</span>`:`<span class="tier-badge" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;white-space:nowrap;display:inline-block;${lbl}">${badge}</span>`}</span>`;
-  if(score==null||isNaN(score))
-    return tip('color:var(--muted)','No Score','This candidate did not attempt an excavator simulation.');
-  if(score>=70)
-    return tip('','&#11088;','A star denotes that this candidate excelled and differentiated themselves on the excavator simulation.',true);
-  if(score>=60)
-    return tip('background:rgba(63,185,80,.2);color:#3fb950','Tier 1','This candidate did very well on the excavator simulator.');
-  if(score>=50)
-    return tip('background:rgba(88,166,255,.2);color:#58a6ff','Tier 2','This candidate was average or slightly better than average on the excavator simulator.');
-  if(score>=40)
-    return tip('background:rgba(240,165,0,.2);color:#f0a500','Tier 3','This candidate was average or slightly worse than average on the excavator simulator but could have potential with training.');
-  return tip('background:rgba(248,81,73,.15);color:#f85149','Below Benchmark','This candidate performed poorly on the excavator simulator.');
-}
-
-function excTierDesc(score){
-  if(score==null||isNaN(score)) return 'This candidate did not attempt an excavator simulation.';
-  if(score>=70) return 'A star denotes that this candidate excelled and differentiated themselves on the excavator simulation.';
-  if(score>=60) return 'This candidate did very well on the excavator simulator.';
-  if(score>=50) return 'This candidate was average or slightly better than average on the excavator simulator.';
-  if(score>=40) return 'This candidate was average or slightly worse than average on the excavator simulator but could have potential with training.';
-  return 'This candidate performed poorly on the excavator simulator.';
-}
-
-function showTip(e, el){
-  const tip = document.getElementById('floatTip');
-  if(!tip) return;
-  tip.textContent = el.dataset.tip || '';
-  tip.style.display = 'block';
-  positionTip(e, tip);
-  el.addEventListener('mousemove', function mm(ev){ positionTip(ev, tip); });
-}
-function positionTip(e, tip){
-  const x = e.clientX, y = e.clientY;
-  const tw = tip.offsetWidth, th = tip.offsetHeight;
-  const vw = window.innerWidth, vh = window.innerHeight;
-  let left = x - tw/2;
-  let top  = y - th - 12;
-  if(left < 8) left = 8;
-  if(left + tw > vw - 8) left = vw - tw - 8;
-  if(top < 8) top = y + 20; // flip below if near top
-  tip.style.left = left + 'px';
-  tip.style.top  = top  + 'px';
-}
-function hideTip(){
-  const tip = document.getElementById('floatTip');
-  if(tip) tip.style.display = 'none';
+  if(score==null||isNaN(score)) return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap">No Score</span>';
+  if(score>=70) return '<span style="font-size:18px" title="70+ Star Tier">&#11088;</span>';
+  if(score>=60) return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(63,185,80,.2);color:#3fb950;white-space:nowrap">Tier 1</span>';
+  if(score>=50) return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(88,166,255,.2);color:#58a6ff;white-space:nowrap">Tier 2</span>';
+  if(score>=40) return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(240,165,0,.2);color:#f0a500;white-space:nowrap">Tier 3</span>';
+  return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(248,81,73,.15);color:#f85149;white-space:nowrap">Below Benchmark</span>';
 }
 
 function normalizePhone(p){const s=String(p||'').split('.')[0];const d=s.replace(/[^0-9]/g,'').replace(/^1/,'');return d.slice(-9);}
@@ -335,8 +277,7 @@ function renderCandidates(){
     const w=webData[a.phone]||{},e=excData[a.phone]||{},t=triviaData[a.phone]||{};
     const name=((w['First Name']||'')+' '+(w['Last Name']||'')).trim()||('Phone: '+a.phone);
     const certs=CERT_NAMES.filter((_,i)=>(w[CERT_COLS[i]]||'').trim()==='Yes');
-    const triviaStr=Object.entries(t).map(([n,s])=>n+': '+s.toFixed(0)).join(', ');
-    return {...a,name,_w:w,_e:e,_t:t,certs,triviaStr};
+    return {...a,name,_w:w,_e:e,_t:t,certs};
   });
   if(status)rows=rows.filter(r=>r.status===status);
   if(q)rows=rows.filter(r=>{
@@ -346,7 +287,7 @@ function renderCandidates(){
       (w['City']||'').toLowerCase().includes(q)||(w['State']||'').toLowerCase().includes(q)||
       (r.hopeful_job||'').toLowerCase().includes(q)||(r.current_job||'').toLowerCase().includes(q)||
       (r.notes||'').toLowerCase().includes(q)||
-      r.certs.some(c=>c.toLowerCase().includes(q))||r.triviaStr.toLowerCase().includes(q);
+      r.certs.some(c=>c.toLowerCase().includes(q));
   });
   rows.sort((a,b)=>{
     let av,bv;
@@ -360,13 +301,11 @@ function renderCandidates(){
   });
   document.getElementById('countLabel').textContent=rows.length.toLocaleString()+' candidates';
   const tbody=document.getElementById('tbody');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--muted);font-style:italic;">No candidates found.</td></tr>';return;}
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted);font-style:italic;">No candidates found.</td></tr>';return;}
   tbody.innerHTML=rows.map(r=>{
     const w=r._w,e=r._e;
     const excScore=e.total!=null?e.total:null;
     const excBadge=excTier(excScore);
-    const ji=w['Interested in Construction Jobs']||'';
-    const jiHtml=ji==='Yes'?'<span class="ip-yes">Yes</span>':ji==='Maybe'?'<span class="ip-maybe">Maybe</span>':ji==='No'?'<span class="ip-no">No</span>':ji||'—';
     const statusOpts=STATUSES.map(s=>`<option${s===r.status?' selected':''}>${s}</option>`).join('');
     const sc=STATUS_MAP[r.status]||'s-nc';
     const certDisplay=r.certs.length?r.certs.slice(0,2).join(', ')+(r.certs.length>2?` +${r.certs.length-2}`:''):'—';
@@ -378,7 +317,6 @@ function renderCandidates(){
       <td style="color:var(--muted);font-size:11px;white-space:nowrap">${phone}</td>
       <td style="color:var(--muted);font-size:11px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${w['Email Address']||'—'}</td>
       <td>${excBadge}</td>
-      <td style="font-size:11px;color:var(--muted);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.triviaStr}">${r.triviaStr||'—'}</td>
       <td style="font-size:11px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.certs.join(', ')}">${certDisplay}</td>
       <td style="font-size:11px;color:var(--muted);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.work_history||''}">${r.work_history||'—'}</td>
       <td><select class="status-sel ${sc}" onchange="updateStatus('${r.id}',this)">${statusOpts}</select></td>
@@ -439,89 +377,11 @@ function showDetail(phone){
     <div class="det-item"><div class="det-item-label">Industry</div><div class="det-item-val" style="font-size:13px">${industry}</div></div>
   </div></div>`;
   const excScore=e.total!=null?e.total:null;
-  html+=`<div class="det-section"><div class="det-section-title">EXC Simulator</div>
-    <div style="padding:10px 0;display:flex;flex-direction:column;gap:10px;">
-      <div style="font-size:16px">${excTier(excScore)}</div>
-      <div style="font-size:12px;color:var(--muted);font-family:'Barlow',sans-serif;line-height:1.5;font-style:italic">${excTierDesc(excScore)}</div>
-    </div>
-  </div>`;
-  const trivEntries=Object.entries(t);
-  if(trivEntries.length){
-    html+=`<div class="det-section"><div class="det-section-title">Trivia Scores</div><div class="det-grid">${trivEntries.map(([n,s])=>`<div class="det-item"><div class="det-item-label">${n}</div><div class="det-item-val">${s.toFixed(0)}</div></div>`).join('')}</div></div>`;
-  }
-  html+=`<div class="det-section"><div class="det-section-title">Certifications &amp; Licenses</div><div style="padding:8px 0">${certs.length?certs.map(c=>`<span class="cert-tag">${c}</span>`).join(''):'<span style="color:var(--muted);font-size:13px">None on file</span>'}</div></div>`;
-  html+=`<div class="det-section"><div class="det-section-title">Notes</div>
-    <div id="detNotesWrap_${a.id}" style="padding:4px 0">
-      <div style="font-size:13px;color:${a.notes?'var(--text)':'var(--muted)'};font-style:${a.notes?'normal':'italic'};padding:4px 0;cursor:pointer" onclick="editDetNotes('${a.id}')" title="Click to edit">${a.notes||'<em>Click to add notes…</em>'}</div>
-    </div>
-    <div style="font-size:11px;color:var(--muted);margin-top:6px">Last updated: ${fmtDate(a.updated_at)}</div>
-  </div>`;
-  document.getElementById('detBody').innerHTML=html;
-  document.getElementById('detOverlay').classList.add('open');
-}
-function editDetNotes(id){
-  const wrap=document.getElementById('detNotesWrap_'+id);
-  if(!wrap)return;
-  const a=assignments.find(x=>x.id===id);
-  wrap.innerHTML=`<textarea class="notes-inp" id="detNI_${id}" style="width:100%;min-height:80px">${a?.notes||''}</textarea>
-    <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
-      <button class="save-notes" onclick="saveDetNotes('${id}')">Save</button>
-      <label style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:4px 10px;border:1.5px dashed var(--border);border-radius:3px;cursor:pointer;color:var(--muted)">
-        &#8679; Attach File
-        <input type="file" style="display:none" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="uploadDetFile('${id}',this)">
-      </label>
-      <span id="detFileStatus_${id}" style="font-size:11px;color:var(--muted);font-family:'Barlow Condensed',sans-serif"></span>
-    </div>`;
-  document.getElementById('detNI_'+id).focus();
-}
-
-async function saveDetNotes(id){
-  const val=document.getElementById('detNI_'+id).value.trim();
-  await sb.from('candidate_assignments').update({notes:val}).eq('id',id);
-  const a=assignments.find(x=>x.id===id);
-  if(a){a.notes=val;a.updated_at=new Date().toISOString();}
-  renderCandidates();
-  // Re-open detail to reflect update
-  const wrap=document.getElementById('detNotesWrap_'+id);
-  if(wrap) wrap.innerHTML=`<div style="font-size:13px;color:${val?'var(--text)':'var(--muted)'};font-style:${val?'normal':'italic'};padding:4px 0;cursor:pointer" onclick="editDetNotes('${id}')" title="Click to edit">${val||'<em>Click to add notes…</em>'}</div>`;
-}
-
-async function uploadDetFile(id, input){
-  if(!input.files||!input.files[0])return;
-  const statusEl=document.getElementById('detFileStatus_'+id);
-  statusEl.textContent='Uploading…';
-  const a=assignments.find(x=>x.id===id);
-  const file=input.files[0];
-  const ext=file.name.split('.').pop();
-  const path=`assignments/${a.phone}_${a.company_id}_${Date.now()}.${ext}`;
-  const {error:upErr}=await sb.storage.from('candidate-files').upload(path,file,{upsert:true});
-  if(upErr){statusEl.style.color='#f85149';statusEl.textContent='Upload failed: '+upErr.message;return;}
-  const {data:urlData}=sb.storage.from('candidate-files').getPublicUrl(path);
-  const fileUrl=urlData?.publicUrl;
-  await sb.from('candidate_assignments').update({file_url:fileUrl}).eq('id',id);
-  if(a) a.file_url=fileUrl;
-  statusEl.style.color='var(--green)';
-  statusEl.innerHTML=`✓ Uploaded — <a href="${fileUrl}" target="_blank" style="color:var(--blue)">View</a>`;
-}
-
-function closeDetail(e){if(e&&e.target!==document.getElementById('detOverlay'))return;document.getElementById('detOverlay').classList.remove('open');}
-
-function exportExcel(){
-  if(typeof XLSX==='undefined'){alert('Loading...');return;}
-  const head=['Name','Phone','Email','Address','City','State','Age','Gender','Employment',
-    'EXC Score','EXC Safety','EXC Productivity','Trivia Tests',
-    'Certifications','Hopeful Job','Pay Scale','Current Job','Work History','Status','Notes','File'];
-  const rows=assignments.map(a=>{
-    const w=webData[a.phone]||{},e=excData[a.phone]||{},t=triviaData[a.phone]||{};
-    const certs=CERT_NAMES.filter((_,i)=>(w[CERT_COLS[i]]||'').trim()==='Yes').join(', ');
-    const trivia=Object.entries(t).map(([n,s])=>n+': '+s.toFixed(0)).join(', ');
-    const name=((w['First Name']||'')+' '+(w['Last Name']||'')).trim()||a.phone;
-    const phone=w['Mobile Phone']?String(w['Mobile Phone']).split('.')[0].replace(/[^\d]/g,''):a.phone;
-    return [name,phone,w['Email Address']||'',w['Street Address']||'',w['City']||'',w['State']||'',
-      getAge(w['DOB'])||'',w['Gender']||'',w['Job Status']||'',
-      e.total!=null?e.total.toFixed(0):'DNC',!isNaN(e.safety)?e.safety.toFixed(0):'',!isNaN(e.prod)?e.prod.toFixed(0):'',
-      trivia,certs,a.hopeful_job||'',a.pay_scale||'',a.current_job||'',a.work_history||'',a.status||'',a.notes||'',a.file_url||''];
-  });
+  html+=`<div class="det-section"><div class="det-section-title">EXC Simulator</div><div class="det-grid three">
+    <div class="det-item"><div class="det-item-label">Performance Tier</div><div class="det-item-val" style="font-size:16px">${excTier(excScore)}</div></div>
+    <div class="det-item"><div class="det-item-label">Safety Score</div><div class="det-item-val">${!isNaN(e.safety)?e.safety.toFixed(0):'—'}</div></div>
+    <div class="det-item"><div class="det-item-label">Productivity</div><div class="det-item-val">${!isNaN(e.prod)?e.prod.toFixed(0):'—'}</div></div>
+  </div></div>`;
   const wb=XLSX.utils.book_new();
   const ws=XLSX.utils.aoa_to_sheet([head,...rows]);
   ws['!cols']=[{wch:22},{wch:14},{wch:28},{wch:28},{wch:16},{wch:8},{wch:6},{wch:10},{wch:18},{wch:14},{wch:10},{wch:10},{wch:12},{wch:40},{wch:36},{wch:20},{wch:14},{wch:20},{wch:16},{wch:32}];
@@ -531,6 +391,5 @@ function exportExcel(){
 }
 
 </script>
-<div id="floatTip"></div>
 </body>
 </html>
