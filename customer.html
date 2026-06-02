@@ -120,6 +120,7 @@ tr:hover td{background:var(--surface2);}
   <div class="table-wrap">
     <table>
       <thead><tr>
+        <th onclick="sortBy('hopeful')">Hopeful Job &#8597;</th>
         <th onclick="sortBy('name')">Name &#8597;</th>
         <th onclick="sortBy('state')">State &#8597;</th>
         <th>Phone</th><th>Email</th>
@@ -159,6 +160,15 @@ const TRIVIA_COLS = {
 };
 const STATUS_MAP = {'Not Contacted':'s-nc','Contacted':'s-co','Interviewed':'s-in','Offered':'s-of','Hired':'s-hi','Rejected':'s-re'};
 const STATUSES   = ['Not Contacted','Contacted','Interviewed','Offered','Hired','Rejected'];
+
+function excTier(score){
+  if(score==null||isNaN(score)) return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap">No Score</span>';
+  if(score>=70) return '<span style="font-size:18px" title="70+ Star Tier">&#11088;</span>';
+  if(score>=60) return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(63,185,80,.2);color:#3fb950;white-space:nowrap">Tier 1</span>';
+  if(score>=50) return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(88,166,255,.2);color:#58a6ff;white-space:nowrap">Tier 2</span>';
+  if(score>=40) return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(240,165,0,.2);color:#f0a500;white-space:nowrap">Tier 3</span>';
+  return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(248,81,73,.15);color:#f85149;white-space:nowrap">Below Benchmark</span>';
+}
 
 function normalizePhone(p){const s=String(p||'').split('.')[0];const d=s.replace(/[^0-9]/g,'').replace(/^1/,'');return d.slice(-9);}
 function fmtDate(str){if(!str)return '—';return new Date(str).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
@@ -282,7 +292,8 @@ function renderCandidates(){
   });
   rows.sort((a,b)=>{
     let av,bv;
-    if(sortState.col==='name'){av=a.name;bv=b.name;}
+    if(sortState.col==='hopeful'){av=a.hopeful_job||'';bv=b.hopeful_job||'';}
+    else if(sortState.col==='name'){av=a.name;bv=b.name;}
     else if(sortState.col==='state'){av=a._w['State']||'';bv=b._w['State']||'';}
     else if(sortState.col==='exc'){av=a._e.total??-1;bv=b._e.total??-1;}
     else if(sortState.col==='status'){av=a.status||'';bv=b.status||'';}
@@ -291,7 +302,7 @@ function renderCandidates(){
   });
   document.getElementById('countLabel').textContent=rows.length.toLocaleString()+' candidates';
   const tbody=document.getElementById('tbody');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--muted);font-style:italic;">No candidates found.</td></tr>';return;}
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--muted);font-style:italic;">No candidates found.</td></tr>';return;}
   tbody.innerHTML=rows.map(r=>{
     const w=r._w,e=r._e;
     const excScore=e.total!=null?e.total:null;
@@ -373,7 +384,7 @@ function showDetail(phone){
   </div></div>`;
   const excScore=e.total!=null?e.total:null;
   html+=`<div class="det-section"><div class="det-section-title">EXC Simulator</div><div class="det-grid three">
-    <div class="det-item"><div class="det-item-label">Total Score</div><div class="det-item-val big ${excScore!=null&&excScore>=72?'green':'accent'}">${excScore!=null?excScore.toFixed(0):'DNC'}</div></div>
+    <div class="det-item"><div class="det-item-label">Performance Tier</div><div class="det-item-val" style="font-size:16px">${excTier(excScore)}</div></div>
     <div class="det-item"><div class="det-item-label">Safety Score</div><div class="det-item-val">${!isNaN(e.safety)?e.safety.toFixed(0):'—'}</div></div>
     <div class="det-item"><div class="det-item-label">Productivity</div><div class="det-item-val">${!isNaN(e.prod)?e.prod.toFixed(0):'—'}</div></div>
   </div></div>`;
