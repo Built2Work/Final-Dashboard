@@ -2603,7 +2603,7 @@ async function startGeocoding(){
 
 // ─── AUTO-GEOCODE NEW RECORDS (silent background) ────────────────────────
 async function autoGeocodeNewRecords(){
-  if(typeof MAPBOX_TOKEN === 'undefined' || MAPBOX_TOKEN === 'YOUR_MAPBOX_TOKEN_HERE') return;
+  if(typeof MAPBOX_TOKEN === 'undefined' || MAPBOX_TOKEN === 'pk.eyJ1Ijoiam9lLWNvbm5lciIsImEiOiJjbXB5N3B4eDgwM3QyMnRvaDN6NmxuYjgyIn0.9vXQcuMisofOxj5ewpol9w') return;
   try{
     // Find rows with address data but no coordinates
     const {data:rows} = await sb.from('web_registration')
