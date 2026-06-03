@@ -1115,6 +1115,8 @@ async function fetchFresh(blocking){
       populateEventDropdown();buildSidebar();render();
       clearInterval(refreshTimer);
       refreshTimer=setInterval(refreshData,AUTO_REFRESH_MS);
+      // Auto-geocode any new records missing coordinates (silent background task)
+      autoGeocodeNewRecords();
     }else{
       // Background refresh — re-render without disturbing filters
       render();
@@ -2596,6 +2598,44 @@ async function startGeocoding(){
   document.getElementById('geocodeDone').style.display='block';
   document.getElementById('geocodeDone').textContent=`\u2713 Done! ${geocoded} geocoded, ${skipped} skipped.`;
   btn.textContent='\u2713 Complete';
+}
+
+
+// ─── AUTO-GEOCODE NEW RECORDS (silent background) ────────────────────────
+async function autoGeocodeNewRecords(){
+  if(typeof MAPBOX_TOKEN === 'undefined' || MAPBOX_TOKEN === 'YOUR_MAPBOX_TOKEN_HERE') return;
+  try{
+    // Find rows with address data but no coordinates
+    const {data:rows} = await sb.from('web_registration')
+      .select('"Mobile Phone","Street Address","City","State","Zip Code"')
+      .is('lat', null)
+      .not('"Street Address"', 'is', null)
+      .limit(50); // Process up to 50 new records per load
+    if(!rows || !rows.length) return;
+    // Run quietly in background — no progress UI
+    for(let i=0; i<rows.length; i+=5){
+      const batch = rows.slice(i, i+5);
+      await Promise.all(batch.map(async r=>{
+        const res = await geocodeAddress(
+          r['Street Address'], r['City'], r['State'], r['Zip Code']
+        );
+        if(res){
+          await sb.from('web_registration')
+            .update({lat: res.lat, lng: res.lng})
+            .eq('"Mobile Phone"', r['Mobile Phone']);
+          // Update rawWeb in memory too so distance filter works immediately
+          const live = rawWeb.find(w => w['Mobile Phone'] === r['Mobile Phone']);
+          if(live){ live.lat = res.lat; live.lng = res.lng; }
+        }
+      }));
+      // Small delay between batches to stay under rate limits
+      if(i+5 < rows.length) await new Promise(r=>setTimeout(r,200));
+    }
+    if(rows.length > 0) console.log(`Auto-geocoded ${rows.length} new participant(s).`);
+  }catch(e){
+    // Silent fail — don't interrupt the dashboard
+    console.warn('Auto-geocode background task failed:', e);
+  }
 }
 
 </script>
