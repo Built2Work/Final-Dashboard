@@ -1104,7 +1104,7 @@ async function loadData(){
 async function fetchFresh(blocking){
   try{
     const [web,exc,win]=await Promise.all([
-      fetchAll('web_registration','"Date","Event Name","Mobile Phone","DOB","First Name","Last Name","Street Address","City","State","Email Address","Gender","Job Status","Student","Interested in Construction Jobs","What industry do you work in?","What industry do you work in","Trade Certifications or Licenses","Trade Certifications or Licenses_1","Trade Certifications or Licenses_2","Trade Certifications or Licenses_3","Trade Certifications or Licenses_4","Trade Certifications or Licenses_5","Trade Certifications or Licenses_6","Trade Certifications or Licenses_7","Trade Certifications or Licenses_8","Trade Certifications or Licenses_9","Trade Certifications or Licenses_10","Trade Certifications or Licenses_11","Trade Certifications or Licenses_12","Trade Certifications or Licenses_13","Trade Certifications or Licenses_14","Trade Certifications or Licenses_15"'),
+      fetchAll('web_registration','"Date","Event Name","Mobile Phone","DOB","First Name","Last Name","Street Address","City","State","Email Address","Gender","Job Status","Student","Interested in Construction Jobs","What industry do you work in?","What industry do you work in","Trade Certifications or Licenses","Trade Certifications or Licenses_1","Trade Certifications or Licenses_2","Trade Certifications or Licenses_3","Trade Certifications or Licenses_4","Trade Certifications or Licenses_5","Trade Certifications or Licenses_6","Trade Certifications or Licenses_7","Trade Certifications or Licenses_8","Trade Certifications or Licenses_9","Trade Certifications or Licenses_10","Trade Certifications or Licenses_11","Trade Certifications or Licenses_12","Trade Certifications or Licenses_13","Trade Certifications or Licenses_14","Trade Certifications or Licenses_15","lat","lng"'),
       fetchAll('exc_truck_loading','"Date","Event Name","Login Code","Total Score","Safety Score","Productivity Score"'),
       fetchAll('windows_trivia','"Date","Event Name","QR Code Scan","Mobile Phone","Trivia Auto Mechanic Score","Trivia Civil Construction Score","Trivia Electrical Score","Trivia Plumbing Score","Trivia Welding Score","Trivia Construction Labor Score","Trivia HVAC Score","Trivia Warehouse Score","Trivia Heavy Equipment Technician Score"')
     ]);
@@ -1525,7 +1525,23 @@ function renderTable(webRows,excRows,winRows){
       });
     });
   }
-  rows.sort((a,b)=>{if(a.excScore==null&&b.excScore==null)return 0;if(a.excScore==null)return 1;if(b.excScore==null)return -1;return b.excScore-a.excScore;});
+  // ── Geo / radius filter ──────────────────────────────────────────────────
+  if(geoFilter.active && geoFilter.lat && geoFilter.lng){
+    rows = rows.map(r=>{
+      const _wlat = r._w?.lat;
+      const _wlng = r._w?.lng;
+      const lat = (_wlat !== null && _wlat !== undefined && !isNaN(parseFloat(_wlat))) ? parseFloat(_wlat) : null;
+      const lng = (_wlng !== null && _wlng !== undefined && !isNaN(parseFloat(_wlng))) ? parseFloat(_wlng) : null;
+      const dist = (lat !== null && lng !== null)
+        ? haversineDistance(geoFilter.lat, geoFilter.lng, lat, lng)
+        : null;
+      return {...r, _dist: dist};
+    });
+    rows = rows.filter(r => r._dist !== null && r._dist <= geoFilter.radius);
+    rows.sort((a,b) => a._dist - b._dist);
+  } else {
+    rows.sort((a,b)=>{if(a.excScore==null&&b.excScore==null)return 0;if(a.excScore==null)return 1;if(b.excScore==null)return -1;return b.excScore-a.excScore;});
+  }
 
 
   document.getElementById('tblCount').textContent=
@@ -1557,7 +1573,8 @@ function renderTable(webRows,excRows,winRows){
     }
   },0);
   const colDefs=activeColIds.map(id=>ALL_COLS.find(c=>c.id===id)).filter(Boolean);
-  document.querySelector('.ptbl thead').innerHTML='<tr><th class="pin-col"><input type="checkbox" id="selectAllPin" title="Select all / deselect all" onchange="toggleSelectAll(this.checked)"></th><th>#</th>'+colDefs.map(c=>'<th>'+c.label+'</th>').join('')+'</tr>';
+  const distCol = geoFilter.active ? '<th style="white-space:nowrap">Distance</th>' : '';
+  document.querySelector('.ptbl thead').innerHTML='<tr><th class="pin-col"><input type="checkbox" id="selectAllPin" title="Select all / deselect all" onchange="toggleSelectAll(this.checked)"></th><th>#</th>'+distCol+colDefs.map(c=>'<th>'+c.label+'</th>').join('')+'</tr>';
   const tbody=document.getElementById('ptblBody');
   if(!rows.length){tbody.innerHTML='<tr><td colspan="'+(colDefs.length+1)+'" class="no-data">No participants match the current filters.</td></tr>';return;}
   // Build rows without inline checked attr — set via JS after render for reliability
