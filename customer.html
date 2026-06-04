@@ -465,17 +465,23 @@ function showDetail(phone){
     <div class="det-item"><div class="det-item-label">Industry</div><div class="det-item-val" style="font-size:13px">${industry}</div></div>
   </div></div>`;
   const excScore=e.total!=null?e.total:null;
-  html+=`<div class="det-section"><div class="det-section-title">EXC Simulator</div><div class="det-grid three">
-    <div class="det-item"><div class="det-item-label">Performance Tier</div><div class="det-item-val" style="font-size:16px">${excTier(excScore)}</div></div>
-    <div class="det-item"><div class="det-item-label">Safety Score</div><div class="det-item-val">${!isNaN(e.safety)?e.safety.toFixed(0):'—'}</div></div>
-    <div class="det-item"><div class="det-item-label">Productivity</div><div class="det-item-val">${!isNaN(e.prod)?e.prod.toFixed(0):'—'}</div></div>
-  </div></div>`;
-  const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.aoa_to_sheet([head,...rows]);
-  ws['!cols']=[{wch:22},{wch:14},{wch:28},{wch:28},{wch:16},{wch:8},{wch:6},{wch:10},{wch:18},{wch:14},{wch:10},{wch:10},{wch:12},{wch:40},{wch:36},{wch:20},{wch:14},{wch:20},{wch:16},{wch:32}];
-  ws['!freeze']={xSplit:0,ySplit:1,topLeftCell:'A2',activeCell:'A2',sqref:'A2'};
-  XLSX.utils.book_append_sheet(wb,ws,'Candidates');
-  XLSX.writeFile(wb,'Candidates_'+myCompany.name.replace(/\s+/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  html+=`<div class="det-section"><div class="det-section-title">EXC Simulator</div>
+    <div style="padding:10px 0;display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:16px">${excTier(excScore)}</div>
+      <div style="font-size:12px;color:var(--muted);font-family:'Barlow',sans-serif;line-height:1.5;font-style:italic">${excTierDesc(excScore)}</div>
+    </div>
+  </div>`;
+  html+=`<div class="det-section"><div class="det-section-title">Certifications &amp; Licenses</div>
+    <div style="padding:8px 0">${certs.length?certs.map(c=>`<span class="cert-tag">${c}</span>`).join(''):'<span style="color:var(--muted);font-size:13px">None on file</span>'}</div>
+  </div>`;
+  html+=`<div class="det-section"><div class="det-section-title">Notes</div>
+    <div id="detNotesWrap_${a.id}" style="padding:4px 0">
+      <div style="font-size:13px;color:${a.notes?'var(--text)':'var(--muted)'};font-style:${a.notes?'normal':'italic'};padding:4px 0;cursor:pointer" onclick="editDetNotes('${a.id}')" title="Click to edit">${a.notes||'<em>Click to add notes…</em>'}</div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px">Last updated: ${fmtDate(a.updated_at)}</div>
+  </div>`;
+  document.getElementById('detBody').innerHTML=html;
+  document.getElementById('detOverlay').classList.add('open');
 }
 
 
