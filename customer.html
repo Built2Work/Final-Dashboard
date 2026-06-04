@@ -500,8 +500,8 @@ function cOnGeoInput(val){
   const sug=document.getElementById('cGeoSugg');
   if(!val||val.length<3){sug.style.display='none';return;}
   cGeoTimer=setTimeout(async()=>{
-    if(MAPBOX_TOKEN==='pk.eyJ1Ijoiam9lLWNvbm5lciIsImEiOiJjbXB5N3B4eDgwM3QyMnRvaDN6NmxuYjgyIn0.9vXQcuMisofOxj5ewpol9w'){
-      document.getElementById('cGeoStatus').textContent='\u26a0 Set Mapbox token first';return;
+    if(!MAPBOX_TOKEN){
+      document.getElementById('cGeoStatus').textContent='\u26a0 Mapbox token not set';return;
     }
     try{
       const url=`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(val)}.json?country=US&types=address,postcode,place&limit=5&access_token=${MAPBOX_TOKEN}`;
@@ -558,6 +558,102 @@ document.addEventListener('click',e=>{
   const sug=document.getElementById('cGeoSugg');
   if(sug&&inp&&!inp.contains(e.target)&&!sug.contains(e.target))sug.style.display='none';
 });
+
+
+// ─── EXC TIER DESCRIPTION (used in detail popup) ─────────────────────────
+function excTierDesc(score){
+  if(score==null||isNaN(score)) return 'This candidate did not attempt an excavator simulation.';
+  if(score>=70) return 'A star denotes that this candidate excelled and differentiated themselves on the excavator simulation.';
+  if(score>=60) return 'This candidate did very well on the excavator simulator.';
+  if(score>=50) return 'This candidate was average or slightly better than average on the excavator simulator.';
+  if(score>=40) return 'This candidate was average or slightly worse than average on the excavator simulator but could have potential with training.';
+  return 'This candidate performed poorly on the excavator simulator.';
+}
+
+// ─── INLINE NOTE EDITING IN DETAIL POPUP ─────────────────────────────────
+function editDetNotes(id){
+  const wrap=document.getElementById('detNotesWrap_'+id);
+  if(!wrap) return;
+  const a=assignments.find(x=>x.id===id);
+  wrap.innerHTML=`<textarea class="notes-inp" id="detNI_${id}" style="width:100%;min-height:80px">${a?.notes||''}</textarea>
+    <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+      <button class="save-notes" onclick="saveDetNotes('${id}')">Save</button>
+      <label style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:4px 10px;border:1.5px dashed var(--border);border-radius:3px;cursor:pointer;color:var(--muted)">
+        &#8679; Attach File
+        <input type="file" style="display:none" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="uploadDetFile('${id}',this)">
+      </label>
+      <span id="detFileStatus_${id}" style="font-size:11px;color:var(--muted);font-family:'Barlow Condensed',sans-serif"></span>
+    </div>`;
+  document.getElementById('detNI_'+id).focus();
+}
+
+async function saveDetNotes(id){
+  const val=document.getElementById('detNI_'+id).value.trim();
+  const {error}=await sb.from('candidate_assignments').update({notes:val}).eq('id',id);
+  if(error){alert('Save failed: '+error.message);return;}
+  const a=assignments.find(x=>x.id===id);
+  if(a){a.notes=val;a.updated_at=new Date().toISOString();}
+  renderCandidates();
+  // Refresh the notes section in the popup
+  const wrap=document.getElementById('detNotesWrap_'+id);
+  if(wrap) wrap.innerHTML=`<div style="font-size:13px;color:${val?'var(--text)':'var(--muted)'};font-style:${val?'normal':'italic'};padding:4px 0;cursor:pointer" onclick="editDetNotes('${id}')" title="Click to edit">${val||'<em>Click to add notes\u2026</em>'}</div>`;
+}
+
+async function uploadDetFile(id,input){
+  if(!input.files||!input.files[0]) return;
+  const statusEl=document.getElementById('detFileStatus_'+id);
+  if(statusEl){statusEl.style.color='var(--muted)';statusEl.textContent='Uploading\u2026';}
+  const a=assignments.find(x=>x.id===id);
+  const file=input.files[0];
+  const ext=file.name.split('.').pop();
+  const path=`assignments/${a.phone}_${a.company_id}_${Date.now()}.${ext}`;
+  const {error:upErr}=await sb.storage.from('candidate-files').upload(path,file,{upsert:true});
+  if(upErr){
+    if(statusEl){statusEl.style.color='#f85149';statusEl.textContent='Upload failed: '+upErr.message;}
+    return;
+  }
+  const {data:urlData}=sb.storage.from('candidate-files').getPublicUrl(path);
+  const fileUrl=urlData?.publicUrl;
+  await sb.from('candidate_assignments').update({file_url:fileUrl}).eq('id',id);
+  if(a) a.file_url=fileUrl;
+  if(statusEl){
+    statusEl.style.color='var(--green)';
+    statusEl.innerHTML=`\u2713 Uploaded \u2014 <a href="${fileUrl}" target="_blank" style="color:var(--blue)">View</a>`;
+  }
+}
+
+// ─── EXCEL EXPORT ─────────────────────────────────────────────────────────
+function exportExcel(){
+  if(typeof XLSX==='undefined'){alert('Loading\u2026');return;}
+  const head=['Name','Phone','Email','Address','City','State','Age','Gender','Employment',
+    'EXC Score','EXC Safety','EXC Productivity','Certifications',
+    'Hopeful Job','Pay Scale','Current Job','Work History','Status','Notes','File'];
+  const rows=assignments.map(a=>{
+    const w=webData[a.phone]||{};
+    const e=excData[a.phone]||{};
+    const certs=CERT_NAMES.filter((_,i)=>(w[CERT_COLS[i]]||'').trim()==='Yes').join(', ');
+    const name=((w['First Name']||'')+' '+(w['Last Name']||'')).trim()||a.phone;
+    const phone=w['Mobile Phone']?String(w['Mobile Phone']).split('.')[0].replace(/[^\d]/g,''):a.phone;
+    return [
+      name, phone, w['Email Address']||'', w['Street Address']||'',
+      w['City']||'', w['State']||'', getAge(w['DOB'])||'', w['Gender']||'',
+      w['Job Status']||'',
+      e.total!=null?e.total.toFixed(0):'DNC',
+      !isNaN(e.safety)?e.safety.toFixed(0):'',
+      !isNaN(e.prod)?e.prod.toFixed(0):'',
+      certs,
+      a.hopeful_job||'', a.pay_scale||'', a.current_job||'',
+      a.work_history||'', a.status||'', a.notes||'', a.file_url||''
+    ];
+  });
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([head,...rows]);
+  ws['!cols']=[{wch:22},{wch:14},{wch:28},{wch:24},{wch:14},{wch:8},{wch:6},{wch:10},{wch:18},
+               {wch:10},{wch:10},{wch:12},{wch:36},{wch:20},{wch:14},{wch:20},{wch:28},{wch:16},{wch:32},{wch:40}];
+  ws['!freeze']={xSplit:0,ySplit:1,topLeftCell:'A2',activeCell:'A2',sqref:'A2'};
+  XLSX.utils.book_append_sheet(wb,ws,'Candidates');
+  XLSX.writeFile(wb,'Candidates_'+myCompany.name.replace(/\s+/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
 
 </script>
 <div id="floatTip"></div>
