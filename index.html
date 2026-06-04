@@ -2567,7 +2567,7 @@ function closeGeocodeModal(e){
 }
 
 async function startGeocoding(){
-  if(MAPBOX_TOKEN==='pk.eyJ1Ijoiam9lLWNvbm5lciIsImEiOiJjbXB5N3B4eDgwM3QyMnRvaDN6NmxuYjgyIn0.9vXQcuMisofOxj5ewpol9w'){alert('Set your Mapbox token first.');return;}
+  if(!MAPBOX_TOKEN){alert('Set your Mapbox token first.');return;}
   const btn=document.getElementById('geocodeStartBtn');
   btn.disabled=true; btn.textContent='Running\u2026';
   document.getElementById('geocodeProgress').style.display='block';
@@ -2584,7 +2584,7 @@ async function startGeocoding(){
       const res=await geocodeAddress(r['Street Address'],r['City'],r['State'],r['Zip Code']);
       if(res){
         await sb.from('web_registration').update({lat:res.lat,lng:res.lng})
-          .eq('"Mobile Phone"',r['Mobile Phone']);
+          .eq('Mobile Phone',r['Mobile Phone']);
         geocoded++;
       }else{skipped++;}
       done++;
@@ -2603,7 +2603,7 @@ async function startGeocoding(){
 
 // ─── AUTO-GEOCODE NEW RECORDS (silent background) ────────────────────────
 async function autoGeocodeNewRecords(){
-  if(typeof MAPBOX_TOKEN === 'undefined' || MAPBOX_TOKEN === 'pk.eyJ1Ijoiam9lLWNvbm5lciIsImEiOiJjbXB5N3B4eDgwM3QyMnRvaDN6NmxuYjgyIn0.9vXQcuMisofOxj5ewpol9w') return;
+  if(!MAPBOX_TOKEN) return;
   try{
     // Find rows with address data but no coordinates
     const {data:rows} = await sb.from('web_registration')
@@ -2622,7 +2622,7 @@ async function autoGeocodeNewRecords(){
         if(res){
           await sb.from('web_registration')
             .update({lat: res.lat, lng: res.lng})
-            .eq('"Mobile Phone"', r['Mobile Phone']);
+            .eq('Mobile Phone', r['Mobile Phone']);
           // Update rawWeb in memory too so distance filter works immediately
           const live = rawWeb.find(w => w['Mobile Phone'] === r['Mobile Phone']);
           if(live){ live.lat = res.lat; live.lng = res.lng; }
