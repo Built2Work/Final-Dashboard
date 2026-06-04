@@ -369,9 +369,11 @@ function renderCandidates(){
   });
   if(geoFilter.active&&geoFilter.lat&&geoFilter.lng){
     rows=rows.map(r=>{
-      const lat=parseFloat(webData[r.phone]?.lat)||null;
-      const lng=parseFloat(webData[r.phone]?.lng)||null;
-      return{...r,_dist:(lat&&lng)?haversineDistance(geoFilter.lat,geoFilter.lng,lat,lng):null};
+      const _wlat = webData[r.phone]?.lat;
+      const _wlng = webData[r.phone]?.lng;
+      const lat = (_wlat !== null && _wlat !== undefined && !isNaN(parseFloat(_wlat))) ? parseFloat(_wlat) : null;
+      const lng = (_wlng !== null && _wlng !== undefined && !isNaN(parseFloat(_wlng))) ? parseFloat(_wlng) : null;
+      return{...r,_dist:(lat!==null&&lng!==null)?haversineDistance(geoFilter.lat,geoFilter.lng,lat,lng):null};
     }).filter(r=>r._dist!=null&&r._dist<=geoFilter.radius)
       .sort((a,b)=>a._dist-b._dist);
   } else {
