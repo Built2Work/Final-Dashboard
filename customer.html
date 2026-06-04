@@ -655,6 +655,12 @@ function exportExcel(){
   XLSX.writeFile(wb,'Candidates_'+myCompany.name.replace(/\s+/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
+
+function closeDetail(e){
+  if(e && e.target !== document.getElementById('detOverlay')) return;
+  document.getElementById('detOverlay').classList.remove('open');
+}
+
 </script>
 <div id="floatTip"></div>
 </body>
