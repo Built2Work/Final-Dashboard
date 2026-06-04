@@ -2577,15 +2577,25 @@ async function startGeocoding(){
     .is('lat',null).limit(2000);
   if(error||!rows){alert('Fetch error: '+(error?.message||'unknown'));return;}
   const total=rows.length; let done=0,geocoded=0,skipped=0;
-  document.getElementById('geocodeProgressLabel').textContent=`Geocoding ${total} participants\u2026`;
+  document.getElementById('geocodeProgressLabel').textContent=`Geocoding ${total} participants…`;
+  let errors=0;
   for(let i=0;i<rows.length;i+=10){
     const batch=rows.slice(i,i+10);
     await Promise.all(batch.map(async r=>{
       const res=await geocodeAddress(r['Street Address'],r['City'],r['State'],r['Zip Code']);
       if(res){
-        await sb.from('web_registration').update({lat:res.lat,lng:res.lng})
-          .eq('Mobile Phone',r['Mobile Phone']);
-        geocoded++;
+        // Use the raw stored phone value for matching (may be float like 7065508483.0)
+        const phoneVal = r['Mobile Phone'];
+        const {error:upErr, count:upCount} = await sb.from('web_registration')
+          .update({lat:res.lat, lng:res.lng})
+          .eq('Mobile Phone', phoneVal)
+          .select();
+        if(upErr){
+          console.warn('Update error for phone',phoneVal,upErr.message);
+          skipped++; errors++;
+        } else {
+          geocoded++;
+        }
       }else{skipped++;}
       done++;
       const pct=Math.round(done/total*100);
@@ -2596,7 +2606,8 @@ async function startGeocoding(){
     if(i+10<rows.length)await new Promise(r=>setTimeout(r,150));
   }
   document.getElementById('geocodeDone').style.display='block';
-  document.getElementById('geocodeDone').textContent=`\u2713 Done! ${geocoded} geocoded, ${skipped} skipped.`;
+  document.getElementById('geocodeDone').textContent=
+    `\u2713 Done! ${geocoded} geocoded, ${skipped} skipped${errors>0?' ('+errors+' DB errors — check RLS policies)':''}.`;
   btn.textContent='\u2713 Complete';
 }
 
@@ -2609,7 +2620,7 @@ async function autoGeocodeNewRecords(){
     const {data:rows} = await sb.from('web_registration')
       .select('"Mobile Phone","Street Address","City","State","Zip Code"')
       .is('lat', null)
-      .not('"Street Address"', 'is', null)
+      .not('Street Address', 'is', null)
       .limit(50); // Process up to 50 new records per load
     if(!rows || !rows.length) return;
     // Run quietly in background — no progress UI
@@ -2620,9 +2631,11 @@ async function autoGeocodeNewRecords(){
           r['Street Address'], r['City'], r['State'], r['Zip Code']
         );
         if(res){
-          await sb.from('web_registration')
+          const {error:upErr2} = await sb.from('web_registration')
             .update({lat: res.lat, lng: res.lng})
-            .eq('Mobile Phone', r['Mobile Phone']);
+            .eq('Mobile Phone', r['Mobile Phone'])
+            .select();
+          if(upErr2) console.warn('Auto-geocode update error:', upErr2.message);
           // Update rawWeb in memory too so distance filter works immediately
           const live = rawWeb.find(w => w['Mobile Phone'] === r['Mobile Phone']);
           if(live){ live.lat = res.lat; live.lng = res.lng; }
