@@ -1213,12 +1213,17 @@ function filteredWeb(){return rawWeb.filter(r=>{
   }
   return true;
 });}
-function filteredExc(){return rawExc.filter(r=>{
-  if(filters.events.size>0&&!filters.events.has((r['Event Name']||'').trim()))return false;
-  const s=parseFloat(r['Total Score']);
-  if(!isNaN(s)){if(s<filters.excMin||s>filters.excMax)return false;if(filters.scoreSegs.size>0&&!filters.scoreSegs.has(excScoreSeg(s)))return false;}
-  return true;
-});}
+function filteredExc(){
+  const excFilterActive=filters.excMin>0||filters.excMax<100||filters.scoreSegs.size>0;
+  return rawExc.filter(r=>{
+    if(filters.events.size>0&&!filters.events.has((r['Event Name']||'').trim()))return false;
+    const s=parseFloat(r['Total Score']);
+    // If EXC filter is active, rows with no valid score are excluded
+    if(excFilterActive&&isNaN(s))return false;
+    if(!isNaN(s)){if(s<filters.excMin||s>filters.excMax)return false;if(filters.scoreSegs.size>0&&!filters.scoreSegs.has(excScoreSeg(s)))return false;}
+    return true;
+  });
+}
 function filteredWin(){return rawWin.filter(r=>{
   if(filters.events.size>0&&!filters.events.has((r['Event Name']||'').trim()))return false;
   if(filters.trivia.size>0){
@@ -1228,7 +1233,9 @@ function filteredWin(){return rawWin.filter(r=>{
     if(filters.trivia.size===1){
       const col=TRIVIA_COLS[[...filters.trivia][0]];
       const score=parseFloat(r[col]);
-      if(isNaN(score)||score<filters.triviaScoreMin||score>filters.triviaScoreMax)return false;
+      // Exclude rows with no score OR score outside range
+      if(isNaN(score))return false;
+      if(score<filters.triviaScoreMin||score>filters.triviaScoreMax)return false;
     }
   }
   return true;
@@ -1238,7 +1245,7 @@ function excMap(rows){const m=new Map();rows.forEach(r=>{const p=normalizePhone(
 function winMap(rows){const m=new Map();rows.forEach(r=>{const p1=normalizePhone(r['Mobile Phone']||'');const p2=normalizePhone(r['QR Code Scan']||'');if(p2)m.set(p2,r);else if(p1)m.set(p1,r);});return m;}
 function crossFiltered(){
   const fW=filteredWeb(),fE=filteredExc(),fN=filteredWin();
-  const hasWeb=filters.employment.size>0||filters.jobInterest.size>0||filters.ageGroups.size>0||filters.gender.size>0||filters.states.size>0;
+  const hasWeb=filters.employment.size>0||filters.jobInterest.size>0||filters.ageGroups.size>0||filters.gender.size>0||filters.states.size>0||filters.certs.size>0;
   const hasExc=filters.excMin>0||filters.excMax<100||filters.scoreSegs.size>0;
   const hasWin=filters.trivia.size>0;
   let webRows=fW,excRows=fE,winRows=fN;
