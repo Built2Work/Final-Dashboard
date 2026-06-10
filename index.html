@@ -1252,6 +1252,16 @@ function crossFiltered(){
   if(hasExc){const ps=new Set(fE.map(r=>normalizePhone(getPhone(r,true))));webRows=webRows.filter(r=>ps.has(normalizePhone(getPhone(r,false))));winRows=winRows.filter(r=>ps.has(normalizePhone(r['Mobile Phone']||'')));}
   if(hasWeb){const ps=new Set(fW.map(r=>normalizePhone(getPhone(r,false))));excRows=excRows.filter(r=>ps.has(normalizePhone(getPhone(r,true))));winRows=winRows.filter(r=>ps.has(normalizePhone(r['Mobile Phone']||'')));}
   if(hasWin){const ps=new Set(fN.map(r=>normalizePhone(r['Mobile Phone']||'')));webRows=webRows.filter(r=>ps.has(normalizePhone(getPhone(r,false))));excRows=excRows.filter(r=>ps.has(normalizePhone(getPhone(r,true))));}
+  // Deduplicate webRows by phone — one person attending multiple events has
+  // multiple web_registration rows; keep only one per person (most recent)
+  if(hasExc||hasWeb||hasWin){
+    const seen=new Set();
+    webRows=webRows.filter(r=>{
+      const p=normalizePhone(getPhone(r,false));
+      if(!p||seen.has(p))return false;
+      seen.add(p);return true;
+    });
+  }
   return {webRows,excRows,winRows};
 }
 
@@ -1295,8 +1305,18 @@ function toggleFilter(key,value){if(filters[key] instanceof Set){if(filters[key]
 function render(){const {webRows,excRows,winRows}=crossFiltered();destroyCharts();renderKPIs(webRows,excRows,winRows);renderGrid(webRows,excRows,winRows);}
 function destroyCharts(){Object.values(charts).forEach(c=>{if(c)c.destroy();});charts={};}
 function renderKPIs(w,e,n){
-  const hot=w.filter(r=>['Yes','Maybe'].includes((r['Interested in Construction Jobs']||'').trim())).length;
-  document.getElementById('kpiRow').innerHTML=`<div class="kpi-card"><div class="kpi-label">Registrations Shown</div><div class="kpi-value">${w.length.toLocaleString()}</div><div class="kpi-sub">of ${rawWeb.length} total</div></div><div class="kpi-card"><div class="kpi-label">EXC Simulator Runs</div><div class="kpi-value">${e.length.toLocaleString()}</div><div class="kpi-sub">of ${rawExc.length} total</div></div><div class="kpi-card"><div class="kpi-label">Trivia Sessions</div><div class="kpi-value">${n.length.toLocaleString()}</div><div class="kpi-sub">of ${rawWin.length} total</div></div><div class="kpi-card"><div class="kpi-label">Yes/Maybe \u2014 Construction</div><div class="kpi-value" style="color:var(--green)">${hot.toLocaleString()}</div><div class="kpi-sub">interested in opportunities</div></div>`;
+  // Count unique participants (by phone) not raw rows
+  // One person attending 3 events has 3 web_registration rows but is 1 participant
+  const uniqueWeb = new Set(w.map(r=>normalizePhone(r['Mobile Phone']||''))).size;
+  const uniqueExc = new Set(e.map(r=>normalizePhone(r['Login Code']||''))).size;
+  const uniqueWin = new Set(n.map(r=>normalizePhone(r['Mobile Phone']||r['QR Code Scan']||''))).size;
+  const totalUniqueWeb = new Set(rawWeb.map(r=>normalizePhone(r['Mobile Phone']||''))).size;
+  const totalUniqueExc = new Set(rawExc.map(r=>normalizePhone(r['Login Code']||''))).size;
+  const totalUniqueWin = new Set(rawWin.map(r=>normalizePhone(r['Mobile Phone']||r['QR Code Scan']||''))).size;
+  // Yes/Maybe counts unique people interested
+  const hotPhones=new Set(w.filter(r=>['Yes','Maybe'].includes((r['Interested in Construction Jobs']||'').trim())).map(r=>normalizePhone(r['Mobile Phone']||'')));
+  const hot=hotPhones.size;
+  document.getElementById('kpiRow').innerHTML=`<div class="kpi-card"><div class="kpi-label">Registrations Shown</div><div class="kpi-value">${uniqueWeb.toLocaleString()}</div><div class="kpi-sub">of ${totalUniqueWeb.toLocaleString()} total</div></div><div class="kpi-card"><div class="kpi-label">EXC Simulator Runs</div><div class="kpi-value">${uniqueExc.toLocaleString()}</div><div class="kpi-sub">of ${totalUniqueExc.toLocaleString()} total</div></div><div class="kpi-card"><div class="kpi-label">Trivia Sessions</div><div class="kpi-value">${uniqueWin.toLocaleString()}</div><div class="kpi-sub">of ${totalUniqueWin.toLocaleString()} total</div></div><div class="kpi-card"><div class="kpi-label">Yes/Maybe \u2014 Construction</div><div class="kpi-value" style="color:var(--green)">${hot.toLocaleString()}</div><div class="kpi-sub">interested in opportunities</div></div>`;
 }
 function renderGrid(webRows,excRows,winRows){
   document.getElementById('dashGrid').innerHTML=`<div class="card"><div class="card-title"><span class="dot"></span>EXC Score Distribution <span class="fab" id="badgeExc">FILTERED</span></div><div class="chart-wrap"><canvas id="chartExc"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Employment Status <span class="fab" id="badgeEmp">FILTERED</span></div><div class="chart-wrap"><canvas id="chartEmp"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Interest in Construction Jobs <span class="fab" id="badgeJI">FILTERED</span></div><div class="chart-wrap"><canvas id="chartJI"></canvas></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Age Distribution <span class="fab" id="badgeAge">FILTERED</span></div><div class="chart-wrap"><canvas id="chartAge"></canvas></div></div><div class="card" style="grid-row:span 2"><div class="card-title"><span class="dot"></span>Trade Certifications &amp; Licenses <span class="fab" id="badgeCerts">FILTERED</span></div><div class="chart-wrap" style="min-height:460px"><canvas id="chartCerts"></canvas></div></div><div class="card"><div class="card-title"><span class="dot"></span>Participants by State <span class="fab" id="badgeState">FILTERED</span></div><div class="state-grid" id="stateGrid"></div></div><div class="card wide"><div class="card-title"><span class="dot"></span>Windows Trivia \u2014 Tests Taken &amp; Avg Scores <span class="fab" id="badgeTrivia">FILTERED</span></div><table class="ttbl"><thead><tr><th>Test</th><th>Participants</th><th>Avg Score</th><th>Bar</th></tr></thead><tbody id="triviaBody"></tbody></table></div><div class="card full"><div class="card-title"><span class="dot"></span>Filtered Participants</div><div class="tbl-toolbar"><button class="tbl-toggle" id="showAllToggle" onclick="toggleShowAll()">Show Unmatched</button>
