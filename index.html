@@ -2237,11 +2237,12 @@ function renderPipeline(){
     // Look up name from rawWeb
     const w = rawWeb.find(r=>normalizePhone(r['Mobile Phone']||'')===a.phone);
     const name = w?(w['First Name']||'')+' '+(w['Last Name']||''):'Phone: '+a.phone;
-    return {...a, companyName: company?.name||'Unknown', name: name.trim()};
+    return {...a, companyName: company?.name||(a.company_id?'Unknown':'Unassigned'), name: name.trim()};
   });
 
   // Filter
-  if(compFilter)   rows=rows.filter(r=>r.company_id===compFilter);
+  if(compFilter==='UNASSIGNED') rows=rows.filter(r=>!r.company_id);
+  else if(compFilter) rows=rows.filter(r=>r.company_id===compFilter);
   if(statusFilter) rows=rows.filter(r=>r.status===statusFilter);
   if(q) rows=rows.filter(r=>
     r.name.toLowerCase().includes(q)||
@@ -2273,7 +2274,7 @@ function renderPipeline(){
   tbody.innerHTML = rows.map(r=>`
     <tr>
       <td><span class="pipe-name">${r.name}</span><br><span style="font-size:11px;color:var(--muted)">${r.phone}</span></td>
-      <td><span class="pipe-company">${r.companyName}</span></td>
+      <td><span class="pipe-company" style="${!r.company_id?'color:var(--amber)':''}">${r.companyName}</span></td>
       <td><span class="${statusClass(r.status)}">${r.status||'Not Contacted'}</span></td>
       <td style="font-size:12px">${r.hopeful_job||'—'}</td>
       <td style="font-size:12px">${r.pay_scale||'—'}</td>
@@ -2443,6 +2444,13 @@ function openPipeEdit(id){
   const w = rawWeb.find(row=>normalizePhone(row['Mobile Phone']||'')===r.phone)||{};
   const name = ((w['First Name']||'')+' '+(w['Last Name']||'')).trim() || ('Phone: '+r.phone);
   document.getElementById('pipeEditName').textContent = name;
+  // Populate company dropdown
+  const compSel = document.getElementById('pipeEditCompany');
+  compSel.innerHTML = '<option value="">Unassigned Pipeline</option>';
+  companies.forEach(c=>{
+    const o=document.createElement('option');o.value=c.id;o.textContent=c.name;compSel.appendChild(o);
+  });
+  compSel.value = r.company_id || '';
   document.getElementById('pipeEditStatus').value       = r.status        || 'Not Contacted';
   document.getElementById('pipeEditHopefulJob').value   = r.hopeful_job   || '';
   document.getElementById('pipeEditPayScale').value     = r.pay_scale     || '';
@@ -2490,7 +2498,9 @@ async function savePipeEdit(){
     fileUrl = urlData?.publicUrl || fileUrl;
   }
 
+  const newCompanyId = document.getElementById('pipeEditCompany').value || null;
   const updates = {
+    company_id:   newCompanyId,
     status:       document.getElementById('pipeEditStatus').value,
     hopeful_job:  document.getElementById('pipeEditHopefulJob').value.trim(),
     pay_scale:    document.getElementById('pipeEditPayScale').value.trim(),
@@ -2708,6 +2718,69 @@ async function autoGeocodeNewRecords(){
   }
 }
 
+
+// ─── UNASSIGNED PIPELINE ─────────────────────────────────────────────────────
+
+async function saveToUnassigned(){
+  if(!assignPhone) return;
+  const msg = document.getElementById('assignMsg');
+  msg.style.color='var(--muted)'; msg.textContent='Saving\u2026';
+  const {data:{user}} = await sb.auth.getUser();
+
+  // Delete any existing unassigned entry for this phone (null company_id)
+  // Can't upsert on null, so delete+insert
+  await sb.from('candidate_assignments')
+    .delete().eq('phone', assignPhone).is('company_id', null);
+
+  const {error} = await sb.from('candidate_assignments').insert({
+    phone:        assignPhone,
+    company_id:   null,
+    hopeful_job:  document.getElementById('assignHopefulJob').value.trim(),
+    pay_scale:    document.getElementById('assignPayScale').value.trim(),
+    current_job:  document.getElementById('assignCurrentJob').value.trim(),
+    work_history: document.getElementById('assignWorkHistory').value.trim(),
+    notes:        document.getElementById('assignNotes').value.trim(),
+    assigned_by:  user?.email || '',
+    status:       'Not Contacted',
+  });
+  if(error){ msg.style.color='#f85149'; msg.textContent='Error: '+error.message; return; }
+  msg.style.color='var(--amber)'; msg.textContent='\u25bc Added to Unassigned Pipeline';
+  await loadCRMData();
+  setTimeout(()=>document.getElementById('assignOverlay').classList.remove('open'), 900);
+}
+
+async function bulkAddToUnassigned(){
+  if(pinnedPhones.size===0) return;
+  const msg = document.getElementById('bulkAssignMsg');
+  msg.style.color='var(--muted)'; msg.textContent='Saving\u2026';
+  const {data:{user}} = await sb.auth.getUser();
+  const hopefulJob  = document.getElementById('bulkHopefulJob').value.trim();
+  const payScale    = document.getElementById('bulkPayScale').value.trim();
+  const currentJob  = document.getElementById('bulkCurrentJob').value.trim();
+  const workHistory = document.getElementById('bulkWorkHistory').value.trim();
+  const notes       = document.getElementById('bulkNotes').value.trim();
+  const phones      = [...pinnedPhones];
+
+  // Delete existing unassigned entries for these phones first
+  for(const phone of phones){
+    await sb.from('candidate_assignments')
+      .delete().eq('phone', phone).is('company_id', null);
+  }
+
+  const rows = phones.map(phone=>({
+    phone, company_id: null,
+    hopeful_job: hopefulJob, pay_scale: payScale,
+    current_job: currentJob, work_history: workHistory,
+    notes, assigned_by: user?.email||'', status:'Not Contacted',
+  }));
+  const {error} = await sb.from('candidate_assignments').insert(rows);
+  if(error){ msg.style.color='#f85149'; msg.textContent='Error: '+error.message; return; }
+  msg.style.color='var(--amber)';
+  msg.textContent='\u25bc '+phones.length+' added to Unassigned Pipeline';
+  await loadCRMData();
+  setTimeout(()=>document.getElementById('bulkAssignOverlay').classList.remove('open'), 900);
+}
+
 </script>
 
 <!-- COLUMN SELECTOR MODAL -->
@@ -2788,6 +2861,7 @@ async function autoGeocodeNewRecords(){
   <div class="pipe-toolbar">
     <select class="pipe-filter-select" id="pipeCompanyFilter" onchange="renderPipeline()">
       <option value="">All Companies</option>
+      <option value="UNASSIGNED">&#9632; Unassigned Pipeline</option>
     </select>
     <select class="pipe-filter-select" id="pipeStatusFilter" onchange="renderPipeline()">
       <option value="">All Statuses</option>
@@ -2873,6 +2947,7 @@ async function autoGeocodeNewRecords(){
       <button class="assign-cancel" onclick="closeAssignModal()">Cancel</button>
       <button class="assign-cancel" id="unassignBtn" onclick="unassignCandidate()" style="display:none;border-color:#f85149;color:#f85149;">&#x2715; Unassign</button>
       <span class="assign-msg" id="assignMsg"></span>
+      <button class="assign-cancel" onclick="saveToUnassigned()" style="border-color:var(--amber);color:var(--amber);" title="Add to pipeline without assigning to a company">&#9660; Unassigned Pipeline</button>
       <button class="assign-save" onclick="saveAssignment()">&#10003; Save Assignment</button>
     </div>
   </div>
@@ -2920,6 +2995,7 @@ async function autoGeocodeNewRecords(){
       <button class="assign-cancel" onclick="closeBulkAssign()">Cancel</button>
       <button class="assign-cancel" onclick="bulkUnassign()" style="border-color:#f85149;color:#f85149;">&#x2715; Unassign All</button>
       <span class="assign-msg" id="bulkAssignMsg"></span>
+      <button class="assign-cancel" onclick="bulkAddToUnassigned()" style="border-color:var(--amber);color:var(--amber);" title="Add all to pipeline without assigning to a company">&#9660; Unassigned Pipeline</button>
       <button class="assign-save" onclick="saveBulkAssignment()">&#10003; Assign All</button>
     </div>
   </div>
@@ -2937,6 +3013,12 @@ async function autoGeocodeNewRecords(){
       <button class="assign-close" onclick="closePipeEdit()">&#x2715;</button>
     </div>
     <div class="assign-body">
+      <div class="assign-field">
+        <label class="assign-label">Company <span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(change to assign to a company)</span></label>
+        <select class="assign-input assign-select" id="pipeEditCompany">
+          <option value="">Unassigned Pipeline</option>
+        </select>
+      </div>
       <div class="assign-field">
         <label class="assign-label">Status</label>
         <select class="assign-input assign-select" id="pipeEditStatus">
