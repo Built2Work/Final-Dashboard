@@ -78,7 +78,7 @@ $$;
 
 -- The company id (if any) that the current user belongs to.
 create or replace function public.my_company_id()
-returns bigint
+returns uuid
 language sql
 stable
 security definer
@@ -190,7 +190,7 @@ create policy cf_read on storage.objects
     bucket_id = 'candidate-files'
     and (
       public.is_admin()
-      or split_part(split_part(name, '/', 2), '_', 2)::bigint = public.my_company_id()
+      or split_part(split_part(name, '/', 2), '_', 2)::uuid = public.my_company_id()
     )
   );
 
@@ -201,7 +201,7 @@ create policy cf_write on storage.objects
     bucket_id = 'candidate-files'
     and (
       public.is_admin()
-      or split_part(split_part(name, '/', 2), '_', 2)::bigint = public.my_company_id()
+      or split_part(split_part(name, '/', 2), '_', 2)::uuid = public.my_company_id()
     )
   );
 
@@ -212,7 +212,7 @@ create policy cf_update on storage.objects
     bucket_id = 'candidate-files'
     and (
       public.is_admin()
-      or split_part(split_part(name, '/', 2), '_', 2)::bigint = public.my_company_id()
+      or split_part(split_part(name, '/', 2), '_', 2)::uuid = public.my_company_id()
     )
   );
 
