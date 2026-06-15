@@ -10,7 +10,7 @@
 
 const SUPABASE_URL  = 'https://uqesgpnnqalpdhbfglbg.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxZXNncG5ucWFscGRoYmZnbGJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTM3ODMsImV4cCI6MjA5MDYyOTc4M30.1y0wSE7lhNVVPamC-1WEVF0qpFhO9mUN2FVGbNSifMI';
-const MAPBOX_TOKEN  = 'pk.eyJ1Ijoiam9lLWNvbm5lciIsImEiOiJjbXB5N3B4eDgwM3QyMnRvaDN6NmxuYjgyIn0.9vXQcuMisofOxj5ewpol9w';
+const MAPBOX_TOKEN  = 'pk.eyJ1Ijoiam9lLWNvbm5lciIsImEiOiJjbXFmYnViNGUxa3VnMnhxMGFxYTl3cmduIn0.Dk4qRQ9eQx1DtBcnPgDtdg';
 
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
