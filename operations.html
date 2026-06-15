@@ -3,9 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://api.mapbox.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.mapbox.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://api.mapbox.com https://*.tiles.mapbox.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.mapbox.com https://events.mapbox.com https://*.tiles.mapbox.com; worker-src 'self' blob:; child-src blob:; object-src 'none'; base-uri 'self'">
 <title>Built to Work — Operations Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- shared config + helpers (must load after Supabase CDN, before page script) -->
+<script src="shared.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0d0d;--surface:#161616;--surface2:#1e1e1e;--surface3:#252525;--border:#333;--accent:#ce0e2d;--text:#f0f0f0;--muted:#9a9a9a;--green:#3fb950;--blue:#58a6ff;--amber:#f0a500;}
@@ -167,10 +170,8 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:11px;border-t
 </div>
 
 <script>
-const SUPABASE_URL  = 'https://uqesgpnnqalpdhbfglbg.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxZXNncG5ucWFscGRoYmZnbGJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTM3ODMsImV4cCI6MjA5MDYyOTc4M30.1y0wSE7lhNVVPamC-1WEVF0qpFhO9mUN2FVGbNSifMI';
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+// SUPABASE_URL/SUPABASE_ANON, the `sb` client and normalizePhone() live in
+// shared.js (loaded before this script).
 
 let rawWeb=[], rawExc=[], rawWin=[];
 let opsCharts={};
@@ -260,7 +261,7 @@ function buildEventPicker(){
     const div=document.createElement('div');
     div.className='ms-option'+(selectedEvents.has(name)?' selected':'');
     div.style.setProperty('--event-color',color);
-    div.innerHTML=`<span class="ms-check">${selectedEvents.has(name)?'&#10003;':''}</span><span class="comp-event-dot" style="background:${color}"></span>${name}`;
+    div.innerHTML=`<span class="ms-check">${selectedEvents.has(name)?'&#10003;':''}</span><span class="comp-event-dot" style="background:${color}"></span>${esc(name)}`;
     div.onclick=()=>toggleEvent(name);
     container.appendChild(div);
   });
@@ -307,7 +308,7 @@ function updatePickerLabel(){
     allCheck.innerHTML='&#10003;';
     document.getElementById('msAll').classList.add('active');
   } else if(selectedEvents.size===1){
-    btn.innerHTML=[...selectedEvents][0];
+    btn.textContent=[...selectedEvents][0];
     allCheck.innerHTML='';
     document.getElementById('msAll').classList.remove('active');
   } else {
@@ -322,7 +323,7 @@ function parseDate(str){if(!str)return null;const d=new Date(str);return isNaN(d
 function toYMD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function median(arr){if(!arr.length)return null;const s=[...arr].sort((a,b)=>a-b),m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2;}
 function avg(arr){return arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:null;}
-function normalizePhone(p){const s=String(p||'').split('.')[0];const d=s.replace(/[^0-9]/g,'').replace(/^1/,'');return d.slice(-9);}
+// normalizePhone() lives in shared.js
 function fmtMin(m){if(m==null)return '—';return m<60?m.toFixed(0)+' min':(m/60).toFixed(1)+' hrs';}
 function fmtPct(n,d){return d>0?(n/d*100).toFixed(1)+'%':'—';}
 function fmtHour(h){return h===0?'12 AM':h<12?h+' AM':h===12?'12 PM':(h-12)+' PM';}
@@ -436,7 +437,7 @@ function render(){
       const color=eventColor(evName);
       const avgSc=avg(dE.excScoreAll);
       rows+=`<tr>
-        <td><span class="comp-event-dot" style="background:${color}"></span>${evName}</td>
+        <td><span class="comp-event-dot" style="background:${color}"></span>${esc(evName)}</td>
         <td>${wE.length.toLocaleString()}</td>
         <td>${eE.length.toLocaleString()}</td>
         <td>${fmtPct(eE.length,wE.length)}</td>
@@ -499,7 +500,7 @@ function render(){
         gridHtml+=`<div class="card">
           <div class="card-title">
             <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;margin-right:4px"></span>
-            ${evName}
+            ${esc(evName)}
           </div>
           <div class="chart-wrap" style="min-height:200px"><canvas id="cDaily_${idx}"></canvas></div>
           <div class="chart-note" style="margin-top:4px">Click to drill into that day</div>
