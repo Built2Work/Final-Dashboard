@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://api.mapbox.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.mapbox.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://api.mapbox.com https://*.tiles.mapbox.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.mapbox.com https://events.mapbox.com https://*.tiles.mapbox.com; worker-src 'self' blob:; child-src blob:; object-src 'none'; base-uri 'self'">
 <title>Built to Work — Event Analytics Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -613,6 +614,8 @@ footer{border-top:1px solid var(--border);}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<!-- shared config + helpers (must load after Supabase CDN, before page script) -->
+<script src="shared.js"></script>
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
 </head>
 <body>
@@ -949,16 +952,13 @@ async function runDiag(){
 //  STEP 2: Replace YOUR_SUPABASE_ANON_KEY with your anon key
 //  Both values are found in Supabase: Settings -> API
 // ================================================================
-const SUPABASE_URL  = 'https://uqesgpnnqalpdhbfglbg.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxZXNncG5ucWFscGRoYmZnbGJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTM3ODMsImV4cCI6MjA5MDYyOTc4M30.1y0wSE7lhNVVPamC-1WEVF0qpFhO9mUN2FVGbNSifMI';
+// ================================================================
+// SUPABASE_URL / SUPABASE_ANON, the `sb` Supabase client, MAPBOX_TOKEN,
+// normalizePhone(), esc()/jsAttr() and validateUploadFile() now live in
+// shared.js (loaded before this script). Keep credentials there only.
 // ================================================================
 
 const AUTO_REFRESH_MS = 300000; // 5 minutes
-
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
-// ── MAPBOX — replace with your public access token from mapbox.com ──────────
-const MAPBOX_TOKEN = 'pk.eyJ1Ijoiam9lLWNvbm5lciIsImEiOiJjbXB5N3B4eDgwM3QyMnRvaDN6NmxuYjgyIn0.9vXQcuMisofOxj5ewpol9w';
 
 let rawWeb=[], rawExc=[], rawWin=[];
 let charts={}, refreshTimer=null, showAllParticipants=false, tblSearch='';
@@ -1048,27 +1048,15 @@ async function fetchAll(table,cols='*'){
 }
 
 // ─── CACHE HELPERS ──────────────────────────────────────────────────────────
-const CACHE_KEY='cs_dash_cache';
-const CACHE_TTL=21600000; // 6 hours
-
-function saveCache(web,exc,win){
-  try{
-    localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),web,exc,win}));
-  }catch(e){console.warn('Cache write failed:',e);}
-}
-
-function loadCache(){
-  try{
-    const raw=localStorage.getItem(CACHE_KEY);
-    if(!raw)return null;
-    const c=JSON.parse(raw);
-    if(Date.now()-c.ts>CACHE_TTL)return null; // expired
-    return c;
-  }catch(e){return null;}
-}
-
+// Persistent caching was REMOVED for privacy: candidate PII (names, DOBs,
+// phones, addresses) must not be written to localStorage, where any XSS could
+// read it. Data is always fetched fresh from Supabase per session and kept only
+// in memory. These remain as no-ops so existing call sites keep working.
+function saveCache(web,exc,win){ /* intentionally no-op — no PII at rest */ }
+function loadCache(){ return null; }
 function clearCache(){
-  try{localStorage.removeItem(CACHE_KEY);}catch(e){}
+  // Best-effort cleanup of any cache written by a previous version.
+  try{ localStorage.removeItem('cs_dash_cache'); }catch(e){}
 }
 
 function stampRefreshTime(fromCache){
@@ -1139,7 +1127,7 @@ async function refreshData(){
 
 // HELPERS
 function getPhone(row,isExc){return isExc?String(row['Login Code']||'').trim():String(row['Mobile Phone']||'').trim();}
-function normalizePhone(p){return String(p||'').replace(/\D/g,'').replace(/^1/,'').slice(-9);}
+// normalizePhone() lives in shared.js
 function getAge(dob){if(!dob)return null;const d=new Date(dob);if(isNaN(d))return null;return Math.floor((new Date()-d)/(365.25*86400000));}
 function ageGroup(age){if(!age||age<18)return null;const bins=[[18,20],[21,25],[26,30],[31,35],[36,40],[41,45],[46,50],[51,55],[56,60],[61,65],[66,70],[71,75],[76,80]];for(const [lo,hi] of bins)if(age>=lo&&age<=hi)return lo+'-'+hi;return '80+';}
 function excScoreSeg(s){if(s==null)return null;if(s<=10)return '0-10';if(s<=20)return '11-20';if(s<=30)return '21-30';if(s<=40)return '31-40';if(s<=50)return '41-50';if(s<=60)return '51-60';if(s<=70)return '61-70';if(s<=80)return '71-80';if(s<=90)return '81-90';return '91-100';}
@@ -1152,7 +1140,7 @@ function populateEventDropdown(){
   allNames.forEach(name=>{
     const div=document.createElement('div');
     div.className='ms-option'+(filters.events.has(name)?' selected':'');
-    div.innerHTML='<span class="ms-check">'+(filters.events.has(name)?'&#10003;':'')+'</span>'+name;
+    div.innerHTML='<span class="ms-check">'+(filters.events.has(name)?'&#10003;':'')+'</span>'+esc(name);
     div.onclick=()=>toggleEventFilter(name);
     container.appendChild(div);
   });
@@ -1352,10 +1340,10 @@ function renderGrid(webRows,excRows,winRows){
   const cc=CERT_NAMES.map((name,i)=>({name,count:webRows.filter(r=>r[CERT_COLS[i]]==='Yes').length})).filter(c=>c.count>0).sort((a,b)=>b.count-a.count);
   charts.certs=new Chart(document.getElementById('chartCerts'),{type:'bar',data:{labels:cc.map(c=>c.name),datasets:[{data:cc.map(c=>c.count),backgroundColor:cc.map(c=>filters.certs.has(c.name)?'#f0a500':PIE_PALETTE[cc.indexOf(c)%PIE_PALETTE.length]+'cc'),borderColor:'transparent',borderRadius:3}]},options:{...co,indexAxis:'y',plugins:{...co.plugins,legend:{display:false}},scales:{x:{ticks:{color:'#8b949e',font:{family:'Barlow Condensed',size:10}},grid:{color:'#21262d'}},y:{ticks:{color:'#e6edf3',font:{family:'Barlow Condensed',size:12,weight:'700'},padding:4},grid:{color:'#21262d'},afterFit(scale){scale.width=220;}}},onClick:(e,els)=>{if(!els.length)return;toggleFilter('certs',cc[els[0].index].name);}}});
   const stC={};webRows.forEach(r=>{const s=(r['State']||'').trim();if(s)stC[s]=(stC[s]||0)+1;});
-  document.getElementById('stateGrid').innerHTML=Object.entries(stC).sort((a,b)=>b[1]-a[1]).map(([s,c])=>'<div class="state-row" style="'+(filters.states.has(s)?'border-left-color:var(--accent)':'')+'" onclick="toggleFilter(\'states\',\''+s+'\')"><span class="state-name">'+s+'</span><span class="state-count">'+c+'</span></div>').join('');
+  document.getElementById('stateGrid').innerHTML=Object.entries(stC).sort((a,b)=>b[1]-a[1]).map(([s,c])=>'<div class="state-row" style="'+(filters.states.has(s)?'border-left-color:var(--accent)':'')+'" onclick="toggleFilter(\'states\',\''+jsAttr(s)+'\')"><span class="state-name">'+esc(s)+'</span><span class="state-count">'+c+'</span></div>').join('');
   const td=Object.entries(TRIVIA_COLS).map(([name,col])=>{const vals=winRows.map(r=>parseFloat(r[col])).filter(v=>!isNaN(v));return{name,count:vals.length,avg:vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0};}).sort((a,b)=>b.count-a.count);
   const maxAvg=Math.max(...td.map(d=>d.avg),1);
-  document.getElementById('triviaBody').innerHTML=td.filter(d=>d.count>0).map(d=>'<tr onclick="toggleFilter(\'trivia\',\''+d.name+'\')"><td class="ttest" style="'+(filters.trivia.has(d.name)?'color:var(--accent)':'')+'">'+d.name+'</td><td class="tcount">'+d.count.toLocaleString()+'</td><td class="tavg">'+d.avg.toFixed(1)+'</td><td><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:'+(d.avg/maxAvg*100).toFixed(1)+'%"></div></div></td></tr>').join('');
+  document.getElementById('triviaBody').innerHTML=td.filter(d=>d.count>0).map(d=>'<tr onclick="toggleFilter(\'trivia\',\''+jsAttr(d.name)+'\')"><td class="ttest" style="'+(filters.trivia.has(d.name)?'color:var(--accent)':'')+'">'+esc(d.name)+'</td><td class="tcount">'+d.count.toLocaleString()+'</td><td class="tavg">'+d.avg.toFixed(1)+'</td><td><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:'+(d.avg/maxAvg*100).toFixed(1)+'%"></div></div></td></tr>').join('');
   window.webRows2=webRows;window.excRows2=excRows;window.winRows2=winRows;
   renderTable(webRows,excRows,winRows);
 }
@@ -1610,11 +1598,11 @@ function renderTable(webRows,excRows,winRows){
     const cells=colDefs.map(col=>{
       const v=getCellValue(col.id,r,w,e,n);
       if(v.html)return '<td>'+v.html+'</td>';
-      return '<td'+(v.style?' style="'+v.style+'"':v.cls?' class="'+v.cls+'"':'')+'>'+(v.display||'—')+'</td>';
+      return '<td'+(v.style?' style="'+v.style+'"':v.cls?' class="'+v.cls+'"':'')+'>'+esc(v.display||'—')+'</td>';
     }).join('');
     const isPinned=pinnedPhones.has(r.phone);
     const distCell=geoFilter.active?(r._dist!=null?'<td><span class="dist-badge">'+r._dist.toFixed(1)+' mi</span></td>':'<td><span class="dist-badge">—</span></td>'):'';
-    return '<tr class="'+(isPinned?'pinned':'')+'"><td class="pin-col"><input type="checkbox" class="pin-check" data-phone="'+r.phone+'" onchange="togglePin(this,\''+r.phone+'\')" title="Pin this person"></td><td class="fmuted">'+(i+1)+'</td>'+distCell+cells+'</tr>';
+    return '<tr class="'+(isPinned?'pinned':'')+'"><td class="pin-col"><input type="checkbox" class="pin-check" data-phone="'+esc(r.phone)+'" onchange="togglePin(this,\''+jsAttr(r.phone)+'\')" title="Pin this person"></td><td class="fmuted">'+(i+1)+'</td>'+distCell+cells+'</tr>';
   }).join('');
   // Set checked state via JS property (more reliable than HTML attribute)
   tbody.querySelectorAll('.pin-check').forEach(chk=>{
@@ -2178,7 +2166,9 @@ async function saveAssignment(){
   const fileInput = document.getElementById('assignFile');
   if(fileInput && fileInput.files && fileInput.files[0]){
     const file = fileInput.files[0];
-    const ext  = file.name.split('.').pop();
+    const v = validateUploadFile(file);
+    if(!v.ok){ msg.style.color='#f85149'; msg.textContent=v.error; return; }
+    const ext  = v.ext;
     const path = `assignments/${assignPhone}_${companyId}_${Date.now()}.${ext}`;
     const {data:upData, error:upErr} = await sb.storage.from('candidate-files').upload(path, file, {upsert:true});
     if(upErr){ msg.style.color='#f85149'; msg.textContent='File upload error: '+upErr.message; return; }
@@ -2273,26 +2263,26 @@ function renderPipeline(){
   }
   tbody.innerHTML = rows.map(r=>`
     <tr>
-      <td><span class="pipe-name">${r.name}</span><br><span style="font-size:11px;color:var(--muted)">${r.phone}</span></td>
-      <td><span class="pipe-company" style="${!r.company_id?'color:var(--amber)':''}">${r.companyName}</span></td>
-      <td><span class="${statusClass(r.status)}">${r.status||'Not Contacted'}</span></td>
-      <td style="font-size:12px">${r.hopeful_job||'—'}</td>
-      <td style="font-size:12px">${r.pay_scale||'—'}</td>
-      <td style="font-size:12px">${r.current_job||'—'}</td>
-      <td class="pipe-notes-cell" title="${(r.notes||'').replace(/"/g,'&quot;')}">${r.notes||'—'}</td>
+      <td><span class="pipe-name">${esc(r.name)}</span><br><span style="font-size:11px;color:var(--muted)">${esc(r.phone)}</span></td>
+      <td><span class="pipe-company" style="${!r.company_id?'color:var(--amber)':''}">${esc(r.companyName)}</span></td>
+      <td><span class="${statusClass(r.status)}">${esc(r.status)||'Not Contacted'}</span></td>
+      <td style="font-size:12px">${esc(r.hopeful_job)||'—'}</td>
+      <td style="font-size:12px">${esc(r.pay_scale)||'—'}</td>
+      <td style="font-size:12px">${esc(r.current_job)||'—'}</td>
+      <td class="pipe-notes-cell" title="${esc(r.notes)}">${esc(r.notes)||'—'}</td>
       <td class="pipe-time">${fmtDate(r.updated_at)}</td>
-      <td class="pipe-time">${fmtDate(r.assigned_at)}<br><span style="font-size:10px;color:var(--muted)">${r.assigned_by||''}</span></td>
+      <td class="pipe-time">${fmtDate(r.assigned_at)}<br><span style="font-size:10px;color:var(--muted)">${esc(r.assigned_by)}</span></td>
       <td style="white-space:nowrap">
         ${r.file_url?`<a href="${r.file_url}" target="_blank" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--blue);text-decoration:none;margin-right:6px;">&#128206; View</a>`:''}
         <label style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;color:var(--muted);padding:2px 7px;border:1px dashed var(--border);border-radius:3px;" title="Upload file for this candidate">
           &#8679;
-          <input type="file" style="display:none" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="uploadPipelineFile('${r.id}',this,event)">
+          <input type="file" style="display:none" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="uploadPipelineFile('${jsAttr(r.id)}',this,event)">
         </label>
         <span id="pf_${r.id}" style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;"></span>
       </td>
       <td style="white-space:nowrap;display:flex;gap:6px;align-items:center">
-        <button onclick="openPipeEdit('${r.id}')" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border:1.5px solid var(--border);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;white-space:nowrap;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">&#9998; Edit</button>
-        <button onclick="pipelineUnassign('${r.id}','${r.name.replace(/'/g,"\\'")}','${r.companyName.replace(/'/g,"\\'")}',this)" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border:1.5px solid #f85149;background:transparent;color:#f85149;border-radius:3px;cursor:pointer;white-space:nowrap;transition:all .15s;" onmouseover="this.style.background='#f85149';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#f85149'">&#x2715; Unassign</button>
+        <button onclick="openPipeEdit('${jsAttr(r.id)}')" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border:1.5px solid var(--border);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;white-space:nowrap;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">&#9998; Edit</button>
+        <button onclick="pipelineUnassign('${jsAttr(r.id)}','${jsAttr(r.name)}','${jsAttr(r.companyName)}',this)" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border:1.5px solid #f85149;background:transparent;color:#f85149;border-radius:3px;cursor:pointer;white-space:nowrap;transition:all .15s;" onmouseover="this.style.background='#f85149';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#f85149'">&#x2715; Unassign</button>
       </td>
     </tr>`).join('');
 }
@@ -2306,7 +2296,9 @@ async function uploadPipelineFile(id, input, evt){
   const row=assignments.find(x=>x.id===id);
   if(!row){if(statusEl)statusEl.textContent='Not found';return;}
   const file=input.files[0];
-  const ext=file.name.split('.').pop();
+  const v=validateUploadFile(file);
+  if(!v.ok){if(statusEl){statusEl.style.color='#f85149';statusEl.textContent=v.error;}input.value='';return;}
+  const ext=v.ext;
   const path=`assignments/${row.phone}_${row.company_id}_${Date.now()}.${ext}`;
   const {error:upErr}=await sb.storage.from('candidate-files').upload(path,file,{upsert:true});
   if(upErr){if(statusEl){statusEl.style.color='#f85149';statusEl.textContent='Failed';}return;}
@@ -2490,7 +2482,9 @@ async function savePipeEdit(){
   const fileInput = document.getElementById('pipeEditFile');
   if(fileInput && fileInput.files && fileInput.files[0]){
     const file = fileInput.files[0];
-    const ext  = file.name.split('.').pop();
+    const v = validateUploadFile(file);
+    if(!v.ok){ msg.style.color='#f85149'; msg.textContent=v.error; return; }
+    const ext  = v.ext;
     const path = `assignments/${r.phone}_${r.company_id}_${Date.now()}.${ext}`;
     const {error:upErr} = await sb.storage.from('candidate-files').upload(path, file, {upsert:true});
     if(upErr){ msg.style.color='#f85149'; msg.textContent='File upload failed: '+upErr.message; return; }
@@ -2554,8 +2548,8 @@ function onGeoInput(val){
       floatSugg.style.width=Math.max(rect.width,260)+'px';
       floatSugg.innerHTML=data.features.map(f=>{
         const name=f.place_name||'';
-        const [lng,lat]=f.center;
-        return `<div class="geo-suggestion" onclick="selectGeoSuggestion('${name.replace(/'/g,"\\'")}',${lat},${lng})">${name}</div>`;
+        const [lng,lat]=f.center.map(Number);
+        return `<div class="geo-suggestion" onclick="selectGeoSuggestion('${jsAttr(name)}',${lat},${lng})">${esc(name)}</div>`;
       }).join('');
       floatSugg.style.display='block';
     }catch(e){console.warn('Geocode autocomplete error',e);}

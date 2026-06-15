@@ -3,10 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://api.mapbox.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.mapbox.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://api.mapbox.com https://*.tiles.mapbox.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.mapbox.com https://events.mapbox.com https://*.tiles.mapbox.com; worker-src 'self' blob:; child-src blob:; object-src 'none'; base-uri 'self'">
 <title>Built to Work — Candidate Portal</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- shared config + helpers (must load after Supabase CDN, before page script) -->
+<script src="shared.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0d0d;--surface:#161616;--surface2:#1e1e1e;--surface3:#252525;--border:#333;--accent:#ce0e2d;--text:#f0f0f0;--muted:#9a9a9a;--green:#3fb950;--blue:#58a6ff;--amber:#f0a500;}
@@ -181,11 +184,8 @@ tr:hover td{background:var(--surface2);}
 <div class="det-overlay" id="detOverlay" onclick="closeDetail(event)"><div class="det-modal"><div class="det-header"><div><div class="det-name" id="detName"></div><div class="det-sub" id="detSub"></div></div><button class="det-close" onclick="closeDetail()">&#x2715;</button></div><div class="det-body" id="detBody"></div></div></div>
 <script>
 
-const SUPABASE_URL  = 'https://uqesgpnnqalpdhbfglbg.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxZXNncG5ucWFscGRoYmZnbGJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTM3ODMsImV4cCI6MjA5MDYyOTc4M30.1y0wSE7lhNVVPamC-1WEVF0qpFhO9mUN2FVGbNSifMI';
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
-const MAPBOX_TOKEN = 'pk.eyJ1Ijoiam9lLWNvbm5lciIsImEiOiJjbXB5N3B4eDgwM3QyMnRvaDN6NmxuYjgyIn0.9vXQcuMisofOxj5ewpol9w';
+// SUPABASE_URL/SUPABASE_ANON, the `sb` client, MAPBOX_TOKEN, normalizePhone(),
+// esc()/jsAttr() and validateUploadFile() live in shared.js (loaded first).
 let geoFilter = { active:false, lat:null, lng:null, radius:25, address:'' };
 
 let myCompany=null, assignments=[], webData={}, excData={}, triviaData={};
@@ -248,7 +248,7 @@ function hideTip(){
   if(tip)tip.style.display='none';
 }
 
-function normalizePhone(p){const s=String(p||'').split('.')[0];const d=s.replace(/[^0-9]/g,'').replace(/^1/,'');return d.slice(-9);}
+// normalizePhone() lives in shared.js
 function fmtDate(str){if(!str)return '—';return new Date(str).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
 function getAge(dob){if(!dob)return null;const d=new Date(dob);if(isNaN(d))return null;const n=new Date();let age=n.getFullYear()-d.getFullYear();if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate()))age--;return age>0&&age<100?age:null;}
 
@@ -401,16 +401,16 @@ function renderCandidates(){
     const phone=w['Mobile Phone']?String(w['Mobile Phone']).split('.')[0].replace(/[^\d]/g,''):r.phone;
     const distTd=geoFilter.active?(r._dist!=null?`<td><span class="dist-badge">${r._dist.toFixed(1)} mi</span></td>`:'<td><span class="dist-badge">—</span></td>'):'';
     return `<tr>
-      ${distTd}<td style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap">${r.hopeful_job||'—'}</td>
-      <td class="td-name" onclick="showDetail('${r.phone}')">${r.name}</td>
-      <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700">${w['State']||'—'}</td>
-      <td style="color:var(--muted);font-size:11px;white-space:nowrap">${phone}</td>
-      <td style="color:var(--muted);font-size:11px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${w['Email Address']||'—'}</td>
+      ${distTd}<td style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap">${esc(r.hopeful_job)||'—'}</td>
+      <td class="td-name" onclick="showDetail('${jsAttr(r.phone)}')">${esc(r.name)}</td>
+      <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700">${esc(w['State'])||'—'}</td>
+      <td style="color:var(--muted);font-size:11px;white-space:nowrap">${esc(phone)}</td>
+      <td style="color:var(--muted);font-size:11px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(w['Email Address'])||'—'}</td>
       <td>${excBadge}</td>
-      <td style="font-size:11px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.certs.join(', ')}">${certDisplay}</td>
-      <td style="font-size:11px;color:var(--muted);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.work_history||''}">${r.work_history||'—'}</td>
-      <td><select class="status-sel ${sc}" onchange="updateStatus('${r.id}',this)">${statusOpts}</select></td>
-      <td id="nc_${r.id}"><div class="notes-txt" onclick="editNotes('${r.id}')" title="${(r.notes||'').replace(/"/g,'&quot;')}">${r.notes||'<em style=color:var(--muted)>Add note…</em>'}</div></td>
+      <td style="font-size:11px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(r.certs.join(', '))}">${esc(certDisplay)}</td>
+      <td style="font-size:11px;color:var(--muted);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(r.work_history)}">${esc(r.work_history)||'—'}</td>
+      <td><select class="status-sel ${sc}" onchange="updateStatus('${jsAttr(r.id)}',this)">${statusOpts}</select></td>
+      <td id="nc_${r.id}"><div class="notes-txt" onclick="editNotes('${jsAttr(r.id)}')" title="${esc(r.notes)}">${r.notes?esc(r.notes):'<em style=color:var(--muted)>Add note…</em>'}</div></td>
     </tr>`;
   }).join('');
 }
@@ -423,7 +423,7 @@ async function updateStatus(id,sel){
 function editNotes(id){
   const cell=document.getElementById('nc_'+id);
   const a=assignments.find(x=>x.id===id);
-  cell.innerHTML=`<textarea class="notes-inp" id="ni_${id}">${a?.notes||''}</textarea><button class="save-notes" onclick="saveNotes('${id}')">Save</button>`;
+  cell.innerHTML=`<textarea class="notes-inp" id="ni_${id}">${esc(a?.notes)}</textarea><button class="save-notes" onclick="saveNotes('${jsAttr(id)}')">Save</button>`;
   document.getElementById('ni_'+id).focus();
 }
 async function saveNotes(id){
@@ -447,24 +447,24 @@ function showDetail(phone){
   const employment=empMap[w['Job Status']||'']||w['Job Status']||'—';
   const ji=w['Interested in Construction Jobs']||'—';
   document.getElementById('detName').textContent=name;
-  document.getElementById('detSub').innerHTML=rawPhone+' &bull; '+(w['Email Address']||'—')+' &bull; '+(w['City']||'')+' '+(w['State']||'');
+  document.getElementById('detSub').innerHTML=esc(rawPhone)+' &bull; '+(esc(w['Email Address'])||'—')+' &bull; '+esc(w['City'])+' '+esc(w['State']);
   let html='';
   html+=`<div class="det-section"><div class="det-section-title">Assignment</div>
     <div class="det-grid three">
-      <div class="det-item"><div class="det-item-label">Hopeful Job</div><div class="det-item-val">${a.hopeful_job||'—'}</div></div>
-      <div class="det-item"><div class="det-item-label">Pay Scale</div><div class="det-item-val">${a.pay_scale||'—'}</div></div>
-      <div class="det-item"><div class="det-item-label">Current Job</div><div class="det-item-val">${a.current_job||'—'}</div></div>
+      <div class="det-item"><div class="det-item-label">Hopeful Job</div><div class="det-item-val">${esc(a.hopeful_job)||'—'}</div></div>
+      <div class="det-item"><div class="det-item-label">Pay Scale</div><div class="det-item-val">${esc(a.pay_scale)||'—'}</div></div>
+      <div class="det-item"><div class="det-item-label">Current Job</div><div class="det-item-val">${esc(a.current_job)||'—'}</div></div>
     </div>
-    ${a.work_history?`<div class="det-item" style="margin-top:10px;grid-column:span 2"><div class="det-item-label">Work History</div><div class="det-item-val" style="font-size:13px;font-weight:400;font-family:'Barlow',sans-serif;white-space:pre-wrap">${a.work_history}</div></div>`:''}
+    ${a.work_history?`<div class="det-item" style="margin-top:10px;grid-column:span 2"><div class="det-item-label">Work History</div><div class="det-item-val" style="font-size:13px;font-weight:400;font-family:'Barlow',sans-serif;white-space:pre-wrap">${esc(a.work_history)}</div></div>`:''}
     ${a.file_url?`<div style="margin-top:10px"><a href="${a.file_url}" target="_blank" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid var(--blue);border-radius:4px;">&#128206; View Attachment</a></div>`:''}
   </div>`;
   html+=`<div class="det-section"><div class="det-section-title">Personal Info</div><div class="det-grid">
-    <div class="det-item"><div class="det-item-label">Address</div><div class="det-item-val" style="font-size:13px;font-weight:400;font-family:'Barlow',sans-serif">${w['Street Address']||'—'}<br>${w['City']||''} ${w['State']||''}</div></div>
-    <div class="det-item"><div class="det-item-label">Email</div><div class="det-item-val" style="font-size:12px;font-weight:400;font-family:'Barlow',sans-serif;word-break:break-all">${w['Email Address']||'—'}</div></div>
+    <div class="det-item"><div class="det-item-label">Address</div><div class="det-item-val" style="font-size:13px;font-weight:400;font-family:'Barlow',sans-serif">${esc(w['Street Address'])||'—'}<br>${esc(w['City'])} ${esc(w['State'])}</div></div>
+    <div class="det-item"><div class="det-item-label">Email</div><div class="det-item-val" style="font-size:12px;font-weight:400;font-family:'Barlow',sans-serif;word-break:break-all">${esc(w['Email Address'])||'—'}</div></div>
     <div class="det-item"><div class="det-item-label">Age</div><div class="det-item-val">${age!=null?age+' yrs':'—'}</div></div>
-    <div class="det-item"><div class="det-item-label">Gender</div><div class="det-item-val">${w['Gender']||'—'}</div></div>
-    <div class="det-item"><div class="det-item-label">Employment</div><div class="det-item-val" style="font-size:13px">${employment}</div></div>
-    <div class="det-item"><div class="det-item-label">Industry</div><div class="det-item-val" style="font-size:13px">${industry}</div></div>
+    <div class="det-item"><div class="det-item-label">Gender</div><div class="det-item-val">${esc(w['Gender'])||'—'}</div></div>
+    <div class="det-item"><div class="det-item-label">Employment</div><div class="det-item-val" style="font-size:13px">${esc(employment)}</div></div>
+    <div class="det-item"><div class="det-item-label">Industry</div><div class="det-item-val" style="font-size:13px">${esc(industry)}</div></div>
   </div></div>`;
   const excScore=e.total!=null?e.total:null;
   html+=`<div class="det-section"><div class="det-section-title">EXC Simulator</div>
@@ -478,7 +478,7 @@ function showDetail(phone){
   </div>`;
   html+=`<div class="det-section"><div class="det-section-title">Notes</div>
     <div id="detNotesWrap_${a.id}" style="padding:4px 0">
-      <div style="font-size:13px;color:${a.notes?'var(--text)':'var(--muted)'};font-style:${a.notes?'normal':'italic'};padding:4px 0;cursor:pointer" onclick="editDetNotes('${a.id}')" title="Click to edit">${a.notes||'<em>Click to add notes…</em>'}</div>
+      <div style="font-size:13px;color:${a.notes?'var(--text)':'var(--muted)'};font-style:${a.notes?'normal':'italic'};padding:4px 0;cursor:pointer" onclick="editDetNotes('${jsAttr(a.id)}')" title="Click to edit">${a.notes?esc(a.notes):'<em>Click to add notes…</em>'}</div>
     </div>
     <div style="font-size:11px;color:var(--muted);margin-top:6px">Last updated: ${fmtDate(a.updated_at)}</div>
   </div>`;
@@ -509,8 +509,8 @@ function cOnGeoInput(val){
       if(!data.features||!data.features.length){sug.style.display='none';return;}
       sug.innerHTML=data.features.map(f=>{
         const name=f.place_name||'';
-        const [lng,lat]=f.center;
-        return `<div onclick="cSelectGeo('${name.replace(/'/g,"\\'")}',${lat},${lng})">${name}</div>`;
+        const [lng,lat]=f.center.map(Number);
+        return `<div onclick="cSelectGeo('${jsAttr(name)}',${lat},${lng})">${esc(name)}</div>`;
       }).join('');
       sug.style.display='block';
     }catch(e){console.warn(e);}
@@ -577,12 +577,12 @@ function editDetNotes(id){
   const wrap=document.getElementById('detNotesWrap_'+id);
   if(!wrap) return;
   const a=assignments.find(x=>x.id===id);
-  wrap.innerHTML=`<textarea class="notes-inp" id="detNI_${id}" style="width:100%;min-height:80px">${a?.notes||''}</textarea>
+  wrap.innerHTML=`<textarea class="notes-inp" id="detNI_${id}" style="width:100%;min-height:80px">${esc(a?.notes)}</textarea>
     <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
-      <button class="save-notes" onclick="saveDetNotes('${id}')">Save</button>
+      <button class="save-notes" onclick="saveDetNotes('${jsAttr(id)}')">Save</button>
       <label style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:4px 10px;border:1.5px dashed var(--border);border-radius:3px;cursor:pointer;color:var(--muted)">
         &#8679; Attach File
-        <input type="file" style="display:none" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="uploadDetFile('${id}',this)">
+        <input type="file" style="display:none" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="uploadDetFile('${jsAttr(id)}',this)">
       </label>
       <span id="detFileStatus_${id}" style="font-size:11px;color:var(--muted);font-family:'Barlow Condensed',sans-serif"></span>
     </div>`;
@@ -598,7 +598,7 @@ async function saveDetNotes(id){
   renderCandidates();
   // Refresh the notes section in the popup
   const wrap=document.getElementById('detNotesWrap_'+id);
-  if(wrap) wrap.innerHTML=`<div style="font-size:13px;color:${val?'var(--text)':'var(--muted)'};font-style:${val?'normal':'italic'};padding:4px 0;cursor:pointer" onclick="editDetNotes('${id}')" title="Click to edit">${val||'<em>Click to add notes\u2026</em>'}</div>`;
+  if(wrap) wrap.innerHTML=`<div style="font-size:13px;color:${val?'var(--text)':'var(--muted)'};font-style:${val?'normal':'italic'};padding:4px 0;cursor:pointer" onclick="editDetNotes('${jsAttr(id)}')" title="Click to edit">${val?esc(val):'<em>Click to add notes\u2026</em>'}</div>`;
 }
 
 async function uploadDetFile(id,input){
@@ -607,7 +607,9 @@ async function uploadDetFile(id,input){
   if(statusEl){statusEl.style.color='var(--muted)';statusEl.textContent='Uploading\u2026';}
   const a=assignments.find(x=>x.id===id);
   const file=input.files[0];
-  const ext=file.name.split('.').pop();
+  const v=validateUploadFile(file);
+  if(!v.ok){ if(statusEl){statusEl.style.color='#f85149';statusEl.textContent=v.error;} input.value=''; return; }
+  const ext=v.ext;
   const path=`assignments/${a.phone}_${a.company_id}_${Date.now()}.${ext}`;
   const {error:upErr}=await sb.storage.from('candidate-files').upload(path,file,{upsert:true});
   if(upErr){
