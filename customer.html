@@ -244,7 +244,6 @@ function hideTip(){
 
 // normalizePhone() lives in shared.js
 function fmtDate(str){if(!str)return '—';return new Date(str).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
-function getAge(dob){if(!dob)return null;const d=new Date(dob);if(isNaN(d))return null;const n=new Date();let age=n.getFullYear()-d.getFullYear();if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate()))age--;return age>0&&age<100?age:null;}
 
 window.addEventListener('DOMContentLoaded',async()=>{
   document.getElementById('loginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
@@ -417,7 +416,6 @@ function showDetail(phone){
   const w=webData[phone]||{},e=excData[phone]||{},t=triviaData[phone]||{};
   const name=((w['First Name']||'')+' '+(w['Last Name']||'')).trim()||('Phone: '+phone);
   const certs=CERT_NAMES.filter((_,i)=>(w[CERT_COLS[i]]||'').trim()==='Yes');
-  const age=getAge(w['DOB']);
   const rawPhone=w['Mobile Phone']?String(w['Mobile Phone']).split('.')[0].replace(/[^\d]/g,''):phone;
   const ind=(w['What industry do you work in?']||'').trim();
   const indOther=(w['What industry do you work in']||'').trim();
@@ -440,8 +438,6 @@ function showDetail(phone){
   html+=`<div class="det-section"><div class="det-section-title">Personal Info</div><div class="det-grid">
     <div class="det-item"><div class="det-item-label">Address</div><div class="det-item-val" style="font-size:13px;font-weight:400;font-family:'Barlow',sans-serif">${esc(w['Street Address'])||'—'}<br>${esc(w['City'])} ${esc(w['State'])}</div></div>
     <div class="det-item"><div class="det-item-label">Email</div><div class="det-item-val" style="font-size:12px;font-weight:400;font-family:'Barlow',sans-serif;word-break:break-all">${esc(w['Email Address'])||'—'}</div></div>
-    <div class="det-item"><div class="det-item-label">Age</div><div class="det-item-val">${age!=null?age+' yrs':'—'}</div></div>
-    <div class="det-item"><div class="det-item-label">Gender</div><div class="det-item-val">${esc(w['Gender'])||'—'}</div></div>
     <div class="det-item"><div class="det-item-label">Employment</div><div class="det-item-val" style="font-size:13px">${esc(employment)}</div></div>
     <div class="det-item"><div class="det-item-label">Industry</div><div class="det-item-val" style="font-size:13px">${esc(industry)}</div></div>
   </div></div>`;
@@ -584,7 +580,7 @@ async function uploadDetFile(id,input){
 // ─── EXCEL EXPORT ─────────────────────────────────────────────────────────
 function exportExcel(){
   if(typeof XLSX==='undefined'){alert('Loading\u2026');return;}
-  const head=['Name','Phone','Email','Address','City','State','Age','Gender','Employment',
+  const head=['Name','Phone','Email','Address','City','State','Employment',
     'EXC Score','EXC Safety','EXC Productivity','Certifications',
     'Hopeful Job','Pay Scale','Current Job','Work History','Status','File'];
   const rows=assignments.map(a=>{
@@ -595,7 +591,7 @@ function exportExcel(){
     const phone=w['Mobile Phone']?String(w['Mobile Phone']).split('.')[0].replace(/[^\d]/g,''):a.phone;
     return [
       name, phone, w['Email Address']||'', w['Street Address']||'',
-      w['City']||'', w['State']||'', getAge(w['DOB'])||'', w['Gender']||'',
+      w['City']||'', w['State']||'',
       w['Job Status']||'',
       e.total!=null?e.total.toFixed(0):'DNC',
       !isNaN(e.safety)?e.safety.toFixed(0):'',
@@ -607,7 +603,7 @@ function exportExcel(){
   });
   const wb=XLSX.utils.book_new();
   const ws=XLSX.utils.aoa_to_sheet([head,...rows]);
-  ws['!cols']=[{wch:22},{wch:14},{wch:28},{wch:24},{wch:14},{wch:8},{wch:6},{wch:10},{wch:18},
+  ws['!cols']=[{wch:22},{wch:14},{wch:28},{wch:24},{wch:14},{wch:8},{wch:18},
                {wch:10},{wch:10},{wch:12},{wch:36},{wch:20},{wch:14},{wch:20},{wch:28},{wch:16},{wch:40}];
   ws['!freeze']={xSplit:0,ySplit:1,topLeftCell:'A2',activeCell:'A2',sqref:'A2'};
   XLSX.utils.book_append_sheet(wb,ws,'Candidates');
