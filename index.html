@@ -606,7 +606,18 @@ footer{border-top:1px solid var(--border);}
 .geocode-tool-btn:hover{border-color:var(--blue);color:var(--blue);}
 /* Distance column */
 .dist-badge{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--muted);}
-
+/* Floating tooltip (ported from customer.html) */
+#floatTip{position:fixed;z-index:9999;background:#1e1e1e;border:1px solid #555;color:#e0e0e0;font-family:'Barlow',sans-serif;font-size:12px;font-weight:400;padding:9px 13px;border-radius:5px;max-width:280px;line-height:1.5;text-align:left;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.6);white-space:pre-line;display:none;}
+/* Pipeline notification badge + activity feed */
+.pipe-badge{display:inline-block;min-width:16px;padding:1px 5px;margin-left:4px;background:#ce0e2d;color:#fff;border-radius:9px;font-size:10px;font-weight:700;text-align:center;vertical-align:middle;}
+.feed-head{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:10px 18px;cursor:pointer;user-select:none;border-bottom:1px solid var(--border);background:var(--surface);}
+.feed-head:hover{color:var(--text);}
+.feed-body{padding:8px 18px;border-bottom:1px solid var(--border);background:var(--surface);max-height:220px;overflow-y:auto;}
+.feed-row{display:flex;gap:8px;align-items:flex-start;font-size:13px;font-family:'Barlow',sans-serif;padding:6px 8px;border-radius:4px;line-height:1.4;}
+.feed-row.unread{background:rgba(206,14,45,.08);border-left:3px solid #ce0e2d;}
+.feed-reason{font-size:12px;color:var(--muted);font-style:italic;margin-top:2px;}
+/* Rejection count badge on pipeline rows */
+.rej-badge{display:inline-block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;background:rgba(248,81,73,.15);color:#f85149;border:1px solid rgba(248,81,73,.4);padding:1px 6px;border-radius:9px;margin-left:6px;cursor:default;vertical-align:middle;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -689,7 +700,7 @@ footer{border-top:1px solid var(--border);}
 
 <div id="pipeTabBar" style="display:none;background:#111;border-bottom:1px solid var(--border);padding:0 18px;flex-shrink:0;display:none;">
   <button class="pipe-tab active" id="tabAnalytics" onclick="switchPipeTab('analytics')" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 18px;background:transparent;border:none;border-bottom:2px solid #ce0e2d;color:#ce0e2d;cursor:pointer;margin-bottom:-1px;">&#9632; Analytics</button>
-  <button class="pipe-tab" id="tabPipeline" onclick="switchPipeTab('pipeline')" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 18px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;margin-bottom:-1px;">&#9632; Pipeline</button>
+  <button class="pipe-tab" id="tabPipeline" onclick="switchPipeTab('pipeline')" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 18px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;margin-bottom:-1px;">&#9632; Pipeline <span id="pipeBadge" class="pipe-badge" style="display:none">0</span></button>
 </div>
 <div id="appLayout" style="display:none;">
   <!-- SIDEBAR -->
@@ -970,6 +981,26 @@ let showSelectedOnly=false; // toggle: show only checked participants
 const PIE_PALETTE=['#f0a500','#e85d04','#3fb950','#58a6ff','#bc8cff','#f85149','#39c5cf','#ff6eb4','#56d4c8','#ff9f43','#a8ff78','#ffd700','#ff6b9d','#c0c0c0','#87ceeb','#dda0dd'];
 const CERT_NAMES=['CDL','HEO Cert','Journeyman Electrician','Master Electrician','NEC Cert','CCM','PMP','CCO','EPA 608 Cert','HVAC Excellence Cert','Journeyman Plumber License','Master Plumber License','CW','CWI','CLC','MCAA'];
 const CERT_COLS=['Trade Certifications or Licenses','Trade Certifications or Licenses_1','Trade Certifications or Licenses_2','Trade Certifications or Licenses_3','Trade Certifications or Licenses_4','Trade Certifications or Licenses_5','Trade Certifications or Licenses_6','Trade Certifications or Licenses_7','Trade Certifications or Licenses_8','Trade Certifications or Licenses_9','Trade Certifications or Licenses_10','Trade Certifications or Licenses_11','Trade Certifications or Licenses_12','Trade Certifications or Licenses_13','Trade Certifications or Licenses_14','Trade Certifications or Licenses_15'];
+// EDIT HERE: full name + description shown when hovering a cert name.
+// Keys must match CERT_NAMES exactly.
+const CERT_INFO={
+  'CDL':{full:'Commercial Driver’s License',desc:'State-issued license required to operate large or heavy vehicles such as semi-trucks, dump trucks, and buses.'},
+  'HEO Cert':{full:'Heavy Equipment Operator Certification',desc:'Certifies training to safely operate heavy machinery like excavators, loaders, bulldozers, and graders.'},
+  'Journeyman Electrician':{full:'Journeyman Electrician License',desc:'Licensed electrician who has completed an apprenticeship and can work independently on electrical systems.'},
+  'Master Electrician':{full:'Master Electrician License',desc:'Highest electrician license level — can design electrical systems, pull permits, and supervise journeymen and apprentices.'},
+  'NEC Cert':{full:'National Electrical Code Certification',desc:'Certifies knowledge of the NEC, the national standard for safe electrical design, installation, and inspection.'},
+  'CCM':{full:'Certified Construction Manager',desc:'Professional certification for managing construction projects from planning through completion.'},
+  'PMP':{full:'Project Management Professional',desc:'Globally recognized certification for leading projects, schedules, budgets, and teams.'},
+  'CCO':{full:'Certified Crane Operator (NCCCO)',desc:'National certification to safely operate cranes and other lifting equipment.'},
+  'EPA 608 Cert':{full:'EPA Section 608 Technician Certification',desc:'Federal certification required to service equipment containing refrigerants, such as AC and refrigeration systems.'},
+  'HVAC Excellence Cert':{full:'HVAC Excellence Certification',desc:'Industry credential validating skills in heating, ventilation, air conditioning, and refrigeration work.'},
+  'Journeyman Plumber License':{full:'Journeyman Plumber License',desc:'Licensed plumber who has completed an apprenticeship and can install and repair plumbing systems independently.'},
+  'Master Plumber License':{full:'Master Plumber License',desc:'Highest plumbing license level — can design systems, pull permits, and supervise journeymen and apprentices.'},
+  'CW':{full:'Certified Welder (AWS)',desc:'American Welding Society credential verifying tested, hands-on welding skill to industry standards.'},
+  'CWI':{full:'Certified Welding Inspector (AWS)',desc:'American Welding Society credential to inspect welds and verify they meet codes and quality standards.'},
+  'CLC':{full:'Construction Labor Certification',desc:'Certifies foundational construction-site skills, safety awareness, and readiness for general labor work.'},
+  'MCAA':{full:'Mechanical Contractors Association of America Certification',desc:'Credential from the MCAA covering mechanical trade skills such as pipefitting, plumbing, and HVAC service.'}
+};
 const TRIVIA_COLS={'Auto Mechanic':'Trivia Auto Mechanic Score','Civil Construction':'Trivia Civil Construction Score','Electrical':'Trivia Electrical Score','Plumbing':'Trivia Plumbing Score','Welding':'Trivia Welding Score','Construction Labor':'Trivia Construction Labor Score','HVAC':'Trivia HVAC Score','Warehouse':'Trivia Warehouse Score','Heavy Equipment Tech':'Trivia Heavy Equipment Technician Score'};
 
 let filters={events:new Set(),excMin:0,excMax:100,jobInterest:new Set(),employment:new Set(),scoreSegs:new Set(),ageGroups:new Set(),gender:new Set(),states:new Set(),trivia:new Set(),triviaScoreMin:0,triviaScoreMax:20,certs:new Set()};
@@ -1121,6 +1152,7 @@ async function refreshData(){
   try{
     clearCache();
     await fetchFresh(true);
+    loadStatusEvents(); // keep the Pipeline notification badge fresh
   }catch(err){console.error('Refresh error:',err);}
   finally{hideLoading();}
 }
@@ -1264,11 +1296,42 @@ function buildSidebar(){
   const sc={};rawWeb.forEach(r=>{const s=(r['State']||'').trim();if(s)sc[s]=(sc[s]||0)+1;});
   buildChipFilter('fState',Object.entries(sc).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([s])=>s),'states');
   buildChipFilter('fTrivia',Object.keys(TRIVIA_COLS),'trivia');
-  buildChipFilter('fCerts',CERT_NAMES,'certs');
+  const certTips={};CERT_NAMES.forEach(n=>{const i=CERT_INFO[n];if(i)certTips[n]=i.full+'\n'+i.desc;});
+  buildChipFilter('fCerts',CERT_NAMES,'certs',{},certTips);
 }
-function buildChipFilter(id,opts,key,lm={}){
+// Floating tooltip (ported from customer.html) — driven by data-tip, textContent-safe.
+function showTip(e,el){
+  const tip=document.getElementById('floatTip');
+  if(!tip)return;
+  tip.textContent=el.dataset.tip||'';
+  tip.style.display='block';
+  positionTip(e,tip);
+  el.onmousemove=ev=>positionTip(ev,tip);
+}
+function positionTip(e,tip){
+  const x=e.clientX,y=e.clientY,tw=tip.offsetWidth,th=tip.offsetHeight,vw=window.innerWidth;
+  let left=x-tw/2,top=y-th-12;
+  if(left<8)left=8;
+  if(left+tw>vw-8)left=vw-tw-8;
+  if(top<8)top=y+20;
+  tip.style.left=left+'px';tip.style.top=top+'px';
+}
+function hideTip(){
+  const tip=document.getElementById('floatTip');
+  if(tip)tip.style.display='none';
+}
+// Word-wrap a string into lines of ~width chars (Chart.js renders arrays as lines).
+function wrapTip(text,width){
+  const words=String(text||'').split(' '),lines=[];let line='';
+  words.forEach(w=>{if(line&&(line+' '+w).length>width){lines.push(line);line=w;}else line=line?line+' '+w:w;});
+  if(line)lines.push(line);
+  return lines;
+}
+function buildChipFilter(id,opts,key,lm={},tips={}){
   const c=document.getElementById(id);c.innerHTML='';
-  opts.forEach(opt=>{const ch=document.createElement('button');const isActive=filters[key] instanceof Set&&filters[key].has(opt);ch.className='filter-chip'+(isActive?' active':'');ch.textContent=lm[opt]||opt;ch.dataset.value=opt;ch.onclick=()=>{
+  opts.forEach(opt=>{const ch=document.createElement('button');const isActive=filters[key] instanceof Set&&filters[key].has(opt);ch.className='filter-chip'+(isActive?' active':'');ch.textContent=lm[opt]||opt;ch.dataset.value=opt;
+  if(tips[opt]){ch.dataset.tip=tips[opt];ch.onmouseenter=e=>showTip(e,ch);ch.onmouseleave=hideTip;}
+  ch.onclick=()=>{
     if(filters[key] instanceof Set){if(filters[key].has(opt))filters[key].delete(opt);else filters[key].add(opt);ch.classList.toggle('active',filters[key].has(opt));}
     // Enable trivia score slider only when exactly 1 trivia test selected
     if(key==='trivia'){const ts=document.getElementById('triviaScoreSection');if(ts){const active=filters.trivia.size===1;ts.style.opacity=active?'1':'0.4';ts.style.pointerEvents=active?'auto':'none';}}
@@ -1338,7 +1401,7 @@ function renderGrid(webRows,excRows,winRows){
   const ahK=ageBins.filter(b=>ac[b]>0),ahV=ahK.map(b=>ac[b]);
   charts.age=new Chart(document.getElementById('chartAge'),{type:'bar',data:{labels:ahK,datasets:[{label:'Participants',data:ahV,backgroundColor:ahV.map((_,i)=>{const t=i/ahV.length;return 'rgba(240,'+Math.round(165*(1-t)+88*t)+','+Math.round(t*4)+',0.85)';}),borderColor:'transparent',borderRadius:3}]},options:{...co,plugins:{...co.plugins,legend:{display:false}},scales:{x:{ticks:{color:'#8b949e',font:{family:'Barlow Condensed',size:10}},grid:{color:'#21262d'}},y:{ticks:{color:'#8b949e',font:{family:'Barlow Condensed',size:10}},grid:{color:'#21262d'}}},onClick:(e,els)=>{if(!els.length)return;toggleFilter('ageGroups',ahK[els[0].index]);}}});
   const cc=CERT_NAMES.map((name,i)=>({name,count:webRows.filter(r=>r[CERT_COLS[i]]==='Yes').length})).filter(c=>c.count>0).sort((a,b)=>b.count-a.count);
-  charts.certs=new Chart(document.getElementById('chartCerts'),{type:'bar',data:{labels:cc.map(c=>c.name),datasets:[{data:cc.map(c=>c.count),backgroundColor:cc.map(c=>filters.certs.has(c.name)?'#f0a500':PIE_PALETTE[cc.indexOf(c)%PIE_PALETTE.length]+'cc'),borderColor:'transparent',borderRadius:3}]},options:{...co,indexAxis:'y',plugins:{...co.plugins,legend:{display:false}},scales:{x:{ticks:{color:'#8b949e',font:{family:'Barlow Condensed',size:10}},grid:{color:'#21262d'}},y:{ticks:{color:'#e6edf3',font:{family:'Barlow Condensed',size:12,weight:'700'},padding:4},grid:{color:'#21262d'},afterFit(scale){scale.width=220;}}},onClick:(e,els)=>{if(!els.length)return;toggleFilter('certs',cc[els[0].index].name);}}});
+  charts.certs=new Chart(document.getElementById('chartCerts'),{type:'bar',data:{labels:cc.map(c=>c.name),datasets:[{data:cc.map(c=>c.count),backgroundColor:cc.map(c=>filters.certs.has(c.name)?'#f0a500':PIE_PALETTE[cc.indexOf(c)%PIE_PALETTE.length]+'cc'),borderColor:'transparent',borderRadius:3}]},options:{...co,indexAxis:'y',plugins:{...co.plugins,legend:{display:false},tooltip:{callbacks:{title:items=>(CERT_INFO[items[0].label]?.full)||items[0].label,afterBody:items=>{const i=CERT_INFO[items[0].label];return i?wrapTip(i.desc,46):'';}}}},scales:{x:{ticks:{color:'#8b949e',font:{family:'Barlow Condensed',size:10}},grid:{color:'#21262d'}},y:{ticks:{color:'#e6edf3',font:{family:'Barlow Condensed',size:12,weight:'700'},padding:4},grid:{color:'#21262d'},afterFit(scale){scale.width=220;}}},onClick:(e,els)=>{if(!els.length)return;toggleFilter('certs',cc[els[0].index].name);}}});
   const stC={};webRows.forEach(r=>{const s=(r['State']||'').trim();if(s)stC[s]=(stC[s]||0)+1;});
   document.getElementById('stateGrid').innerHTML=Object.entries(stC).sort((a,b)=>b[1]-a[1]).map(([s,c])=>'<div class="state-row" style="'+(filters.states.has(s)?'border-left-color:var(--accent)':'')+'" onclick="toggleFilter(\'states\',\''+jsAttr(s)+'\')"><span class="state-name">'+esc(s)+'</span><span class="state-count">'+c+'</span></div>').join('');
   const td=Object.entries(TRIVIA_COLS).map(([name,col])=>{const vals=winRows.map(r=>parseFloat(r[col])).filter(v=>!isNaN(v));return{name,count:vals.length,avg:vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0};}).sort((a,b)=>b.count-a.count);
@@ -2044,6 +2107,71 @@ let assignments = [];         // [{id, phone, company_id, ...}]
 let assignPhone = null;       // phone of candidate being assigned
 let pipeSort = {col:'updated', dir:-1};
 
+// ── Status events: Hired/Rejected notifications + rejection history ─────────
+// Populated from the status_events table (see supabase-status-events.sql).
+let statusEvents = [];        // Hired/Rejected events, newest first
+let feedOpen = false;
+
+async function loadStatusEvents(){
+  try{
+    const {data,error} = await sb.from('status_events').select('*')
+      .in('new_status',['Hired','Rejected'])
+      .order('changed_at',{ascending:false}).limit(2000);
+    if(error){ console.warn('status_events load failed (has supabase-status-events.sql been applied?):', error.message); return; }
+    statusEvents = data||[];
+    if(statusEvents.some(e=>!e.seen)) feedOpen = true;
+    updatePipeBadge();
+    renderActivityFeed();
+  }catch(e){ console.warn('status_events load failed:', e); }
+}
+
+function updatePipeBadge(){
+  const b = document.getElementById('pipeBadge');
+  if(!b) return;
+  const n = statusEvents.filter(e=>!e.seen).length;
+  b.textContent = n;
+  b.style.display = n ? 'inline-block' : 'none';
+}
+
+function eventCandidateName(ev){
+  const w = rawWeb.find(r=>normalizePhone(r['Mobile Phone']||'')===ev.phone);
+  const nm = w ? ((w['First Name']||'')+' '+(w['Last Name']||'')).trim() : '';
+  return nm || ('Phone: '+ev.phone);
+}
+
+function toggleActivityFeed(){ feedOpen=!feedOpen; renderActivityFeed(); }
+
+function renderActivityFeed(){
+  const el = document.getElementById('pipeActivity');
+  if(!el) return;
+  if(!statusEvents.length){ el.innerHTML=''; return; }
+  const unread = statusEvents.filter(e=>!e.seen).length;
+  const rows = statusEvents.slice(0,20).map(ev=>{
+    const hired = ev.new_status==='Hired';
+    const col = hired ? 'var(--green)' : '#f85149';
+    return `<div class="feed-row${ev.seen?'':' unread'}">
+      <span style="color:${col};font-weight:700">${hired?'&#10003;':'&#10005;'}</span>
+      <span><b>${esc(ev.company_name||'Unknown company')}</b> <span style="color:${col};font-weight:700">${hired?'hired':'rejected'}</span> <b>${esc(eventCandidateName(ev))}</b><span style="color:var(--muted)"> &mdash; ${timeAgo(ev.changed_at)}</span>
+      ${ev.reason?`<div class="feed-reason">&ldquo;${esc(ev.reason)}&rdquo;</div>`:''}</span>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="feed-head" onclick="toggleActivityFeed()">${feedOpen?'&#9662;':'&#9656;'} Recent Hired / Rejected Activity (${statusEvents.length}${unread?`, <span style="color:#ce0e2d">${unread} new</span>`:''})</div>${feedOpen?`<div class="feed-body">${rows}</div>`:''}`;
+}
+
+async function markEventsSeen(){
+  const ids = statusEvents.filter(e=>!e.seen).map(e=>e.id);
+  if(!ids.length) return;
+  const {error} = await sb.from('status_events').update({seen:true}).in('id',ids);
+  if(!error){ statusEvents.forEach(e=>e.seen=true); updatePipeBadge(); }
+}
+
+// phone -> rejection events (all-time, across companies — survives unassignment)
+function rejInfoByPhone(){
+  const m={};
+  statusEvents.forEach(e=>{ if(e.new_status!=='Rejected')return; (m[e.phone]=m[e.phone]||[]).push(e); });
+  return m;
+}
+
 // ── Load CRM data alongside main data ────────────────────────────────────────
 async function loadCRMData(){
   try{
@@ -2056,11 +2184,12 @@ async function loadCRMData(){
     // Populate pipeline company filter
     const cf = document.getElementById('pipeCompanyFilter');
     if(cf){
-      cf.innerHTML = '<option value="">All Companies</option>';
+      cf.innerHTML = '<option value="">All Companies</option><option value="UNASSIGNED">&#9632; Unassigned Pipeline</option>';
       companies.forEach(c=>{
         const o=document.createElement('option');o.value=c.id;o.textContent=c.name;cf.appendChild(o);
       });
     }
+    await loadStatusEvents(); // badge/feed/rejection history
   } catch(e){ console.error('CRM load error:',e); }
 }
 
@@ -2075,7 +2204,7 @@ function switchPipeTab(tab){
     pipeline.style.display='flex';
     tA.style.color='var(--muted)';tA.style.borderBottomColor='transparent';
     tP.style.color='#ce0e2d';tP.style.borderBottomColor='#ce0e2d';
-    loadCRMData().then(renderPipeline);
+    loadCRMData().then(()=>{ renderPipeline(); markEventsSeen(); });
   } else {
     analytics.style.display='flex';
     pipeline.style.display='none';
@@ -2261,11 +2390,15 @@ function renderPipeline(){
     tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted);font-style:italic;">No assignments found.</td></tr>';
     return;
   }
-  tbody.innerHTML = rows.map(r=>`
+  const rejMap = rejInfoByPhone();
+  tbody.innerHTML = rows.map(r=>{
+    const rej = rejMap[r.phone]||[];
+    const rejTip = 'Rejections:\n'+rej.map(e=>`${e.company_name||'Unknown'} (${timeAgo(e.changed_at)}): ${e.reason||'no reason given'}`).join('\n');
+    return `
     <tr>
-      <td><span class="pipe-name">${esc(r.name)}</span><br><span style="font-size:11px;color:var(--muted)">${esc(r.phone)}</span></td>
+      <td><span class="pipe-name">${esc(r.name)}</span>${rej.length?`<span class="rej-badge" data-tip="${esc(rejTip)}" onmouseenter="showTip(event,this)" onmouseleave="hideTip()">&#10005; ${rej.length}</span>`:''}<br><span style="font-size:11px;color:var(--muted)">${esc(r.phone)}</span></td>
       <td><span class="pipe-company" style="${!r.company_id?'color:var(--amber)':''}">${esc(r.companyName)}</span></td>
-      <td><span class="${statusClass(r.status)}">${esc(r.status)||'Not Contacted'}</span></td>
+      <td><span class="${statusClass(r.status)}">${esc(r.status)||'Not Contacted'}</span>${r.status_changed_at?`<br><span class="pipe-time" style="font-size:10px">${timeAgo(r.status_changed_at)}</span>`:''}</td>
       <td style="font-size:12px">${esc(r.hopeful_job)||'—'}</td>
       <td style="font-size:12px">${esc(r.pay_scale)||'—'}</td>
       <td style="font-size:12px">${esc(r.current_job)||'—'}</td>
@@ -2283,8 +2416,9 @@ function renderPipeline(){
       <td style="white-space:nowrap;display:flex;gap:6px;align-items:center">
         <button onclick="openPipeEdit('${jsAttr(r.id)}')" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border:1.5px solid var(--border);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;white-space:nowrap;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">&#9998; Edit</button>
         <button onclick="pipelineUnassign('${jsAttr(r.id)}','${jsAttr(r.name)}','${jsAttr(r.companyName)}',this)" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border:1.5px solid #f85149;background:transparent;color:#f85149;border-radius:3px;cursor:pointer;white-space:nowrap;transition:all .15s;" onmouseover="this.style.background='#f85149';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#f85149'">&#x2715; Unassign</button>
+        ${r.status==='Rejected'&&r.company_id?`<button onclick="pipelineMoveToUnassigned('${jsAttr(r.id)}','${jsAttr(r.name)}','${jsAttr(r.companyName)}',this)" title="Remove this rejected candidate from the company and return them to the Unassigned Pipeline (rejection history is kept)" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border:1.5px solid var(--amber);background:transparent;color:var(--amber);border-radius:3px;cursor:pointer;white-space:nowrap;transition:all .15s;" onmouseover="this.style.background='var(--amber)';this.style.color='#000'" onmouseout="this.style.background='transparent';this.style.color='var(--amber)'">&#8594; Pool</button>`:''}
       </td>
-    </tr>`).join('');
+    </tr>`;}).join('');
 }
 
 // ── PIPELINE EXCEL EXPORT ─────────────────────────────────────────────────────
@@ -2317,6 +2451,36 @@ async function pipelineUnassign(id, name, company, btn){
   if(error){ alert('Error: '+error.message); btn.disabled=false; btn.textContent='✕ Unassign'; return; }
   // Remove row from DOM immediately
   btn.closest('tr').remove();
+  await loadCRMData();
+  renderPipeline();
+}
+
+// Move a rejected candidate off a company and back into the Unassigned
+// Pipeline. Their rejection history is kept (status_events is keyed by phone).
+async function pipelineMoveToUnassigned(id, name, company, btn){
+  if(!confirm('Move ' + name + ' from ' + company + ' back to the Unassigned Pipeline? Their rejection history is kept.')) return;
+  const r = assignments.find(x=>x.id===id);
+  if(!r){ alert('Assignment not found — refresh and try again.'); return; }
+  btn.textContent='Moving…';btn.disabled=true;
+  const {data:{user}} = await sb.auth.getUser();
+  // Can't upsert on a null company_id, so delete any existing pool row first
+  // (same pattern as saveToUnassigned), then delete the rejected assignment.
+  await sb.from('candidate_assignments').delete().eq('phone', r.phone).is('company_id', null);
+  const {error:delErr} = await sb.from('candidate_assignments').delete().eq('id', id);
+  if(delErr){ alert('Error: '+delErr.message); btn.disabled=false; btn.textContent='→ Pool'; return; }
+  const {error} = await sb.from('candidate_assignments').insert({
+    phone:        r.phone,
+    company_id:   null,
+    status:       'Not Contacted',
+    hopeful_job:  r.hopeful_job||'',
+    pay_scale:    r.pay_scale||'',
+    current_job:  r.current_job||'',
+    work_history: r.work_history||'',
+    notes:        r.notes||'',
+    file_url:     r.file_url||null,
+    assigned_by:  user?.email || '',
+  });
+  if(error){ alert('Error re-adding to pool: '+error.message); }
   await loadCRMData();
   renderPipeline();
 }
@@ -2454,6 +2618,16 @@ function openPipeEdit(id){
   exEl.innerHTML = r.file_url
     ? `<a href="${r.file_url}" target="_blank" style="color:var(--blue)">&#128206; View current file</a>`
     : '<span style="color:var(--muted)">No file attached</span>';
+  // Rejection history (all-time, across companies)
+  const histEl = document.getElementById('pipeEditRejHist');
+  if(histEl){
+    const rej = (rejInfoByPhone()[r.phone])||[];
+    histEl.style.display = rej.length ? 'block' : 'none';
+    histEl.innerHTML = rej.length
+      ? '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#f85149;margin-bottom:6px;">Rejection History ('+rej.length+')</div>'
+        + rej.map(e=>`<div style="font-size:12px;font-family:'Barlow',sans-serif;color:var(--text);padding:5px 8px;background:rgba(248,81,73,.07);border-left:2px solid rgba(248,81,73,.5);border-radius:3px;margin-bottom:4px;line-height:1.4;"><b>${esc(e.company_name||'Unknown')}</b> <span style="color:var(--muted)">— ${timeAgo(e.changed_at)}</span><br>${esc(e.reason)||'<i style="color:var(--muted)">no reason given</i>'}</div>`).join('')
+      : '';
+  }
   document.getElementById('pipeEditMsg').textContent = '';
   document.getElementById('pipeEditOverlay').classList.add('open');
 }
@@ -2493,9 +2667,12 @@ async function savePipeEdit(){
   }
 
   const newCompanyId = document.getElementById('pipeEditCompany').value || null;
+  const newStatus = document.getElementById('pipeEditStatus').value;
   const updates = {
     company_id:   newCompanyId,
-    status:       document.getElementById('pipeEditStatus').value,
+    status:       newStatus,
+    // clear a stale company-typed reason if staff move the status off Rejected
+    ...(newStatus!=='Rejected' ? {rejection_reason:null} : {}),
     hopeful_job:  document.getElementById('pipeEditHopefulJob').value.trim(),
     pay_scale:    document.getElementById('pipeEditPayScale').value.trim(),
     current_job:  document.getElementById('pipeEditCurrentJob').value.trim(),
@@ -2852,6 +3029,7 @@ async function bulkAddToUnassigned(){
 
 <!-- ══ PIPELINE PANEL ══ -->
 <div id="pipelinePanel" style="display:none;flex:1;overflow-y:auto;flex-direction:column;">
+  <div id="pipeActivity"></div>
   <div class="pipe-toolbar">
     <select class="pipe-filter-select" id="pipeCompanyFilter" onchange="renderPipeline()">
       <option value="">All Companies</option>
@@ -3024,6 +3202,7 @@ async function bulkAddToUnassigned(){
           <option>Rejected</option>
         </select>
       </div>
+      <div id="pipeEditRejHist" style="display:none;margin-bottom:14px;"></div>
       <div class="assign-field">
         <label class="assign-label">Hopeful Job</label>
         <input class="assign-input" id="pipeEditHopefulJob" placeholder="e.g. CDL Driver, Welder&hellip;">
@@ -3097,5 +3276,6 @@ async function bulkAddToUnassigned(){
 </div>
 
 <div id="geoFloatSugg" style="display:none;position:fixed;z-index:9998;background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px;max-height:200px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.5);min-width:240px;"></div>
+<div id="floatTip"></div>
 </body>
 </html>

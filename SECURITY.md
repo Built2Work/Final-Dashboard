@@ -28,6 +28,13 @@ security.
 > phones server-side. See the performance note in the file for indexing on large
 > tables.
 
+**Also apply [`supabase-status-events.sql`](./supabase-status-events.sql)** (after
+`supabase-rls.sql` — it reuses its helper functions). It adds status-change
+timestamps, the rejection-reason column, and the `status_events` log that powers
+the Pipeline tab's Hired/Rejected notifications and rejection history. Without it
+the dashboards still work, but status timestamps, the notification badge, and
+rejection tracking stay empty.
+
 ## 2. Restrict the Mapbox token (recommended)
 
 The Mapbox token is a public `pk.` token — fine to expose, but it should be
