@@ -176,6 +176,22 @@ tr:hover td{background:var(--surface2);}
   </div>
 </div>
 <div class="det-overlay" id="detOverlay" onclick="closeDetail(event)"><div class="det-modal"><div class="det-header"><div><div class="det-name" id="detName"></div><div class="det-sub" id="detSub"></div></div><button class="det-close" onclick="closeDetail()">&#x2715;</button></div><div class="det-body" id="detBody"></div></div></div>
+
+<!-- Rejection reason modal: required before a status can be set to Rejected -->
+<div class="det-overlay" id="rejOverlay" style="z-index:900">
+  <div class="det-modal" style="width:460px;border-top-color:#f85149;">
+    <div class="det-header"><div><div class="det-name">Rejection Reason</div><div class="det-sub" id="rejName"></div></div></div>
+    <div class="det-body">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5;">Please explain why this candidate is being rejected. A reason is required &mdash; it will be shared with Built to Work staff.</div>
+      <textarea id="rejReason" rows="4" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;padding:10px;resize:vertical;box-sizing:border-box;"></textarea>
+      <div id="rejError" style="display:none;color:#f85149;font-size:12px;margin-top:6px;font-weight:600;">A reason is required to reject a candidate.</div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px;">
+        <button class="tb-btn" style="border:1.5px solid var(--border);background:transparent;color:var(--muted);" onclick="rejCancel()">Cancel</button>
+        <button class="tb-btn" style="border:1.5px solid #f85149;background:rgba(248,81,73,.15);color:#f85149;" onclick="rejConfirm()">Confirm Rejection</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
 
 // SUPABASE_URL/SUPABASE_ANON, the `sb` client, MAPBOX_TOKEN, normalizePhone(),
@@ -406,10 +422,50 @@ function renderCandidates(){
   }).join('');
 }
 
+// Rejection-reason modal: promptRejectReason() resolves to the typed reason,
+// or null if the company cancels.
+let _rejResolve=null;
+function promptRejectReason(name){
+  return new Promise(res=>{
+    _rejResolve=res;
+    document.getElementById('rejName').textContent=name||'';
+    document.getElementById('rejReason').value='';
+    document.getElementById('rejError').style.display='none';
+    document.getElementById('rejOverlay').classList.add('open');
+    setTimeout(()=>document.getElementById('rejReason').focus(),50);
+  });
+}
+function rejConfirm(){
+  const t=document.getElementById('rejReason').value.trim();
+  if(!t){document.getElementById('rejError').style.display='block';return;}
+  closeRej(t);
+}
+function rejCancel(){closeRej(null);}
+function closeRej(val){
+  document.getElementById('rejOverlay').classList.remove('open');
+  if(_rejResolve){_rejResolve(val);_rejResolve=null;}
+}
+
 async function updateStatus(id,sel){
-  const s=sel.value;sel.className='status-sel '+(STATUS_MAP[s]||'s-nc');
-  await sb.from('candidate_assignments').update({status:s}).eq('id',id);
-  const a=assignments.find(x=>x.id===id);if(a){a.status=s;a.updated_at=new Date().toISOString();}
+  const a=assignments.find(x=>x.id===id);
+  const prev=a?.status||'Not Contacted';
+  const s=sel.value;
+  if(s===prev)return;
+  let reason=null;
+  if(s==='Rejected'){
+    const w=a?webData[a.phone]:null;
+    const name=w?((w['First Name']||'')+' '+(w['Last Name']||'')).trim():'';
+    reason=await promptRejectReason(name);
+    if(reason===null){sel.value=prev;return;} // cancelled — revert, no write
+  }
+  const updates={status:s,rejection_reason:s==='Rejected'?reason:null};
+  const {error}=await sb.from('candidate_assignments').update(updates).eq('id',id);
+  if(error){sel.value=prev;sel.className='status-sel '+(STATUS_MAP[prev]||'s-nc');alert('Could not save status: '+error.message);return;}
+  sel.className='status-sel '+(STATUS_MAP[s]||'s-nc');
+  if(a){
+    a.status=s;a.rejection_reason=updates.rejection_reason;
+    a.status_changed_at=new Date().toISOString();a.updated_at=a.status_changed_at;
+  }
 }
 function showDetail(phone){
   const a=assignments.find(x=>x.phone===phone)||{};
@@ -426,12 +482,15 @@ function showDetail(phone){
   document.getElementById('detName').textContent=name;
   document.getElementById('detSub').innerHTML=esc(rawPhone)+' &bull; '+(esc(w['Email Address'])||'—')+' &bull; '+esc(w['City'])+' '+esc(w['State']);
   let html='';
+  const statusCls=STATUS_MAP[a.status]||'s-nc';
   html+=`<div class="det-section"><div class="det-section-title">Assignment</div>
     <div class="det-grid three">
+      <div class="det-item"><div class="det-item-label">Status</div><div class="det-item-val"><span class="status-sel ${statusCls}" style="background-image:none;padding:3px 8px;cursor:default;">${esc(a.status)||'Not Contacted'}</span>${a.status_changed_at?`<div style="font-size:11px;font-weight:400;color:var(--muted);margin-top:4px;">changed ${timeAgo(a.status_changed_at)}</div>`:''}</div></div>
       <div class="det-item"><div class="det-item-label">Hopeful Job</div><div class="det-item-val">${esc(a.hopeful_job)||'—'}</div></div>
       <div class="det-item"><div class="det-item-label">Pay Scale</div><div class="det-item-val">${esc(a.pay_scale)||'—'}</div></div>
       <div class="det-item"><div class="det-item-label">Current Job</div><div class="det-item-val">${esc(a.current_job)||'—'}</div></div>
     </div>
+    ${a.status==='Rejected'&&a.rejection_reason?`<div class="det-item" style="margin-top:10px;border-color:rgba(248,81,73,.4);"><div class="det-item-label" style="color:#f85149;">Rejection Reason</div><div class="det-item-val" style="font-size:13px;font-weight:400;font-family:'Barlow',sans-serif;white-space:pre-wrap">${esc(a.rejection_reason)}</div></div>`:''}
     ${a.work_history?`<div class="det-item" style="margin-top:10px;grid-column:span 2"><div class="det-item-label">Work History</div><div class="det-item-val" style="font-size:13px;font-weight:400;font-family:'Barlow',sans-serif;white-space:pre-wrap">${esc(a.work_history)}</div></div>`:''}
     ${a.file_url?`<div style="margin-top:10px"><a href="${a.file_url}" target="_blank" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid var(--blue);border-radius:4px;">&#128206; View Attachment</a></div>`:''}
   </div>`;

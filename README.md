@@ -39,3 +39,7 @@ Access control depends on Supabase Row-Level Security. **Before relying on this
 in production, read [`SECURITY.md`](./SECURITY.md) and apply
 [`supabase-rls.sql`](./supabase-rls.sql).** Without RLS the public anon key
 exposes all candidate PII.
+
+Then apply [`supabase-status-events.sql`](./supabase-status-events.sql) — it adds
+the status-change log behind the Pipeline tab's Hired/Rejected notifications,
+"status changed X ago" timestamps, and per-candidate rejection history.

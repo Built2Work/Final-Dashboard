@@ -606,7 +606,8 @@ footer{border-top:1px solid var(--border);}
 .geocode-tool-btn:hover{border-color:var(--blue);color:var(--blue);}
 /* Distance column */
 .dist-badge{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--muted);}
-
+/* Floating tooltip (ported from customer.html) */
+#floatTip{position:fixed;z-index:9999;background:#1e1e1e;border:1px solid #555;color:#e0e0e0;font-family:'Barlow',sans-serif;font-size:12px;font-weight:400;padding:9px 13px;border-radius:5px;max-width:280px;line-height:1.5;text-align:left;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.6);white-space:pre-line;display:none;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -974,6 +975,26 @@ let showSelectedOnly=false; // toggle: show only checked participants
 const PIE_PALETTE=['#f0a500','#e85d04','#3fb950','#58a6ff','#bc8cff','#f85149','#39c5cf','#ff6eb4','#56d4c8','#ff9f43','#a8ff78','#ffd700','#ff6b9d','#c0c0c0','#87ceeb','#dda0dd'];
 const CERT_NAMES=['CDL','HEO Cert','Journeyman Electrician','Master Electrician','NEC Cert','CCM','PMP','CCO','EPA 608 Cert','HVAC Excellence Cert','Journeyman Plumber License','Master Plumber License','CW','CWI','CLC','MCAA'];
 const CERT_COLS=['Trade Certifications or Licenses','Trade Certifications or Licenses_1','Trade Certifications or Licenses_2','Trade Certifications or Licenses_3','Trade Certifications or Licenses_4','Trade Certifications or Licenses_5','Trade Certifications or Licenses_6','Trade Certifications or Licenses_7','Trade Certifications or Licenses_8','Trade Certifications or Licenses_9','Trade Certifications or Licenses_10','Trade Certifications or Licenses_11','Trade Certifications or Licenses_12','Trade Certifications or Licenses_13','Trade Certifications or Licenses_14','Trade Certifications or Licenses_15'];
+// EDIT HERE: full name + description shown when hovering a cert name.
+// Keys must match CERT_NAMES exactly. Keep in sync with index.html.
+const CERT_INFO={
+  'CDL':{full:'Commercial Driver’s License',desc:'State-issued license required to operate large or heavy vehicles such as semi-trucks, dump trucks, and buses.'},
+  'HEO Cert':{full:'Heavy Equipment Operator Certification',desc:'Certifies training to safely operate heavy machinery like excavators, loaders, bulldozers, and graders.'},
+  'Journeyman Electrician':{full:'Journeyman Electrician License',desc:'Licensed electrician who has completed an apprenticeship and can work independently on electrical systems.'},
+  'Master Electrician':{full:'Master Electrician License',desc:'Highest electrician license level — can design electrical systems, pull permits, and supervise journeymen and apprentices.'},
+  'NEC Cert':{full:'National Electrical Code Certification',desc:'Certifies knowledge of the NEC, the national standard for safe electrical design, installation, and inspection.'},
+  'CCM':{full:'Certified Construction Manager',desc:'Professional certification for managing construction projects from planning through completion.'},
+  'PMP':{full:'Project Management Professional',desc:'Globally recognized certification for leading projects, schedules, budgets, and teams.'},
+  'CCO':{full:'Certified Crane Operator (NCCCO)',desc:'National certification to safely operate cranes and other lifting equipment.'},
+  'EPA 608 Cert':{full:'EPA Section 608 Technician Certification',desc:'Federal certification required to service equipment containing refrigerants, such as AC and refrigeration systems.'},
+  'HVAC Excellence Cert':{full:'HVAC Excellence Certification',desc:'Industry credential validating skills in heating, ventilation, air conditioning, and refrigeration work.'},
+  'Journeyman Plumber License':{full:'Journeyman Plumber License',desc:'Licensed plumber who has completed an apprenticeship and can install and repair plumbing systems independently.'},
+  'Master Plumber License':{full:'Master Plumber License',desc:'Highest plumbing license level — can design systems, pull permits, and supervise journeymen and apprentices.'},
+  'CW':{full:'Certified Welder (AWS)',desc:'American Welding Society credential verifying tested, hands-on welding skill to industry standards.'},
+  'CWI':{full:'Certified Welding Inspector (AWS)',desc:'American Welding Society credential to inspect welds and verify they meet codes and quality standards.'},
+  'CLC':{full:'Construction Labor Certification',desc:'Certifies foundational construction-site skills, safety awareness, and readiness for general labor work.'},
+  'MCAA':{full:'Mechanical Contractors Association of America Certification',desc:'Credential from the MCAA covering mechanical trade skills such as pipefitting, plumbing, and HVAC service.'}
+};
 const TRIVIA_COLS={'Auto Mechanic':'Trivia Auto Mechanic Score','Civil Construction':'Trivia Civil Construction Score','Electrical':'Trivia Electrical Score','Plumbing':'Trivia Plumbing Score','Welding':'Trivia Welding Score','Construction Labor':'Trivia Construction Labor Score','HVAC':'Trivia HVAC Score','Warehouse':'Trivia Warehouse Score','Heavy Equipment Tech':'Trivia Heavy Equipment Technician Score'};
 
 let filters={events:new Set(),excMin:0,excMax:100,jobInterest:new Set(),employment:new Set(),scoreSegs:new Set(),ageGroups:new Set(),gender:new Set(),states:new Set(),trivia:new Set(),triviaScoreMin:0,triviaScoreMax:20,certs:new Set()};
@@ -1240,11 +1261,42 @@ function buildSidebar(){
   const sc={};rawWeb.forEach(r=>{const s=(r['State']||'').trim();if(s)sc[s]=(sc[s]||0)+1;});
   buildChipFilter('fState',Object.entries(sc).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([s])=>s),'states');
   buildChipFilter('fTrivia',Object.keys(TRIVIA_COLS),'trivia');
-  buildChipFilter('fCerts',CERT_NAMES,'certs');
+  const certTips={};CERT_NAMES.forEach(n=>{const i=CERT_INFO[n];if(i)certTips[n]=i.full+'\n'+i.desc;});
+  buildChipFilter('fCerts',CERT_NAMES,'certs',{},certTips);
 }
-function buildChipFilter(id,opts,key,lm={}){
+// Floating tooltip (ported from customer.html) — driven by data-tip, textContent-safe.
+function showTip(e,el){
+  const tip=document.getElementById('floatTip');
+  if(!tip)return;
+  tip.textContent=el.dataset.tip||'';
+  tip.style.display='block';
+  positionTip(e,tip);
+  el.onmousemove=ev=>positionTip(ev,tip);
+}
+function positionTip(e,tip){
+  const x=e.clientX,y=e.clientY,tw=tip.offsetWidth,th=tip.offsetHeight,vw=window.innerWidth;
+  let left=x-tw/2,top=y-th-12;
+  if(left<8)left=8;
+  if(left+tw>vw-8)left=vw-tw-8;
+  if(top<8)top=y+20;
+  tip.style.left=left+'px';tip.style.top=top+'px';
+}
+function hideTip(){
+  const tip=document.getElementById('floatTip');
+  if(tip)tip.style.display='none';
+}
+// Word-wrap a string into lines of ~width chars (Chart.js renders arrays as lines).
+function wrapTip(text,width){
+  const words=String(text||'').split(' '),lines=[];let line='';
+  words.forEach(w=>{if(line&&(line+' '+w).length>width){lines.push(line);line=w;}else line=line?line+' '+w:w;});
+  if(line)lines.push(line);
+  return lines;
+}
+function buildChipFilter(id,opts,key,lm={},tips={}){
   const c=document.getElementById(id);c.innerHTML='';
-  opts.forEach(opt=>{const ch=document.createElement('button');const isActive=filters[key] instanceof Set&&filters[key].has(opt);ch.className='filter-chip'+(isActive?' active':'');ch.textContent=lm[opt]||opt;ch.dataset.value=opt;ch.onclick=()=>{
+  opts.forEach(opt=>{const ch=document.createElement('button');const isActive=filters[key] instanceof Set&&filters[key].has(opt);ch.className='filter-chip'+(isActive?' active':'');ch.textContent=lm[opt]||opt;ch.dataset.value=opt;
+  if(tips[opt]){ch.dataset.tip=tips[opt];ch.onmouseenter=e=>showTip(e,ch);ch.onmouseleave=hideTip;}
+  ch.onclick=()=>{
     if(filters[key] instanceof Set){if(filters[key].has(opt))filters[key].delete(opt);else filters[key].add(opt);ch.classList.toggle('active',filters[key].has(opt));}
     // Enable trivia score slider only when exactly 1 trivia test selected
     if(key==='trivia'){const ts=document.getElementById('triviaScoreSection');if(ts){const active=filters.trivia.size===1;ts.style.opacity=active?'1':'0.4';ts.style.pointerEvents=active?'auto':'none';}}
@@ -1314,7 +1366,7 @@ function renderGrid(webRows,excRows,winRows){
   const ahK=ageBins.filter(b=>ac[b]>0),ahV=ahK.map(b=>ac[b]);
   charts.age=new Chart(document.getElementById('chartAge'),{type:'bar',data:{labels:ahK,datasets:[{label:'Participants',data:ahV,backgroundColor:ahV.map((_,i)=>{const t=i/ahV.length;return 'rgba(240,'+Math.round(165*(1-t)+88*t)+','+Math.round(t*4)+',0.85)';}),borderColor:'transparent',borderRadius:3}]},options:{...co,plugins:{...co.plugins,legend:{display:false}},scales:{x:{ticks:{color:'#8b949e',font:{family:'Barlow Condensed',size:10}},grid:{color:'#21262d'}},y:{ticks:{color:'#8b949e',font:{family:'Barlow Condensed',size:10}},grid:{color:'#21262d'}}},onClick:(e,els)=>{if(!els.length)return;toggleFilter('ageGroups',ahK[els[0].index]);}}});
   const cc=CERT_NAMES.map((name,i)=>({name,count:webRows.filter(r=>r[CERT_COLS[i]]==='Yes').length})).filter(c=>c.count>0).sort((a,b)=>b.count-a.count);
-  charts.certs=new Chart(document.getElementById('chartCerts'),{type:'bar',data:{labels:cc.map(c=>c.name),datasets:[{data:cc.map(c=>c.count),backgroundColor:cc.map(c=>filters.certs.has(c.name)?'#f0a500':PIE_PALETTE[cc.indexOf(c)%PIE_PALETTE.length]+'cc'),borderColor:'transparent',borderRadius:3}]},options:{...co,indexAxis:'y',plugins:{...co.plugins,legend:{display:false}},scales:{x:{ticks:{color:'#8b949e',font:{family:'Barlow Condensed',size:10}},grid:{color:'#21262d'}},y:{ticks:{color:'#e6edf3',font:{family:'Barlow Condensed',size:12,weight:'700'},padding:4},grid:{color:'#21262d'},afterFit(scale){scale.width=220;}}},onClick:(e,els)=>{if(!els.length)return;toggleFilter('certs',cc[els[0].index].name);}}});
+  charts.certs=new Chart(document.getElementById('chartCerts'),{type:'bar',data:{labels:cc.map(c=>c.name),datasets:[{data:cc.map(c=>c.count),backgroundColor:cc.map(c=>filters.certs.has(c.name)?'#f0a500':PIE_PALETTE[cc.indexOf(c)%PIE_PALETTE.length]+'cc'),borderColor:'transparent',borderRadius:3}]},options:{...co,indexAxis:'y',plugins:{...co.plugins,legend:{display:false},tooltip:{callbacks:{title:items=>(CERT_INFO[items[0].label]?.full)||items[0].label,afterBody:items=>{const i=CERT_INFO[items[0].label];return i?wrapTip(i.desc,46):'';}}}},scales:{x:{ticks:{color:'#8b949e',font:{family:'Barlow Condensed',size:10}},grid:{color:'#21262d'}},y:{ticks:{color:'#e6edf3',font:{family:'Barlow Condensed',size:12,weight:'700'},padding:4},grid:{color:'#21262d'},afterFit(scale){scale.width=220;}}},onClick:(e,els)=>{if(!els.length)return;toggleFilter('certs',cc[els[0].index].name);}}});
   const stC={};webRows.forEach(r=>{const s=(r['State']||'').trim();if(s)stC[s]=(stC[s]||0)+1;});
   document.getElementById('stateGrid').innerHTML=Object.entries(stC).sort((a,b)=>b[1]-a[1]).map(([s,c])=>'<div class="state-row" style="'+(filters.states.has(s)?'border-left-color:var(--accent)':'')+'" onclick="toggleFilter(\'states\',\''+jsAttr(s)+'\')"><span class="state-name">'+esc(s)+'</span><span class="state-count">'+c+'</span></div>').join('');
   const td=Object.entries(TRIVIA_COLS).map(([name,col])=>{const vals=winRows.map(r=>parseFloat(r[col])).filter(v=>!isNaN(v));return{name,count:vals.length,avg:vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0};}).sort((a,b)=>b.count-a.count);
@@ -3052,5 +3104,6 @@ async function bulkAddToUnassigned(){
 </div>
 
 <div id="geoFloatSugg" style="display:none;position:fixed;z-index:9998;background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px;max-height:200px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.5);min-width:240px;"></div>
+<div id="floatTip"></div>
 </body>
 </html>
