@@ -149,7 +149,7 @@ tr:hover td{background:var(--surface2);}
   <div class="geo-bar" id="geoBar">
     <span class="geo-bar-label">&#9678; Radius</span>
     <div class="geo-input-wrap">
-      <input class="geo-inp" id="cGeoInput" placeholder="Enter your business address…" oninput="cOnGeoInput(this.value)" autocomplete="off">
+      <input class="geo-inp" id="cGeoInput" placeholder="Enter your business address…" oninput="cOnGeoInput(this.value)" onkeydown="cOnGeoKey(event)" autocomplete="off">
       <div class="geo-sugg" id="cGeoSugg" style="display:none"></div>
     </div>
     <input type="range" id="cGeoSlider" min="1" max="150" value="25" style="width:100px;accent-color:var(--accent)" oninput="cOnGeoRadius(this.value)">
@@ -535,30 +535,88 @@ function haversineDistance(lat1,lng1,lat2,lng2){
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-let cGeoTimer=null;
+// Forward-geocode helper \u2014 throws a readable message (Mapbox error body or HTTP
+// status) instead of silently swallowing failures, so the box can say *why* a
+// search didn't return anything.
+async function cMapboxForward(params){
+  const url=`https://api.mapbox.com/search/geocode/v6/forward?${params}`;
+  const resp=await fetch(url);
+  let data=null;
+  try{ data=await resp.json(); }catch(_){}
+  if(!resp.ok){
+    const msg=(data&&(data.message||data.error))||('HTTP '+resp.status);
+    throw new Error(msg);
+  }
+  return data||{};
+}
+function cGeoSay(msg){
+  const s=document.getElementById('cGeoStatus');
+  if(s&&!geoFilter.active)s.textContent=msg;
+}
+
+let cGeoTimer=null, cGeoSeq=0;
 function cOnGeoInput(val){
   clearTimeout(cGeoTimer);
   const sug=document.getElementById('cGeoSugg');
-  if(!val||val.length<3){sug.style.display='none';return;}
+  val=(val||'').trim();
+  if(val.length<3){ sug.style.display='none'; cGeoSay(val?'Keep typing\u2026':''); return; }
+  if(!MAPBOX_TOKEN){ cGeoSay('\u26a0 Mapbox token not set'); return; }
+  cGeoSay('Searching\u2026');
+  const seq=++cGeoSeq;
   cGeoTimer=setTimeout(async()=>{
-    if(!MAPBOX_TOKEN){
-      document.getElementById('cGeoStatus').textContent='\u26a0 Mapbox token not set';return;
-    }
     // Mapbox retired the legacy v5 Geocoding API \u2014 use v6 forward with a
     // free-text `q` param for typeahead.
     try{
       const params=new URLSearchParams({q:val,country:'US',types:'address,postcode,place',autocomplete:'true',limit:'5',access_token:MAPBOX_TOKEN});
-      const url=`https://api.mapbox.com/search/geocode/v6/forward?${params}`;
-      const data=await fetch(url).then(r=>r.json());
-      if(!data.features||!data.features.length){sug.style.display='none';return;}
-      sug.innerHTML=data.features.map(f=>{
+      const data=await cMapboxForward(params);
+      if(seq!==cGeoSeq)return; // a newer keystroke superseded this response
+      const feats=data.features||[];
+      if(!feats.length){ sug.style.display='none'; cGeoSay('No matches for \u201C'+val+'\u201D'); return; }
+      sug.innerHTML=feats.map(f=>{
         const name=f.properties?.full_address||f.properties?.name||'';
         const [lng,lat]=f.geometry.coordinates;
         return `<div onclick="cSelectGeo('${jsAttr(name)}',${lat},${lng})">${esc(name)}</div>`;
       }).join('');
       sug.style.display='block';
-    }catch(e){console.warn(e);}
+      cGeoSay(feats.length+' match'+(feats.length>1?'es':'')+' \u2014 pick one or press Enter');
+    }catch(e){
+      if(seq!==cGeoSeq)return;
+      console.warn('Geocode autocomplete error',e);
+      sug.style.display='none';
+      cGeoSay('\u26a0 Search failed: '+e.message);
+    }
   },300);
+}
+
+// Enter in the box geocodes the typed text and applies directly, so search
+// works even without clicking a suggestion.
+async function cOnGeoKey(e){
+  if(e.key!=='Enter')return;
+  e.preventDefault();
+  document.getElementById('cGeoSugg').style.display='none';
+  await cResolveTyped();
+  if(geoFilter.lat&&geoFilter.lng)cApplyGeo();
+}
+
+async function cResolveTyped(){
+  const inp=document.getElementById('cGeoInput');
+  const val=(inp?.value||'').trim();
+  if(!val)return;
+  if(!MAPBOX_TOKEN){ cGeoSay('\u26a0 Mapbox token not set'); return; }
+  cGeoSay('Searching\u2026');
+  try{
+    const params=new URLSearchParams({q:val,country:'US',types:'address,postcode,place',limit:'1',access_token:MAPBOX_TOKEN});
+    const data=await cMapboxForward(params);
+    const f=(data.features||[])[0];
+    if(!f){ cGeoSay('No matches for \u201C'+val+'\u201D'); return; }
+    const name=f.properties?.full_address||f.properties?.name||val;
+    const [lng,lat]=f.geometry.coordinates;
+    geoFilter.lat=lat; geoFilter.lng=lng; geoFilter.address=name;
+    inp.value=name;
+  }catch(e){
+    console.warn('Geocode error',e);
+    cGeoSay('\u26a0 Search failed: '+e.message);
+  }
 }
 
 function cSelectGeo(name,lat,lng){
@@ -573,9 +631,12 @@ function cOnGeoRadius(val){
   geoFilter.radius=parseInt(val);
 }
 
-function cApplyGeo(){
+async function cApplyGeo(){
+  if((!geoFilter.lat||!geoFilter.lng) && (document.getElementById('cGeoInput').value||'').trim()){
+    await cResolveTyped();
+  }
   if(!geoFilter.lat||!geoFilter.lng){
-    document.getElementById('cGeoStatus').textContent='\u26a0 Select an address first';return;
+    document.getElementById('cGeoStatus').textContent='\u26a0 Enter an address, then Apply';return;
   }
   geoFilter.active=true;
   document.getElementById('cGeoClear').style.display='inline';
