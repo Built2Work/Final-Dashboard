@@ -1,45 +1,30 @@
-# Final-Dashboard
+# Logo asset
 
-Built to Work event analytics dashboards (static, client-side, Supabase-backed).
+The Built to Work logo shown at the top of every page and on the login screens is
+loaded from a single shared file:
 
-| Page | Purpose |
-|------|---------|
-| `index.html` | Event analytics — KPIs, filters, participant table, assignment pipeline |
-| `operations.html` | Real-time operations metrics and per-day drill-down |
-| `customer.html` | Company candidate portal (scoped to the logged-in company) |
-| `demo.html` | Public, login-free demo of the analytics dashboard on anonymized data |
-| `shared.js` | Shared config + helpers (Supabase client, phone/escape/upload utils) |
-| `demo-data.js` | Anonymized static snapshot that powers `demo.html` (no real PII) |
+```
+assets/logo.png
+```
 
-## Demo
+## To install / replace the logo
 
-`demo.html` is a shareable copy of the analytics dashboard with **no login** and
-**no Supabase access**. It runs entirely on the static snapshot in `demo-data.js`,
-in which participant names are faked, phones/emails are removed, street addresses
-are scrubbed, and map coordinates are jittered. All database-write controls
-(assign / edit notes / file upload / geocode) are removed, so it is read-only.
+1. Drop your logo image into this folder and name it exactly **`logo.png`**
+   (overwrite the existing file — keep the same name and path).
+2. Use a transparent-background PNG for best results. It is displayed on a white
+   header/login, sized by height (~26–52px depending on the spot), so any width is
+   fine — width scales automatically to preserve aspect ratio.
+3. Commit the file. No HTML/CSS changes are needed — every page (`index.html`,
+   `operations.html`, `customer.html`) and both login screens already point at
+   `assets/logo.png`.
 
-The committed `demo-data.js` is small synthetic placeholder data. To refresh it
-with real-but-anonymized numbers from the live dashboard:
+The file currently checked in is the previous logo, kept as a placeholder so the
+pages never show a broken image. Replacing it swaps the logo everywhere at once.
 
-1. Open `index.html`, log in, and let the data load. Open the **Pipeline** tab
-   once so the CRM data is loaded too.
-2. Open DevTools → **Console**, paste the contents of `make-demo-data.js`, and
-   run it. Anonymization happens in your browser; it downloads a scrubbed
-   `demo-data.js` (no raw PII ever leaves the page).
-3. Replace `demo-data.js` in the repo with the downloaded file and push.
+## Note: PDF export logo
 
-> ⚠️ Only ever commit a `demo-data.js` produced by `make-demo-data.js` (or the
-> synthetic placeholder). Never paste live query results in directly — they
-> contain real PII.
-
-## Security
-
-Access control depends on Supabase Row-Level Security. **Before relying on this
-in production, read [`SECURITY.md`](./SECURITY.md) and apply
-[`supabase-rls.sql`](./supabase-rls.sql).** Without RLS the public anon key
-exposes all candidate PII.
-
-Then apply [`supabase-status-events.sql`](./supabase-status-events.sql) — it adds
-the status-change log behind the Pipeline tab's Hired/Rejected notifications,
-"status changed X ago" timestamps, and per-candidate rejection history.
+The PDF export in `index.html` embeds its own copy of the logo as a base64 string
+(the `const LOGO = '...'` near the export code) because the PDF generator needs the
+raw image data at build time. That copy is intentionally separate and is **not**
+updated by replacing `assets/logo.png`. If you want the exported PDF header to use
+the new logo too, update that `LOGO` constant with the base64 of the new image.
